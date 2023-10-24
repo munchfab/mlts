@@ -10,7 +10,7 @@
 #' of the time-varying construct.
 #' @param pred_random character. Name(s) of between-person variables to use as
 #' predictors of individual parameters
-#' @param outcome character. Names(s) of between-person variables
+#' @param outcome character. Name(s) of between-person variables
 #' to regress individual parameters on.
 #' @param out_predictors character. "mu", "ar", and/or "logv" to use individual
 #' parameter estimates.
