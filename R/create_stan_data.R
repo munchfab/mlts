@@ -10,7 +10,7 @@
 #' of the time-varying construct.
 #' @param pred_random character. Name(s) of between-person variables to use as
 #' predictors of individual parameters
-#' @param outcome character. Names(s) of between-person variables
+#' @param outcome character. Name(s) of between-person variables
 #' to regress individual parameters on.
 #' @param out_predictors character. "mu", "ar", and/or "logv" to use individual
 #' parameter estimates.
@@ -40,6 +40,7 @@ create_stan_data <- function(data, id, beep, ts,
                              miss_handling = c("remove", "impute"),
                              random.innovations = TRUE,
                              add_mplus_data = T) {
+
 
   # integrate later...
   out_pred_b = NULL
