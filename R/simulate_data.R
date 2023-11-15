@@ -1,1 +1,1 @@
-simulate_data_AR1 <- function()
+simulate_data_AR1_man <- function()
