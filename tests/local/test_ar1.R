@@ -13,7 +13,8 @@ ar1_model <- rstan::stan_model(
 pars <- c("btw_pred", # fixed effects of mu, ar, and (log) innovation variance
           "sigma", # random effect SDs
           "bcorr", # random effect correlations
-          "bcov") # Var-Cov-matrix
+          "bcov", # Var-Cov-matrix
+          "y_rep")
 
 # draw samples
 ar1_fit <- rstan::sampling(
@@ -28,3 +29,18 @@ ar1_fit <- rstan::sampling(
 
 # print summary
 print(ar1_fit)
+print(ar1_fit, pars = "y_rep")
+
+# extract posterior predictions
+y_rep <- as.matrix(
+  ar1_fit,
+  pars = paste0("y_rep[", 1:ar1_stan_data$N_obs, "]"))[sample(500), ]
+
+
+# posterior predictive checking: density
+ppc_dens <- bayesplot::ppc_dens_overlay(
+  ar1_stan_data$y,
+  y_rep
+)
+# view
+ppc_dens
