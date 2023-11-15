@@ -34,7 +34,7 @@ transformed data{
     } else {
       n_random = 3;
       n_inno = N;
-      }
+    }
    // standardize outcome
  }
 parameters {
@@ -122,7 +122,7 @@ model {
     if (logv_is_random == 1) {
       y_merge[(pos + 1) : (pos + N_obs_id[pp])] ~ normal(mus, sd_noise[pp]);
     } else {
-      y_merge[(pos+1):(pos+N_obs_id[pp])] ~ normal(mus, sd_noise[1]);
+      y_merge[(pos + 1):(pos + N_obs_id[pp])] ~ normal(mus, sd_noise[1]);
     }
     // update index variables
     pos = pos + N_obs_id[pp] + 1; 
@@ -138,7 +138,7 @@ model {
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
   matrix[n_random,n_random] bcov; // random coefficients covariance matrix
-  array[n_out] vector[N] yhat; // predictions
+  array[n_out] vector[N] y_hat; // predictions
   real R2_out[n_out]; // explained outcome variance 
   // create random coefficient matrices
   bcorr = multiply_lower_tri_self_transpose(L);
@@ -146,9 +146,22 @@ generated quantities{
   // conditional: prediction of time-invariant outcome
   if (n_out > 0) {
     for (oo in 1 : n_out) {
-    yhat[oo, 1 : N] = alpha_out[oo] + b_pred * bs[oo, ]';
+    y_hat[oo, 1 : N] = alpha_out[oo] + b_pred * bs[oo, ]';
     R2_out[oo] = ((sd(out[oo,])^2) - (sigma_out[oo]^2)) / (sd(out[oo, ])^2);
-    //R2_out[oo] = (sd(yhat[oo,])^2)/(sd(out[oo,])^2);
+    // R2_out[oo] = (sd(y_hat[oo,])^2)/(sd(out[oo,])^2);
     }
+  }
+  // posterior predictive checks for y
+  int pos = 1;
+  array[N_obs] real y_rep;
+  for (pp in 1:N) {
+    if (logv_is_random == 1) {
+      y_rep[pos] = b[pp, 1];
+      y_rep[(pos + 1):(pos + N_obs_id[pp])] = normal_rng(b[pp, 1] + b[pp, 2] * (y_merge[pos : (pos + (N_obs_id[pp] - 1))] - b[pp, 1]), sd_noise[pp]);
+    } else {
+      y_rep[pos] = b[pp, 1];
+      y_rep[(pos + 1):(pos + N_obs_id[pp])] = normal_rng(b[pp, 1] + b[pp, 2] * (y_merge[pos : (pos + (N_obs_id[pp] - 1))] - b[pp, 1]), sd_noise[1]);
+    }
+    pos = pos + N_obs_id[pp] + 1; 
   }
 }
