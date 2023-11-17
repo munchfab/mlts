@@ -26,7 +26,7 @@ create_stan_data(
   add_mplus_data = TRUE
 )
 
-# load artifical data set
+# load artyifical data set
 load("./data/ar1_stan_data.rda")
 
 # compile model
