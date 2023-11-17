@@ -8,7 +8,7 @@ create_stan_data(
   data,
   id,
   beep,
-  ts,
+  y,
   pred_random = NULL,
   outcome = NULL,
   out_predictors = NULL,
@@ -16,7 +16,7 @@ create_stan_data(
   overnight_lags = NULL,
   miss_handling = c("remove", "impute"),
   random.innovations = TRUE,
-  add_mplus_data = T
+  add_mplus_data = TRUE
 )
 }
 \arguments{
@@ -29,13 +29,13 @@ observational unit.}
 \item{beep}{character. The variable in \code{data} that contains the running
 beep from 1 to TP for each person.}
 
-\item{ts}{character. The variable in \code{data} that contains the observations
+\item{y}{character. The variable in \code{data} that contains the observations
 of the time-varying construct.}
 
 \item{pred_random}{character. Name(s) of between-person variables to use as
 predictors of individual parameters}
 
-\item{outcome}{character. Names(s) of between-person variables
+\item{outcome}{character. Name(s) of between-person variables
 to regress individual parameters on.}
 
 \item{out_predictors}{character. "mu", "ar", and/or "logv" to use individual
