@@ -5,16 +5,16 @@ devtools::load_all()
 # create artificial data
 ar1_data <- sim_data_AR1_man(
   N = 100,
-  TP = 50,
-  mu = 10, phi = .4, logv = .4,
-  sigma_mu = 2, sigma_phi = .2, sigma_logv = .1,
-  mu_ec = 2, sigma_ec = 1,
+  TP = 70,
+  mu = 10, phi = .3, logv = 2,
+  sigma_mu = 1.4, sigma_phi = .2, sigma_logv = .7,
+  mu_ec = 5, sigma_ec = 2,
   cor_mu_phi = .3, cor_mu_logv = .3, cor_phi_logv = .3,
-  cor_mu_ec = .4, cor_phi_ec = .4, cor_logv_ec = .4,
+  cor_mu_ec = .3, cor_phi_ec = .3, cor_logv_ec = .3,
   seed = 1234
 )
 
-create_stan_data(
+ar1_stan_data <- create_stan_data(
   data = ar1_data, id = "id", beep = "TP", y = "y",
   pred_random = NULL,
   outcome = NULL,
@@ -22,12 +22,12 @@ create_stan_data(
   standardize_out = TRUE,
   overnight_lags = NULL,
   miss_handling = "remove",
-  random.innovations = TRUE,
+  random_innovations = TRUE,
   add_mplus_data = TRUE
 )
 
-# load artyifical data set
-load("./data/ar1_stan_data.rda")
+# load artifical data set
+# load("./data/ar1_stan_data.rda")
 
 # compile model
 # not needed if precompiled
@@ -55,7 +55,7 @@ ar1_fit <- rstan::sampling(
 )
 
 # print summary
-print(ar1_fit)
+print(ar1_fit, pars = pars[!pars == "y_rep"])
 print(ar1_fit, pars = "y_rep")
 
 # extract posterior predictions
