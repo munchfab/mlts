@@ -14,17 +14,28 @@ ar1_data <- sim_data_AR1_man(
   seed = 1234
 )
 
-ar1_stan_data <- create_stan_data(
-  data = ar1_data, id = "id", beep = "TP", y = "y",
-  pred_random = NULL,
-  outcome = NULL,
-  out_predictors = NULL,
-  standardize_out = TRUE,
-  overnight_lags = NULL,
-  miss_handling = "remove",
-  random_innovations = TRUE,
-  add_mplus_data = TRUE
+
+# fit model
+fit <- dsem(
+  formula = y ~ TP + (TP | id),
+  data = ar1_data,
+  y = "y", id = "id", beep = "TP",
+  iter = 50, seed = 12
 )
+
+print(fit)
+
+# ar1_stan_data <- create_stan_data(
+#   data = ar1_data, id = "id", beep = "TP", y = "y",
+#   pred_random = NULL,
+#   outcome = NULL,
+#   out_predictors = NULL,
+#   standardize_out = TRUE,
+#   overnight_lags = NULL,
+#   miss_handling = "remove",
+#   random_innovations = TRUE,
+#   add_mplus_data = TRUE
+# )
 
 # load artifical data set
 # load("./data/ar1_stan_data.rda")
@@ -36,27 +47,27 @@ ar1_stan_data <- create_stan_data(
 #   model_name = "manifest_AR"
 # )
 
-# parameters to monitor
-pars <- c("btw_pred", # fixed effects of mu, ar, and (log) innovation variance
-          "sigma", # random effect SDs
-          "bcorr", # random effect correlations
-          "bcov", # Var-Cov-matrix
-          "y_rep")
-
-# draw samples
-ar1_fit <- rstan::sampling(
-  object = stanmodels$manifest_AR,
-  chains = 4,
-  cores = 4,
-  iter = 3000,
-  data = ar1_stan_data,
-  seed = 1234,
-  pars = pars
-)
-
-# print summary
-print(ar1_fit, pars = pars[!pars == "y_rep"])
-print(ar1_fit, pars = "y_rep")
+# # parameters to monitor
+# pars <- c("btw_pred", # fixed effects of mu, ar, and (log) innovation variance
+#           "sigma", # random effect SDs
+#           "bcorr", # random effect correlations
+#           "bcov", # Var-Cov-matrix
+#           "y_rep")
+#
+# # draw samples
+# ar1_fit <- rstan::sampling(
+#   object = stanmodels$manifest_AR,
+#   chains = 4,
+#   cores = 4,
+#   iter = 3000,
+#   data = ar1_stan_data,
+#   seed = 1234,
+#   pars = pars
+# )
+#
+# # print summary
+# print(ar1_fit, pars = pars[!pars == "y_rep"])
+# print(ar1_fit, pars = "y_rep")
 
 # extract posterior predictions
 y_rep <- as.matrix(
