@@ -34,7 +34,6 @@ sim_data_AR1_man <- function(N, TP,
   )
   names(between) <- c("mu", "phi", "logv", "ec")
   between$id <- rep(1:N)
-  # return(between)
 
   # create within-level data in long format
 
