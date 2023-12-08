@@ -1,7 +1,5 @@
 # Fit stan model using artificial AR1 data set
 
-devtools::load_all()
-
 # create artificial data
 ar1_data <- sim_data_AR1_man(
   N = 100,
@@ -14,16 +12,24 @@ ar1_data <- sim_data_AR1_man(
   seed = 1234
 )
 
+devtools::load_all()
+
+dsem_formula(formula = y ~ y + ar(y) + (y + TP | TP / id) + TP)
 
 # fit model
 fit <- dsem(
-  formula = y ~ TP + (TP | id),
+  formula = y ~ y +ar(y) + (y + TP | TP / id) + TP,
   data = ar1_data,
-  y = "y", id = "id", beep = "TP",
+  # y = "y", id = "id", beep = "TP",
   iter = 50, seed = 12
 )
 
 print(fit)
+
+
+
+
+
 
 # ar1_stan_data <- create_stan_data(
 #   data = ar1_data, id = "id", beep = "TP", y = "y",
