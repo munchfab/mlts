@@ -15,7 +15,7 @@ create_stan_data(
   standardize_out = TRUE,
   overnight_lags = NULL,
   miss_handling = c("remove", "impute"),
-  random.innovations = TRUE,
+  random_innovations = TRUE,
   add_mplus_data = TRUE
 )
 }
@@ -52,7 +52,7 @@ subsequent observation on the next day.}
 \item{miss_handling}{character. Should missings be removed (\code{"remove"}) or
 imputed (\code{"impute"})?}
 
-\item{random.innovations}{logical. \code{FALSE} = constant innovation variance,
+\item{random_innovations}{logical. \code{FALSE} = constant innovation variance,
 \code{TRUE} = person-specific innovation variances.}
 
 \item{add_mplus_data}{logical. Should data be stored in Mplus format?
