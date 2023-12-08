@@ -15,7 +15,7 @@ data {
   int n_out; // number of outcomes 
   int n_out_pred; // number of predictors (including interceots when out_is_std = 0)
   int n_out_pred_b; // number of additional person parameters to use as predictors 
-  int out_pred_which[1, n_out_pred-n_out_pred_b]; // index of RE to use as predictor (1 = MU, 2 = AR, 3 = LOGV)
+  int out_pred_which[1, n_out_pred - n_out_pred_b]; // index of RE to use as predictor (1 = MU, 2 = AR, 3 = LOGV)
   array[n_out] vector[N] out;
   matrix[N, n_out_pred_b] out_pred_b;
   int<lower=0, upper=1> out_is_std; // were outcome variables standardized? 0 = no, 1 = yes
