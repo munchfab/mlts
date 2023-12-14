@@ -1,28 +1,9 @@
-#' Title
-#'
-#' @param y The variable in `data` used for the autoregressive process
-#' (should be the same as the response variable).
-#' @param p A non-negative integer specifying the autoregressive (AR) order.
-#' Default is 1.
-#' @inheritParams dsem
-#' @return
-#' @export
-#'
-#' @examples
 ar <- function(y, p = 1) {
   ar_call <- paste0("ar(y, p = ", p, ")")
   return()
 }
 
 
-#' Title
-#'
-#' @param formula
-#'
-#' @return
-#' @export
-#'
-#' @examples
 dsem_formula <- function(formula) {
 
   # old syntax ================================================================
