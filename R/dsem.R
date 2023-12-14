@@ -1,18 +1,3 @@
-#' Title
-#'
-#' @param formula
-#' @param data
-#' @param y
-#' @param id
-#' @param beep
-#' @param iter
-#' @param seed
-#' @param miss_handling
-#'
-#' @return
-#' @export
-#'
-#' @examples
 dsem <- function(formula, data,
                  y = NULL, id = NULL, beep = NULL,
                  iter = 2000, seed = NULL,
@@ -41,9 +26,9 @@ dsem <- function(formula, data,
 
   # draw samples for respective model
   # if latent variables are present, use latent variable model
-  if (grepl("lv", specials)) {
+  if (any(grepl("lv", dsem_terms$specials))) {
     NULL
-  } else if (grepl("ar", specials)) {
+  } else if (any(grepl("ar", dsem_terms$specials))) {
     fit <- rstan::sampling(
       object = stanmodels$manifest_AR,
       chains = 4,
