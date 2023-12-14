@@ -63,14 +63,14 @@ create_stan_data <- function(data, id, beep, y,
       df <- cbind(df, data[, c(pred_random, outcome)])
       out_pred_b = NULL
     } else {
-      df = cbind(df, data[, c(pred_random, outcome, out_pred_b)])
+      df <- cbind(df, data[, c(pred_random, outcome, out_pred_b)])
     }
   }
 
   # make sure that old variable names are removed
   # in case old column names were passed to df
-  if (length(y) > 1) {y_col = paste0("y_", 1:length(y))} else {y_col = "y"}
-  colnames(df) = c(
+  if (length(y) > 1) {y_col <- paste0("y_", 1:length(y))} else {y_col <- "y"}
+  colnames(df) <- c(
     "id", "dayno", "beep",
     y_col, pred_random, outcome, out_pred_b
   )
@@ -251,18 +251,19 @@ create_stan_data <- function(data, id, beep, y,
     pos_miss <- matrix(nrow = 1, ncol = 0)
   }
 
+
   if(length(y) == 1){
-    y <- df$y
+    y_array <- df$y
   } else {
-    y <- array(data = NA, dim = c(length(y), ncol = N_obs))
+    y_array <- array(data = NA, dim = c(length(y), ncol = N_obs))
     for(ii in 1:length(y)){
-      y[ii, ] = unname(unlist(df[, y_col[ii]]))
+      y_array[ii, ] <- unname(unlist(df[, y_col[ii]]))
     }
   }
 
   # create final object that can be passed to Stan
   stan_data = list(
-    y = y,
+    y = y_array,
     N = N,
     TP = TP,
     N_obs = N_obs,
@@ -272,8 +273,8 @@ create_stan_data <- function(data, id, beep, y,
     N_use = sum(df$include != 0),
     N_index_mus = N_index_mus,
     N_index = N_index,
-    N_ind = length(ts),
-
+    # N_ind = length(ts),
+    N_ind = nrow(y_array)[[1]],
     n_out = n_out,
     n_out_pred = n_out_pred,
     out_pred_which = out_pred_which,
@@ -293,6 +294,8 @@ create_stan_data <- function(data, id, beep, y,
     logv_is_random = ifelse(random_innovations == TRUE, 1, 0),
     n_cov = n_cov,
     W = W
+    # latent case
+    # N_ind = N_ind
   )
 
   # add Mplus data if requested
