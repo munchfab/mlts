@@ -246,9 +246,9 @@ create_stan_data <- function(data, id, beep, y,
     }
   } else {
     # NEEDS UPDATING LATER
-    N_miss <- 0
-    N_miss_max <- 0
-    pos_miss <- matrix(nrow = 1, ncol = 0)
+    N_miss <- array(data = 0, dim = length(y))
+    N_miss_max <- array(data = 0, dim = length(y))
+    pos_miss <- matrix(nrow = length(y), ncol = 0)
   }
 
 
