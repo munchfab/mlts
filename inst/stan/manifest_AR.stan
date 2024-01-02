@@ -136,8 +136,8 @@ model {
   }
 }
 generated quantities{
-  matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
-  matrix[n_random,n_random] bcov; // random coefficients covariance matrix
+  matrix[n_random, n_random] bcorr; // random coefficients correlation matrix
+  matrix[n_random, n_random] bcov; // random coefficients covariance matrix
   array[n_out] vector[N] y_hat; // predictions
   real R2_out[n_out]; // explained outcome variance 
   // create random coefficient matrices

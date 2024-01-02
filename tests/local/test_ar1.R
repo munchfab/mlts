@@ -16,14 +16,19 @@ ar1_data <- sim_data_AR1_man(
   seed = 1234
 )
 
-devtools::load_all()
+ar1_data_stan <- create_stan_data(
+  data = ar1_data,
+  y = "y", id = "id", beep = "TP",
+  miss_handling = "remove"
+)
+
 
 # fit model
 ar1_fit <- dsem_ar(
   y = "y", id = "id", beep = "TP",
   data = ar1_data,
   # y = "y", id = "id", beep = "TP",
-  iter = 50, seed = 12
+  iter = 2000, seed = 12
 )
 
 # summary
@@ -32,19 +37,17 @@ print(ar1_fit)
 # extract posterior predictions
 y_rep <- as.matrix(
   ar1_fit,
-  pars = paste0("y_rep[", 1:length(unique(ar1_data$id)), "]"))[sample(500), ]
+  pars = paste0("y_rep[", 1:length(ar1_data$id), "]"))[sample(500), ]
 
 # posterior predictive checking: density
 ppc_dens <- bayesplot::ppc_dens_overlay(
   ar1_data$y,
   y_rep
 )
+
 # view
 ppc_dens
 
-
-# eine Funktion für jedes Stan-Modell schreiben
-#
 
 
 ## latent model ===============================================================
@@ -98,23 +101,30 @@ ar1_model <- rstan::stan_model(
   model_name = "latent_AR"
 )
 
-# # parameters to monitor
-# pars <- c("btw_pred", # fixed effects of mu, ar, and (log) innovation variance
-#           "sigma", # random effect SDs
-#           "bcorr", # random effect correlations
-#           "bcov", # Var-Cov-matrix
-#           "y_rep")
+
+# parameters to monitor
+pars <- c("btw_pred", # fixed effects of mu, ar, and (log) innovation variance
+          "sigma", # random effect SDs
+          "bcorr", # random effect correlations
+          "bcov", # Var-Cov-matrix
+          "yB_rep"
+          # "yW_rep"
+          )
 #
-# # draw samples
-# ar1_fit <- rstan::sampling(
-#   object = stanmodels$manifest_AR,
-#   chains = 4,
-#   cores = 4,
-#   iter = 3000,
-#   data = ar1_stan_data,
-#   seed = 1234,
-#   pars = pars
-# )
+# draw samples
+ar1_fit <- rstan::sampling(
+  object = ar1_model,
+  chains = 4,
+  cores = 4,
+  iter = 3000,
+  data = stan_data,
+  seed = 1234,
+  pars = pars
+)
+
+print(ar1_fit)
+
+rstan::traceplot(ar1_fit, pars = pars)
 #
 # # print summary
 # print(ar1_fit, pars = pars[!pars == "y_rep"])

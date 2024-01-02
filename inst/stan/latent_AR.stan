@@ -39,15 +39,15 @@ transformed data{
    // standardize outcome 
  }
 parameters {
-  vector[n_random] b[N]; // person-specific parameter
+  array[N] vector[n_random] b; // person-specific parameter
   vector<lower=0>[n_random] sigma; // random effect SD
   cholesky_factor_corr[n_random] L; // cholesky factor of random effects correlation matrix
   vector[sum(N_miss)] y_impute;
   matrix[n_cov, n_random] btw_pred;
   // prediction parameter regressing outcome on individual parameter 
   matrix[n_out, n_out_pred] bs;
-  real<lower=0> sigma_out[n_out];
-  real alpha_out[n_out];
+  array [n_out] real<lower=0> sigma_out;
+  array [n_out] real alpha_out;
   // addon for measurement model
   vector[N_ind - 1] lamB;
   vector[N_ind - 1] lamW;
@@ -73,7 +73,7 @@ transformed parameters {
     sd_noise = sqrt(exp(to_vector(b[, 3])));
   } else {
     sd_noise[1] = sigma[3];
-  }
+  }y_W
   // prepare predictor matrix if outcome is provided 
   if(n_out > 0) {
     for (nn in 1 : (n_out_pred - n_out_pred_b)) {
@@ -163,7 +163,7 @@ model {
     }
     // update index variables
     pos = pos + N_obs_id[pp] + 1;
-    } // end loop over subjects 
+  } // end loop over subjects 
   // conditional: prediction of time-invariant outcome 
   if (n_out > 0) {
     for(oo in 1 : n_out) {
@@ -176,7 +176,7 @@ generated quantities{
   matrix[n_random, n_random] bcorr; // random coefficients correlation matrix
   matrix[n_random, n_random] bcov; // random coefficients covariance matrix
   array[n_out] vector[N] yhat;
-  real R2_out[n_out]; // explained outcome variance 
+  array[n_out] real R2_out; // explained outcome variance 
   bcorr = multiply_lower_tri_self_transpose(L);
   bcov = quad_form_diag(bcorr, sigma[1 : n_random]);
   // conditional: prediction of time-invariant outcome 
@@ -187,4 +187,31 @@ generated quantities{
       //R2_out[oo] = (sd(yhat[oo,])^2)/(sd(out[oo,])^2);
     }
   }
+  // posterior predictive checks for y
+  // int pos = 1;
+  // array[N_ind, N] real yW_rep;
+  array[N_ind - 1, N] real yB_rep;
+  for (pp in 1 : N) {
+    // decomposing between and within-part  
+    for (i in 1 : N_ind) {
+      if (i == 1) {
+        // yW_rep[i, ] = y_merge[i, pos : (pos + (N_obs_id[pp]))] - b[pp, 1];
+        // yW_rep[i, ] = normal_rng(etaW[pos : (pos + (N_obs_id[pp]))], sigmaW[i]);
+      } else {
+        yB_rep[i - 1, pp] = normal_rng(item_int[i - 1] + lamB[i - 1] * b[pp, 1], sigmaB[i - 1]);
+        // yW_rep[i, ] = y_merge[i, pos : (pos + (N_obs_id[pp]))] - yB[i - 1, pp];
+        // yW_rep[i, ] = normal_rng(lamW[i - 1] * etaW[pos : (pos + (N_obs_id[pp]))], sigmaW[i]);
+      }
+    }
+    // mus = b[pp, 2] * (etaW[pos : (pos + (N_obs_id[pp] - 1))]);
+    // if (logv_is_random == 1) {
+    //   vector[(N_obs_id[pp])] mus = b[pp, 2] * (etaW[pos : (pos + (N_obs_id[pp] - 1))]);
+    //   array[N_obs] real etaW_rep;
+    //   etaW_rep[(pos + 1) : (pos + N_obs_id[pp])] = normal_rng(mus, sd_noise[pp]);
+    // } else {
+    //   etaW_rep[(pos + 1) : (pos + N_obs_id[pp])] = normal_rng(mus, sd_noise[1]);
+    // }
+    // update index variables
+    // pos = pos + N_obs_id[pp] + 1;
+  } // end loop over subjects 
 }
