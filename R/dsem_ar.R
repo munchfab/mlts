@@ -24,6 +24,8 @@ dsem_ar <- function(y, id, beep, data,
                     miss_handling = "remove",
                     iter = 2000, seed = NULL) {
 
+  # VarModelBuild
+
   # create Stan data list
   stan_data <- create_stan_data(
     data = data,
