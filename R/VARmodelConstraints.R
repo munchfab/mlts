@@ -13,7 +13,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 VARmodelConstraints <- function(VARmodel, FixInnoVars = F, 
-                                FixInnoCovs = F, CovsZero = NULL, 
+                                FixInnoCovs = F, InnoCovsZero = F, 
                                 FEis0 = NULL, REis0 = NULL
 ){
   
@@ -53,7 +53,10 @@ VARmodelConstraints <- function(VARmodel, FixInnoVars = F,
     VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma_")] = gsub(
       VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma_")], 
       pattern = "ln.sigma_", replacement = "r.zeta_")
-    
+  }
+  
+  if(InnoCovsZero == T){
+    VARmodel = VARmodel[!grepl(VARmodel$Param_Label, pattern = "Covariance"),]
   }
   
   # remove individual effects from the dynamic model 
@@ -65,6 +68,9 @@ VARmodelConstraints <- function(VARmodel, FixInnoVars = F,
   if(!is.null(REis0)){
     # update identifier column
     VARmodel$isRandom[VARmodel$Type=="Fix effect" & VARmodel$Param %in% c(REis0)] = 0
+    
+    isFixed = VARmodel$Param[VARmodel$Type == "Fix effect" & VARmodel$isRandom == 0]
+    VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" & VARmodel$Param %in% isFixed),]
     
     # adjust parameter labels for constant innovation variances 
     VARmodel[VARmodel$Param %in% REis0, "Param_Label"] = gsub(
@@ -85,6 +91,9 @@ VARmodelConstraints <- function(VARmodel, FixInnoVars = F,
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
   
+  
+  
+  
   # update random effect correlations 
   rand.pars = (VARmodel[VARmodel$Type == "Random effect SD","Param"])
   n_rand = length(rand.pars)
@@ -99,13 +108,17 @@ VARmodelConstraints <- function(VARmodel, FixInnoVars = F,
     for(i in 2:n_rand){
       ps = c(ps, rep(rand.pars[i:n_rand], 1))
     }
-  }
   
   btw.cov_pars = paste0("r_", qs,".", ps)
   
   # remove and replace 
   VARmodel = VARmodel[VARmodel$Type!="Random effect correlation" | 
     (VARmodel$Type=="Random effect correlation" & VARmodel$Param %in% btw.cov_pars),]
+  } else if(n_rand == 1){
+    
+    VARmodel = VARmodel[VARmodel$Type != "Random effect correlation",]
+    
+  }
   
   
   # update priors =============================================================
