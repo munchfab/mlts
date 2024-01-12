@@ -101,7 +101,6 @@ VARfit <- function(VARmodel, data, printMessage = T, printWarning = T,
   #   standata = data
   #
   #   # model fit
-  }
 
   # VAR(1) Models -------------------------------------------------------------
   ## Single-indicator VAR(1) model
