@@ -1,0 +1,18 @@
+---
+# title: "Template Title"
+# author: "Your Name"
+# date: "The Date"
+output: pdf_document
+header-includes: 
+  - \usepackage{tikz}
+  - \usepackage{pgfplots}
+  - \pgfplotsset{compat=1.18}
+  - \usetikzlibrary{shapes, positioning, calc}
+  - \newlength{\Radius}
+  - \setlength\Radius{15mm}
+  - \usepackage{amsmath}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```

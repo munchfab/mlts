@@ -66,7 +66,7 @@ pathmodel <- paste0("
 
 cat(pathmodel, file = "model.rmd", append = TRUE)
 
-render(
+rmarkdown::render(
   input = "model.rmd"
 )
 
