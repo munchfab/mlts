@@ -14,10 +14,12 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 RcppExport SEXP _rcpp_module_boot_stan_fit4latent_AR_mod();
 RcppExport SEXP _rcpp_module_boot_stan_fit4manifest_AR_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4manifest_VAR_mod();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rcpp_module_boot_stan_fit4latent_AR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4latent_AR_mod, 0},
     {"_rcpp_module_boot_stan_fit4manifest_AR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4manifest_AR_mod, 0},
+    {"_rcpp_module_boot_stan_fit4manifest_VAR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4manifest_VAR_mod, 0},
     {NULL, NULL, 0}
 };
 
