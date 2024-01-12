@@ -1,10 +1,9 @@
 
-devtools::load_all()
 
 ## AR(1) Models ================================================================
 # 1. Random effect model ----------------------------------------------------
 ### Build general model
-(VARmodel = VARmodelBuild(q = 1))
+(VARmodeldata = VARmodelBuild(q = 1))
 
 # create artificial data
 ar1_data <- sim_data_AR1_man(
@@ -26,43 +25,61 @@ ar1_data_stan <- create_stan_data(
   miss_handling = "remove"
 )
 
+VARmodel <- list()
 
-if (file.exists("model.rmd")) {
-  file.remove("model.rmd")
+VARmodel <- list(VARmodel = VARmodeldata, q = 1)
+
+#######################################
+devtools::load_all()
+
+VARmodelPaths(VARmodel = VARmodel)
+
+
+
+if (file.exists("pathmodel.rmd")) {
+  file.remove("pathmodel.rmd")
 }
 
-rmarkdown::draft(file = "model.rmd",
+rmarkdown::draft(file = "pathmodel.rmd",
                  template = "pathmodel",
                  package = "dsemr",
                  edit = FALSE)
 
-pathmodel <- paste0("
-\\begin{tikzpicture}[
+pathmodel <- paste0(
+"\\begin{tikzpicture}[
   auto, > = latex, align=center,
 	latent/.style = {circle, draw, thick, inner sep = 2pt, minimum width = \\Radius},
 	intercept/.style = {regular polygon,regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = \\Radius},
-	manifest/.style = {rectangle, draw, thick, inner sep = 0pt, minimum size = 5mm, node distance = 4.5mm},
+	manifest/.style = {rectangle, draw, thick, inner sep = 0pt, minimum size = 5mm},
 	mean/.style = {regular polygon, regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = 8mm},
 	paths/.style = {arrows = ->, thick, > = {stealth[]}},
 	error/.style = {circle, draw = none, fill = none, thick, inner sep = 0pt, minimum size = 5mm},
-	variance/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
-	cov/.style = {<->, thick, > = {stealth[]}, bend right = 290},
+	var/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
+	cov/.style = {<->, thick, > = {stealth[]}, bend right = 270},
+	% style to add a circle in the middle of a path
+  random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\\draw[fill = black] circle[radius = 2pt];}}}},
 	]
 
   % draw within-level structural model
-  \\node [latent] (y1wt-1)                        {$y_{1,t-1}^w$};
-  \\node [latent] (y1wt)    [right = of y1wt-1]   {$y_{1,t}^w$};
-  \\node [latent] (eps1t)   [right = of y1wt]     {$\\delta_{{y_1},t}$};
+  \\node [latent] (y1wt-1)                            {$y_{1,t-1}^w$};
+  \\node [latent] (y1wt)    [right =5em of y1wt-1]    {$y_{1,t}^w$};
+  \\node [latent] (eps1t)   [right =2.5em of y1wt]    {$\\delta_{{y_1},t}$};
 
   % draw paths
-  \\draw [paths]  (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);
+  \\draw [paths, postaction = random]  (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);
   \\draw [paths]  (eps1t)   to node [] {}           (y1wt);
 
   % draw (co-)variances
-  \\draw [cov]	  (eps1t.north east)   to node [] {} (eps1t.south east);
-\\end{tikzpicture}
+  \\draw [var]	  (eps1t.30)   to node [] {} (eps1t.330);
+  ",
+  # if (VARmodel[VARmodel$Param == "mu_1" & VARmodel$Type == "Fix effect", "isRandom"] == 1) {
+  #   "\\draw [circle] (0, 0) -- (2, 0);"
+  # },
+
+"\\end{tikzpicture}
 "
 )
+
 
 cat(pathmodel, file = "model.rmd", append = TRUE)
 

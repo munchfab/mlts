@@ -7,12 +7,15 @@ header-includes:
   - \usepackage{tikz}
   - \usepackage{pgfplots}
   - \pgfplotsset{compat=1.18}
-  - \usetikzlibrary{shapes, positioning, calc}
+  - \usetikzlibrary{shapes, positioning, calc, decorations.markings}
   - \newlength{\Radius}
-  - \setlength\Radius{15mm}
+  - \setlength\Radius{4em}
   - \usepackage{amsmath}
+  - \usepackage{caption}
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
