@@ -7,7 +7,7 @@ header-includes:
   - \usepackage{tikz}
   - \usepackage{pgfplots}
   - \pgfplotsset{compat=1.18}
-  - \usetikzlibrary{shapes, positioning, calc, decorations.markings}
+  - \usetikzlibrary{shapes, positioning, calc, decorations.markings, chains, scopes}
   - \newlength{\Radius}
   - \setlength\Radius{4em}
   - \usepackage{amsmath}
@@ -36,71 +36,28 @@ knitr::opts_chunk$set(echo = TRUE)
     random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\draw[fill = black] circle[radius = 2pt];}}}},
   	]
 
+    % draw decomposition
     \node [manifest] (y1t) {$y_{1,t}$};
     \node [latent]   (y1wt)    [above = 2.5em of y1t]  {$y_{1,t}^w$};
     \node [latent]   (mu_y1)   [below = 2.5em of y1t]  {$\mu_{y_1,t}$};
 
-    % draw paths
-    \draw [path] (y1wt) to node [] {} (y1t);
-    \draw [path] (mu_y1) to node [] {} (y1t);
-\end{tikzpicture}
+    % draw nodes
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+    \node [manifest] (y\i t) [right = 2.5em of y\lasti t] {$y_{\i,t}$};
 
-\end{figure}
-\begin{figure}
-\centering
-\caption*{Within-model.}
-\begin{tikzpicture}[
-    auto, > = latex, align=center,
-  	latent/.style = {circle, draw, thick, inner sep = 2pt, minimum width = \Radius},
-  	manifest/.style = {rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2},
-  	intercept/.style = {regular polygon,regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = \Radius},
-  	mean/.style = {regular polygon, regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = 8mm},
-  	path/.style = {arrows = ->, thick, > = {stealth[]}},
-  	error/.style = {circle, draw = none, fill = none, thick, inner sep = 0pt, minimum size = 5mm},
-  	var/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
-  	cov/.style = {<->, thick, > = {stealth[]}, bend right = 30},
-  	% style to add a circle in the middle of a path
-    random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\draw[fill = black] circle[radius = 2pt];}}}},
-  	]
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+    \node [latent] (y\i wt) [above = 2.5em of y\i t] {$y_{\i,t}^w$};
 
-    % draw within-level structural model
-    \node [latent] (y1wt-1)  {$y_{1,t-1}^w$};
-    \node [latent] (y1wt)    [right =5em of y1wt-1]  {$y_{1,t}^w$};
-    \node [latent] (delta1t)   [right =2.5em of y1wt]  {$\delta_{{y_1},t}$};
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ...,2}
+    \node [latent] (mu_y\i) [below = 2.5em of y\i t] {$\mu_{y_{\i,t}}$};
 
     % draw paths
-    \draw [path]  (delta1t)   to node [] {}           (y1wt);
-	 	\draw [path, postaction = random]  (y1wt-1)  to node [] {$\phi_{y_1}$}  (y1wt);
-% draw (co-)variances
-      \draw [var, postaction = random]	  (delta1t.30)   to node [] {$\pi_{y_1}$} (delta1t.330);
-\end{tikzpicture}
+    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
+    \draw [path] (y\i wt) to node [] {} (y\i t);
 
-\end{figure}
-\begin{figure}
-\centering
-\caption*{Between-model.}
-\begin{tikzpicture}[
-    auto, > = latex, align=center,
-  	latent/.style = {circle, draw, thick, inner sep = 2pt, minimum width = \Radius},
-  	manifest/.style = {rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2},
-  	intercept/.style = {regular polygon,regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = \Radius},
-  	mean/.style = {regular polygon, regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = 8mm},
-  	path/.style = {arrows = ->, thick, > = {stealth[]}},
-  	error/.style = {circle, draw = none, fill = none, thick, inner sep = 0pt, minimum size = 5mm},
-  	var/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
-  	cov/.style = {<->, thick, > = {stealth[]}, bend right = 30},
-  	% style to add a circle in the middle of a path
-    random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\draw[fill = black] circle[radius = 2pt];}}}},
-  	]
-
-    % draw between-level structural model
-    \node [latent] (mu_y1) {$\mu_{y_1,t}$};
-    \node [latent] (phi_y1) [right = 1.5em of mu_y1] {$\phi_{y_1}$};
-    \node [latent] (lnsigma2_y1) [right = 1.5em of phi_y1] {$log(\pi_{y_1})$};
+    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
+    \draw [path] (mu_y\i) to node [] {} (y\i t);
     
-\draw [cov] (mu_y1.south) to node [] {} (phi_y1.south);
-\draw [cov] (mu_y1.south) to node [] {} (lnsigma2_y1.south);
-\draw [cov] (phi_y1.south) to node [] {} (lnsigma2_y1.south);
 \end{tikzpicture}
 
 \end{figure}

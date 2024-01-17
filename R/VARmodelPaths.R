@@ -41,6 +41,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
   if (VARmodel$q == 1) {
     dc <- "
+    % draw decomposition
     \\node [manifest] (y1t) {$y_{1,t}$};
     \\node [latent]   (y1wt)    [above = 2.5em of y1t]  {$y_{1,t}^w$};
     \\node [latent]   (mu_y1)   [below = 2.5em of y1t]  {$\\mu_{y_1,t}$};
@@ -48,6 +49,37 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     % draw paths
     \\draw [path] (y1wt) to node [] {} (y1t);
     \\draw [path] (mu_y1) to node [] {} (y1t);"
+  } else {
+    dc <- paste0(
+    "
+    % draw decomposition
+    \\node [manifest] (y1t) {$y_{1,t}$};
+    \\node [latent]   (y1wt)    [above = 2.5em of y1t]  {$y_{1,t}^w$};
+    \\node [latent]   (mu_y1)   [below = 2.5em of y1t]  {$\\mu_{y_1,t}$};
+
+    % draw nodes
+    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+    VARmodel$q, "}
+    \\node [manifest] (y\\i t) [right = 2.5em of y\\lasti t] {$y_{\\i,t}$};
+
+    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+    VARmodel$q, "}
+    \\node [latent] (y\\i wt) [above = 2.5em of y\\i t] {$y_{\\i,t}^w$};
+
+    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ...,",
+    VARmodel$q, "}
+    \\node [latent] (mu_y\\i) [below = 2.5em of y\\i t] {$\\mu_{y_{\\i,t}}$};
+
+    % draw paths
+    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
+    VARmodel$q, "}
+    \\draw [path] (y\\i wt) to node [] {} (y\\i t);
+
+    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
+    VARmodel$q, "}
+    \\draw [path] (mu_y\\i) to node [] {} (y\\i t);
+    "
+    )
   }
 
   # paste together
@@ -65,96 +97,112 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   cat(decomposition, file = "pathmodel.rmd", append = TRUE)
 
 
-  # within-model ##############################################################
-
-  # within-model caption
-  wm_caption <- "\\caption*{Within-model.}"
-
-  # draw nodes for q time-series constructs
-  if (VARmodel$q == 1) {
-    wm <- "
-    % draw within-level structural model
-    \\node [latent] (y1wt-1)  {$y_{1,t-1}^w$};
-    \\node [latent] (y1wt)    [right =5em of y1wt-1]  {$y_{1,t}^w$};
-    \\node [latent] (delta1t)   [right =2.5em of y1wt]  {$\\delta_{{y_1},t}$};
-
-    % draw paths
-    \\draw [path]  (delta1t)   to node [] {}           (y1wt);"
-    # draw paths conditional on isRandom
-    if (model[model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"] == 1) {
-      phi_11 <- "\\draw [path, postaction = random]  (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);"
-    } else {
-      phi_11 <- "\\draw [path]  (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);"
-    }
-    if (model[model$Param == "ln.sigma2_1" & model$Type == "Fix effect", "isRandom"] == 1) {
-      ln.sigma2_1 <- "% draw (co-)variances
-      \\draw [var, postaction = random]	  (delta1t.30)   to node [] {$\\pi_{y_1}$} (delta1t.330);"
-    } else {
-      ln.sigma2_1 <- "% draw (co-)variances
-      \\draw [var]	  (delta1t.30)   to node [] {$\\pi_{y_1}$} (delta1t.330);"
-    }
-    # paste together
-    within_model <- paste(wm, phi_11, ln.sigma2_1, sep = "\n")
-  }
-
-  # paste together
-  within_model <- paste(
-    begin_figure,
-    wm_caption,
-    begin_tikz,
-    within_model,
-    end_tikz,
-    end_figure,
-    sep = "\n"
-  )
-
-  # paste within_model to markdown
-  cat(within_model, file = "pathmodel.rmd", append = TRUE)
-
-
-  # between-model #############################################################
-
-  # between-model caption
-  bm_caption <- "\\caption*{Between-model.}"
-
-  # draw nodes for q time-series constructs
-  if (VARmodel$q == 1) {
-    bm <- "
-    % draw between-level structural model
-    \\node [latent] (mu_y1) {$\\mu_{y_1,t}$};
-    \\node [latent] (phi_y1) [right = 1.5em of mu_y1] {$\\phi_{y_1}$};
-    \\node [latent] (lnsigma2_y1) [right = 1.5em of phi_y1] {$log(\\pi_{y_1})$};
-    "
-    # draw (co-)variances conditional on existing correlations
-    if (nrow(model[model$Param == "r_mu_1.phi_11"]) > 0) {
-      r_mu_1.phi_11 <- "\\draw [cov] (mu_y1.south) to node [] {} (phi_y1.south);"
-    }
-    if (nrow(model[model$Param == "r_mu_1.ln.sigma2_1"]) > 0) {
-      r_mu_1.ln.sigma2_1 <- "\\draw [cov] (mu_y1.south) to node [] {} (lnsigma2_y1.south);"
-    }
-    if (nrow(model[model$Param == "r_phi_11.ln.sigma2_1"]) > 0) {
-      r_phi_11.ln.sigma2_1 <- "\\draw [cov] (phi_y1.south) to node [] {} (lnsigma2_y1.south);"
-    }
-  }
-
-  # paste together
-  between_model <- paste(bm, r_mu_1.phi_11, r_mu_1.ln.sigma2_1, r_phi_11.ln.sigma2_1, sep = "\n")
-
-  # paste together
-  between_model <- paste(
-    begin_figure,
-    bm_caption,
-    begin_tikz,
-    between_model,
-    end_tikz,
-    end_figure,
-    sep = "\n"
-  )
-
-  # paste within_model to markdown
-  cat(between_model, file = "pathmodel.rmd", append = TRUE)
-
-
+  # # within-model ##############################################################
+  #
+  # # within-model caption
+  # wm_caption <- "\\caption*{Within-model.}"
+  #
+  # # draw nodes for q time-series constructs
+  # if (VARmodel$q == 1) {
+  #   wm <- "
+  #   % draw within-level structural model
+  #   \\node [latent] (y1wt-1)  {$y_{1,t-1}^w$};
+  #   \\node [latent] (y1wt)    [right =5em of y1wt-1]  {$y_{1,t}^w$};
+  #   \\node [latent] (delta1t)   [right =2.5em of y1wt]  {$\\delta_{{y_1},t}$};
+  #
+  #   % draw paths
+  #   \\draw [path]  (delta1t)   to node [] {}           (y1wt);"
+  #   # draw paths conditional on isRandom
+  #   phi_11 <- paste0(
+  #     "\\draw [path", ifelse(
+  #       model[model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"] == 1,
+  #       ", postaction = random]", "]"
+  #     ),
+  #     " (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);"
+  #   )
+  #   ln.sigma2_1 <- paste0(
+  #     "\\draw [var", ifelse(
+  #       model[model$Param == "ln.sigma2_1" & model$Type == "Fix effect", "isRandom"] == 1,
+  #       ", postaction = random]", "]"
+  #     ),
+  #     " (delta1t.30)   to node [] {$\\pi_{y_1}$} (delta1t.330);"
+  #   )
+  # } else {
+  #   wm <- paste0(
+  #   "
+  #   % draw within-level structural model
+  #   \\node [latent] (y1wt-1)  {$y_{1,t-1}^w$};
+  #   \\node [latent] (y1wt)    [right =5em of y1wt-1]  {$y_{1,t}^w$};
+  #   \\node [latent] (delta1t)   [right =2.5em of y1wt]  {$\\delta_{{y_1},t}$};
+  #
+  #   % draw nodes
+  #   \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+  #     VARmodel$q, "}
+  #   \\node [latent] (y\\i wt-1) [below = 2.5em of y\\lasti wt-1] {$y_{\\lasti ,t-1}^w$};
+  #   "
+  #   )
+  # }
+  # # paste together
+  # within_model <- paste(wm, phi_11, ln.sigma2_1, sep = "\n")
+  #
+  # # paste together
+  # within_model <- paste(
+  #   begin_figure,
+  #   wm_caption,
+  #   begin_tikz,
+  #   within_model,
+  #   end_tikz,
+  #   end_figure,
+  #   sep = "\n"
+  # )
+  #
+  # # paste within_model to markdown
+  # cat(within_model, file = "pathmodel.rmd", append = TRUE)
+  #
+  #
+  # # between-model #############################################################
+  #
+  # # between-model caption
+  # bm_caption <- "\\caption*{Between-model.}"
+  #
+  # # draw nodes for q time-series constructs
+  # if (VARmodel$q == 1) {
+  #   bm <- "
+  #   % draw between-level structural model
+  #   \\node [latent] (mu_y1) {$\\mu_{y_1,t}$};
+  #   \\node [latent] (phi_y1) [right = 1.5em of mu_y1] {$\\phi_{y_1}$};
+  #   \\node [latent] (lnsigma2_y1) [right = 1.5em of phi_y1] {$log(\\pi_{y_1})$};
+  #   "
+  #   # draw (co-)variances conditional on existing correlations
+  #   if (nrow(model[model$Param == "r_mu_1.phi_11"]) > 0) {
+  #     r_mu_1.phi_11 <- "\\draw [cov] (mu_y1.south) to node [] {} (phi_y1.south);"
+  #   }
+  #   if (nrow(model[model$Param == "r_mu_1.ln.sigma2_1"]) > 0) {
+  #     r_mu_1.ln.sigma2_1 <- "\\draw [cov] (mu_y1.south) to node [] {} (lnsigma2_y1.south);"
+  #   }
+  #   if (nrow(model[model$Param == "r_phi_11.ln.sigma2_1"]) > 0) {
+  #     r_phi_11.ln.sigma2_1 <- "\\draw [cov] (phi_y1.south) to node [] {} (lnsigma2_y1.south);"
+  #   }
+  # }
+  #
+  # # paste together
+  # between_model <- paste(bm, r_mu_1.phi_11, r_mu_1.ln.sigma2_1, r_phi_11.ln.sigma2_1, sep = "\n")
+  #
+  # # paste together
+  # between_model <- paste(
+  #   begin_figure,
+  #   bm_caption,
+  #   begin_tikz,
+  #   between_model,
+  #   end_tikz,
+  #   end_figure,
+  #   sep = "\n"
+  # )
+  #
+  # # paste within_model to markdown
+  # cat(between_model, file = "pathmodel.rmd", append = TRUE)
+  #
+  #
 
 
   # render markdown input #####################################################

@@ -7,7 +7,7 @@ header-includes:
   - \usepackage{tikz}
   - \usepackage{pgfplots}
   - \pgfplotsset{compat=1.18}
-  - \usetikzlibrary{shapes, positioning, calc, decorations.markings}
+  - \usetikzlibrary{shapes, positioning, calc, decorations.markings, chains, scopes}
   - \newlength{\Radius}
   - \setlength\Radius{4em}
   - \usepackage{amsmath}
