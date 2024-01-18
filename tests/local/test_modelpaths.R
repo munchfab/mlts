@@ -44,6 +44,14 @@ VARmodel <- list(VARmodel = VARmodeldata, q = 2)
 
 VARmodelPaths(VARmodel = VARmodel)
 
+
+
+# render markdown
+rmarkdown::render(
+  input = "pathmodel.rmd"
+)
+
+
 # without random effects
 VARmodeldata = VARmodelBuild(q = 1)
 VARmodeldata[VARmodeldata$Param == "phi_11" & VARmodeldata$Type == "Fix effect", "isRandom"] <- 0

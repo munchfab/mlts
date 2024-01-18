@@ -31,9 +31,10 @@ knitr::opts_chunk$set(echo = TRUE)
   	path/.style = {arrows = ->, thick, > = {stealth[]}},
   	error/.style = {circle, draw = none, fill = none, thick, inner sep = 0pt, minimum size = 5mm},
   	var/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
-  	cov/.style = {<->, thick, > = {stealth[]}, bend right = 30},
+  	cov/.style = {<->, thick, > = {stealth[]}, bend right = 300},
   	% style to add a circle in the middle of a path
     random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\draw[fill = black] circle[radius = 2pt];}}}},
+    random_cl/.style = {postaction = {decorate, decoration = {markings, mark = at position .2 with {\draw[fill = black] circle[radius = 2pt];}}}},
   	]
 
     % draw decomposition
@@ -58,6 +59,56 @@ knitr::opts_chunk$set(echo = TRUE)
     \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
     \draw [path] (mu_y\i) to node [] {} (y\i t);
     
+\end{tikzpicture}
+
+\end{figure}
+\begin{figure}
+\centering
+\caption*{Within-model.}
+\begin{tikzpicture}[
+    auto, > = latex, align=center,
+  	latent/.style = {circle, draw, thick, inner sep = 2pt, minimum width = \Radius},
+  	manifest/.style = {rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2},
+  	intercept/.style = {regular polygon,regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = \Radius},
+  	mean/.style = {regular polygon, regular polygon sides = 3, draw, thick, inner sep = 0pt, minimum size = 8mm},
+  	path/.style = {arrows = ->, thick, > = {stealth[]}},
+  	error/.style = {circle, draw = none, fill = none, thick, inner sep = 0pt, minimum size = 5mm},
+  	var/.style = {<->, thick, > = {stealth[]}, bend right = 270, looseness = 2},
+  	cov/.style = {<->, thick, > = {stealth[]}, bend right = 300},
+  	% style to add a circle in the middle of a path
+    random/.style = {postaction = {decorate, decoration = {markings, mark = at position .5 with {\draw[fill = black] circle[radius = 2pt];}}}},
+    random_cl/.style = {postaction = {decorate, decoration = {markings, mark = at position .2 with {\draw[fill = black] circle[radius = 2pt];}}}},
+  	]
+
+    % draw within-level structural model
+    \node [latent] (y1wt-1)  {$y_{1,t-1}^w$};
+    \node [latent] (y1wt)    [right =5em of y1wt-1]  {$y_{1,t}^w$};
+    \node [latent] (delta1t)   [right =2.5em of y1wt]  {$\delta_{{y_1},t}$};
+
+    % draw nodes
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+    \node [latent] (y\i wt-1) [below = 2.5em of y\lasti wt-1] {$y_{\i ,t-1}^w$};
+
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+    \node [latent] (y\i wt) [below = 2.5em of y\lasti wt] {$y_{\i ,t}^w$};
+
+    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+    \node [latent] (delta\i t) [below = 2.5em of delta\lasti t] {$\delta_{{y_\i} ,t}$};
+
+    % draw paths from residuals to yiwt
+    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
+    \draw [path] (delta\i t) to node [] {} (y\i wt);
+    
+\draw [path, postaction = random]  (y1wt-1)  to node  []  {$\phi_{y_1}$}  (y1wt);
+\draw [path, postaction = random_cl]  (y1wt-1)  to node  [pos = .2]  {$\phi_{y_{12}}$}  (y2wt);
+\draw [path, postaction = random_cl]  (y2wt-1)  to node  [pos = .2]  {$\phi_{y_{21}}$}  (y1wt);
+\draw [path, postaction = random]  (y2wt-1)  to node  []  {$\phi_{y_2}$}  (y2wt);
+
+\draw [var, postaction = random]  (delta1t.120)   to node [] {$\pi_{y_1}$} (delta1t.60);
+ \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_1}$} (delta2t.0);
+\draw [var, postaction = random]  (delta2t.120)   to node [] {$\pi_{y_2}$} (delta2t.60);
+ \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_1}$} (delta2t.0);
+
 \end{tikzpicture}
 
 \end{figure}
