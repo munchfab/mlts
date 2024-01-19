@@ -1,32 +1,32 @@
 #' Title
 #'
 #' @param q integer. The number of time-varying constructs.
-#' @param p integer. For multiple-indicator models, specify a vector of length 
+#' @param p integer. For multiple-indicator models, specify a vector of length
 #' `q` with the number of manifest indicators per construct.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 VARmodelBuild <- function(q, p = NULL){
-  
-  # checks needed? 
-  ### Müssen wir hier einen manuellen Check einbauen, ob p entweder 
-  ### length(p) == 1 oder length(p) == q ist? 
+
+  # checks needed?
+  ### Müssen wir hier einen manuellen Check einbauen, ob p entweder
+  ### length(p) == 1 oder length(p) == q ist?
   if(length(p) == 1){
     p = rep(p, times = q)
   }
-  
-  
+
+
   # Structural Model ===========================================================
-  n_mus = q                                 # trait level parameters 
+  n_mus = q                                 # trait level parameters
   mus_pars = paste0("mu_",1:n_mus)
-  
-  n_phi = q^2                               # dynamic parameters 
+
+  n_phi = q^2                               # dynamic parameters
   phi_pars = paste0("phi_",rep(1:q, each = q), rep(1:q, times = q))
-  
-  n_sigma = q                               # innovation variances 
+
+  n_sigma = q                               # innovation variances
   sigma_pars = paste0("ln.sigma2_", 1:q)
-  
-  n_covs = (q *(q-1)) / 2                   # innovation covariances 
+
+  n_covs = (q *(q-1)) / 2                   # innovation covariances
   qs = c()
   ps = c()
   for(i in 1:(q-1)){
@@ -36,24 +36,24 @@ VARmodelBuild <- function(q, p = NULL){
     ps = c(ps, rep(i:q, 1))
   }
   cov_pars = paste0("ln.sigma_", qs, ps)
-  
+
   # ---
-  
+
   if(q > 1){
-    
-message("Note: When specifying a VAR(1) model with person-specific innovation 
+
+message("Note: When specifying a VAR(1) model with person-specific innovation
 covariances, a latent-variable approach will be used which affords introducing
-contraints on the loading parameters of the latent covariance facotor(s). 
-(see Hamaker et al., 2018). If innovation covariances are set as a constant 
+contraints on the loading parameters of the latent covariance factor(s).
+(see Hamaker et al., 2018). If innovation covariances are set as a constant
 or set to 0 in a subsequent step, this warning can be ignored.")
-    
+
     pars = c(mus_pars, phi_pars, sigma_pars, cov_pars)
-    
-    # combine a information in a data frame 
+
+    # combine a information in a data frame
     FE = data.frame(
       "Model" = "Structural",
       "Level" = "Within",
-      "Type" = "Fix effect", 
+      "Type" = "Fix effect",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -66,7 +66,7 @@ or set to 0 in a subsequent step, this warning can be ignored.")
     RE = data.frame(
       "Model" = "Structural",
       "Level" = "Between",
-      "Type" = "Random effect SD", 
+      "Type" = "Random effect SD",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -76,17 +76,17 @@ or set to 0 in a subsequent step, this warning can be ignored.")
       ),
       "isRandom" = 0
     )
-    ## combine 
+    ## combine
     df.pars = rbind(FE, RE)
   } else {
     pars = c(mus_pars, phi_pars, sigma_pars)
-    
-    # combine a information in a data frame 
-    ## fixed effects 
+
+    # combine a information in a data frame
+    ## fixed effects
     FE = data.frame(
       "Model" = "Structural",
       "Level" = "Within",
-      "Type" = "Fix effect", 
+      "Type" = "Fix effect",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -94,11 +94,11 @@ or set to 0 in a subsequent step, this warning can be ignored.")
         rep("Log Innovation Variance", n_sigma)
       ), "isRandom" = 1
     )
-    ## random effect variances 
+    ## random effect variances
     RE = data.frame(
       "Model" = "Structural",
       "Level" = "Between",
-      "Type" = "Random effect SD", 
+      "Type" = "Random effect SD",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -108,8 +108,8 @@ or set to 0 in a subsequent step, this warning can be ignored.")
       "isRandom" = 0
     )
   }
-    
-    ## add random effect correlations  
+
+    ## add random effect correlations
     rand.pars = (RE[RE$Type == "Random effect SD","Param"])
     n_rand = length(rand.pars)
     btw.cov_pars = c()
@@ -123,32 +123,32 @@ or set to 0 in a subsequent step, this warning can be ignored.")
       for(i in 2:n_rand){
         ps = c(ps, rep(rand.pars[i:n_rand], 1))
       }
-      
+
       btw.cov_pars = paste0("r_", qs,".", ps)
-      
-      ## random effect correlations  
+
+      ## random effect correlations
       REcors = data.frame(
         "Model" = "Structural",
         "Level" = "Between",
-        "Type" = rep("Random effect correlation",n_cors), 
+        "Type" = rep("Random effect correlation",n_cors),
         "Param" = btw.cov_pars,
         "Param_Label" = "RE Cor",
         "isRandom" = 0
       )
-    
-    
-    ## combine 
+
+
+    ## combine
     VARmodel = rbind(FE, RE, REcors)
   }
-  
+
   # ADD DEFAULT PRIORS ========================================================
   VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
-  
+
   # MEASUREMENT MODEL =========================================================
   if(!is.null(p)){
     VARmodel = VARmodelMeasurement(VARmodel = VARmodel, q = q, p = p)
   }
 
   return(VARmodel)
-  
+
 }

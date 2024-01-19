@@ -211,43 +211,39 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
       )
     }
     # do the same for innovation covariances
-    all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
-    n_psi <- nrow(all_psis)
+    # all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
+    # n_psi <- nrow(all_psis)
     psi_vec <- c()
-    for (i in 1:n_psi) {
-      psi_vec <- c(
-        psi_vec, paste0(
-          "\\draw [cov", ifelse(
-            # decorate with dot on path if parameter is random
-            all_psis[all_psis$Param == paste0("ln.sigma_", i, i + 1), "isRandom"] == 1,
-            ", postaction = random]", "]"
-          ),
-          "  (delta", i, "t.0)   to node [] {$\\pi_{y_", i, "}$} (delta", i + 1, "t.0);\n"
-        )
+    if (VARmodel$q == 1) {
+      psi_vec <- paste0(
+        "\\draw [cov", ifelse(
+          # decorate with dot on path if parameter is random
+          all_psis[all_psis$Param == "ln.sigma_12", "isRandom"] == 1,
+          ", postaction = random]", "]"
+        ),
+        "  (delta1t.0)   to node [] {$\\pi_{y_{12}}$} (delta2t.0);\n"
       )
+    } else {
+      for (i in 1:(VARmodel$q - 1)) {
+        for (j in (i + 1):VARmodel$q) {
+          psi_vec <- c(
+            psi_vec, paste0(
+              "\\draw [cov", ifelse(
+                # decorate with dot on path if parameter is random
+                all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
+                ", postaction = random]", "]"
+              ),
+              "  (delta", i, "t.0)   to node [] {$\\pi_{y_{", i, j, "}}$} (delta", j, "t.0);\n"
+            )
+          )
+        }
+      }
     }
-
     # paste sigmas in one string
     ln.sigma2 <- paste(sigma_vec, psi_vec, collapse = "")
-
-
-
-    # phi <- paste0(
-    # "\\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
-    # VARmodel$q, "}
-    # \\draw [path", ifelse(
-    #   model[model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"] == 1,
-    #   ", postaction = random]", "]"
-    #   ),
-    #   " (y1wt-1)  to node [] {$\\phi_{y_1}$}  (y1wt);"
-    # )
-
   }
   # paste together
-  within_model <- paste(wm,
-                        phi,
-                        ln.sigma2,
-                        sep = "\n")
+  within_model <- paste(wm, phi, ln.sigma2, sep = "\n")
 
   # paste together
   within_model <- paste(

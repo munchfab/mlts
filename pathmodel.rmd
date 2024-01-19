@@ -105,9 +105,9 @@ knitr::opts_chunk$set(echo = TRUE)
 \draw [path, postaction = random]  (y2wt-1)  to node  []  {$\phi_{y_2}$}  (y2wt);
 
 \draw [var, postaction = random]  (delta1t.120)   to node [] {$\pi_{y_1}$} (delta1t.60);
- \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_1}$} (delta2t.0);
+ \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_{12}}$} (delta2t.0);
 \draw [var, postaction = random]  (delta2t.120)   to node [] {$\pi_{y_2}$} (delta2t.60);
- \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_1}$} (delta2t.0);
+ \draw [cov, postaction = random]  (delta1t.0)   to node [] {$\pi_{y_{12}}$} (delta2t.0);
 
 \end{tikzpicture}
 
