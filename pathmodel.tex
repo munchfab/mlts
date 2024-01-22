@@ -1,58 +1,115 @@
----
-# title: "Template Title"
-# author: "Your Name"
-# date: "The Date"
-output: pdf_document
-header-includes: 
-  - \usepackage{tikz}
-  - \usepackage{pgfplots}
-  - \pgfplotsset{compat=1.18}
-  - \usetikzlibrary{shapes, positioning, calc, decorations.markings, chains, scopes}
-  - \newlength{\Radius}
-  - \setlength\Radius{4em}
-  - \usepackage{amsmath}
-  - \usepackage{caption}
----
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes, positioning, calc, decorations.markings, chains, scopes}
+\newlength{\Radius}
+\setlength\Radius{4em}
+\usepackage{amsmath}
+\usepackage{caption}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+\author{}
+\date{\vspace{-2.5em}}
 
-
+\begin{document}
 
 \begin{figure}
 \centering
 \caption*{Decomposition.}
 \begin{tikzpicture}[
     auto, > = latex, align=center,
-  	latent/.style = {
-  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
-  	},
-  	manifest/.style = {
-  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
-  	},
-  	intercept/.style = {
-  	  regular polygon,regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = \Radius
-  	},
-  	mean/.style = {
-  	  regular polygon, regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = 8mm
-  	},
-  	path/.style = {
-  	  arrows = ->, thick, > = {stealth[]}
-  	},
-  	error/.style = {
-  	  circle, draw = none, fill = none, thick,
-  	  inner sep = 0pt, minimum size = 5mm
-  	},
-  	var/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
-  	},
-  	cov/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 300
-  	},
-  	% style to add a circle in the middle of a path
+    latent/.style = {
+      circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+    },
+    manifest/.style = {
+      rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+    },
+    intercept/.style = {
+      regular polygon,regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = \Radius
+    },
+    mean/.style = {
+      regular polygon, regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = 8mm
+    },
+    path/.style = {
+      arrows = ->, thick, > = {stealth[]}
+    },
+    error/.style = {
+      circle, draw = none, fill = none, thick,
+      inner sep = 0pt, minimum size = 5mm
+    },
+    var/.style = {
+      <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+    },
+    cov/.style = {
+      <->, thick, > = {stealth[]}, bend right = 300
+    },
+    % style to add a circle in the middle of a path
     random/.style = {
       postaction = {
         decorate, decoration = {
@@ -71,7 +128,7 @@ knitr::opts_chunk$set(echo = TRUE)
         }
       }
     },
-  	]
+    ]
 
     % draw decomposition
     \node  [manifest]  (y1t)  {$y_{1,t}$};
@@ -103,34 +160,34 @@ knitr::opts_chunk$set(echo = TRUE)
 \caption*{Within-model.}
 \begin{tikzpicture}[
     auto, > = latex, align=center,
-  	latent/.style = {
-  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
-  	},
-  	manifest/.style = {
-  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
-  	},
-  	intercept/.style = {
-  	  regular polygon,regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = \Radius
-  	},
-  	mean/.style = {
-  	  regular polygon, regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = 8mm
-  	},
-  	path/.style = {
-  	  arrows = ->, thick, > = {stealth[]}
-  	},
-  	error/.style = {
-  	  circle, draw = none, fill = none, thick,
-  	  inner sep = 0pt, minimum size = 5mm
-  	},
-  	var/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
-  	},
-  	cov/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 300
-  	},
-  	% style to add a circle in the middle of a path
+    latent/.style = {
+      circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+    },
+    manifest/.style = {
+      rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+    },
+    intercept/.style = {
+      regular polygon,regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = \Radius
+    },
+    mean/.style = {
+      regular polygon, regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = 8mm
+    },
+    path/.style = {
+      arrows = ->, thick, > = {stealth[]}
+    },
+    error/.style = {
+      circle, draw = none, fill = none, thick,
+      inner sep = 0pt, minimum size = 5mm
+    },
+    var/.style = {
+      <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+    },
+    cov/.style = {
+      <->, thick, > = {stealth[]}, bend right = 300
+    },
+    % style to add a circle in the middle of a path
     random/.style = {
       postaction = {
         decorate, decoration = {
@@ -149,7 +206,7 @@ knitr::opts_chunk$set(echo = TRUE)
         }
       }
     },
-  	]
+    ]
 
     % draw within-level structural model
     \node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
@@ -188,34 +245,34 @@ knitr::opts_chunk$set(echo = TRUE)
 \caption*{Between-model.}
 \begin{tikzpicture}[
     auto, > = latex, align=center,
-  	latent/.style = {
-  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
-  	},
-  	manifest/.style = {
-  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
-  	},
-  	intercept/.style = {
-  	  regular polygon,regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = \Radius
-  	},
-  	mean/.style = {
-  	  regular polygon, regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = 8mm
-  	},
-  	path/.style = {
-  	  arrows = ->, thick, > = {stealth[]}
-  	},
-  	error/.style = {
-  	  circle, draw = none, fill = none, thick,
-  	  inner sep = 0pt, minimum size = 5mm
-  	},
-  	var/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
-  	},
-  	cov/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 300
-  	},
-  	% style to add a circle in the middle of a path
+    latent/.style = {
+      circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+    },
+    manifest/.style = {
+      rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+    },
+    intercept/.style = {
+      regular polygon,regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = \Radius
+    },
+    mean/.style = {
+      regular polygon, regular polygon sides = 3, draw, thick,
+      inner sep = 0pt, minimum size = 8mm
+    },
+    path/.style = {
+      arrows = ->, thick, > = {stealth[]}
+    },
+    error/.style = {
+      circle, draw = none, fill = none, thick,
+      inner sep = 0pt, minimum size = 5mm
+    },
+    var/.style = {
+      <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+    },
+    cov/.style = {
+      <->, thick, > = {stealth[]}, bend right = 300
+    },
+    % style to add a circle in the middle of a path
     random/.style = {
       postaction = {
         decorate, decoration = {
@@ -234,7 +291,7 @@ knitr::opts_chunk$set(echo = TRUE)
         }
       }
     },
-  	]
+    ]
 \node  [latent]  (mu_1)  {$\mu_{1}$};
 \node  [latent]  (mu_2)  [right = 1em of mu_1]  {$\mu_{2}$};
 \node  [latent]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
@@ -284,3 +341,5 @@ knitr::opts_chunk$set(echo = TRUE)
 
 \end{tikzpicture}
 \end{figure}
+
+\end{document}
