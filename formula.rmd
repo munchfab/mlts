@@ -20,7 +20,21 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 \[
-\begin{bmatrix}
+ \begin{bmatrix}
  y_{1, t}^w \\
-y_{2, t}^w \\ \end{bmatrix}
+y_{2, t}^w \\
+y_{3, t}^w \\ 
+\end{bmatrix} = \begin{bmatrix}
+ \phi_{11} & \phi_{12} & \phi_{13} \\ 
+\phi_{21} & \phi_{22} & \phi_{23} \\ 
+\phi_{31} & \phi_{32} & \phi_{33} \\ 
+\end{bmatrix} + \begin{bmatrix}
+ y_{1, t - 1}^w \\
+y_{2, t - 1}^w \\
+y_{3, t - 1}^w \\ 
+\end{bmatrix} + \begin{bmatrix}
+ \zeta_{y,1} \\
+\zeta_{y,2} \\
+\zeta_{y,3} \\ 
+\end{bmatrix} 
 \]

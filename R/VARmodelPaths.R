@@ -462,7 +462,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   )
 }
 
-VARmodelformula <- function (VARmodel, data = NULL, labels = NULL) {
+VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
   # extract model data frame
   model <- VARmodel$VARmodel
@@ -477,8 +477,10 @@ VARmodelformula <- function (VARmodel, data = NULL, labels = NULL) {
                    edit = FALSE)
 
   # latex bmatrix begin and end
-  begin_bmatrix <- "\\[\n\\begin{bmatrix}"
-  end_bmatrix <- "\\end{bmatrix}\n\\]"
+  begin_math <- "\\[\n"
+  end_math <- "\n\\]"
+  begin_bmatrix <- "\\begin{bmatrix}\n"
+  end_bmatrix <- "\n\\end{bmatrix}"
 
   # caption
   wmf_caption <- "Within-model."
@@ -488,15 +490,73 @@ VARmodelformula <- function (VARmodel, data = NULL, labels = NULL) {
   # left hand side
   for (i in 1:VARmodel$q) {
     dvs_vec <- c(dvs_vec, paste0(
-        "y_{", i, ", t}^w \\\\"
+      "y_{", i, ", t}^w \\\\"
       )
     )
   }
   dvs <- paste(dvs_vec, collapse = "\n")
   wmf_lhs <- paste(begin_bmatrix, dvs, end_bmatrix, collapse = "\n")
 
+  # autoregressive / cross-lagged parameter matrix
+
+  # store number of phi-parameters for loops
+  all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
+
+  phi_mat_vec <- c()
+  # loop across phi subscripts
+  for (i in 1:VARmodel$q) {
+    for (j in 1:VARmodel$q) {
+      if (j == VARmodel$q) {
+        phi_mat_vec <- c(phi_mat_vec, paste0(
+          "\\phi_{", i, j, "} \\\\ \n"
+          )
+        )
+      } else if (i == VARmodel$q & j == VARmodel$q) {
+        # line before end of bmatrix must not be broken
+        phi_mat_vec <- c(phi_mat_vec, paste0(
+          "\\phi_{", i, j, "} \\\\"
+          )
+        )
+      } else {
+        phi_mat_vec <- c(phi_mat_vec, paste0(
+          "\\phi_{", i, j, "} & "
+          )
+        )
+      }
+    }
+  }
+  phi_mat <- paste(phi_mat_vec, collapse = "")
+
+  # initiate empty time series vector
+  ts_vec <- c()
+  # time series loop
+  for (i in 1:VARmodel$q) {
+    ts_vec <- c(ts_vec, paste0("y_{", i, ", t - 1}^w \\\\")
+    )
+  }
+  ts <- paste(ts_vec, collapse = "\n")
+
+  # initiate empty innovation vector
+  innos_vec <- c()
+  # innovations loop
+  for (i in 1:VARmodel$q) {
+    innos_vec <- c(innos_vec, paste0("\\zeta_{y,", i, "} \\\\"))
+  }
+  innos <- paste(innos_vec, collapse = "\n")
+
+  wmf_rhs <- paste(
+    begin_bmatrix, phi_mat, end_bmatrix, "+",
+    begin_bmatrix, ts, end_bmatrix, "+",
+    begin_bmatrix, innos, end_bmatrix,
+    collapse = "\n"
+  )
+
+
+  wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, end_math)
+
+
   # paste within_model to markdown
-  cat(wmf_lhs, file = "formula.rmd", append = TRUE)
+  cat(wmf, file = "formula.rmd", append = TRUE)
 
   # render markdown input #####################################################
 
