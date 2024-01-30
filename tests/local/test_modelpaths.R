@@ -50,12 +50,9 @@ VARmodelPaths(VARmodel = VARmodel)
 devtools::load_all()
 # with random effects
 VARmodeldata = VARmodelBuild(q = 2)
-# VARmodeldata = VARmodelConstraints(VARmodel = VARmodeldata, FEis0 = c("phi_11"))
+VARmodeldata = VARmodelConstraints(VARmodel = VARmodeldata, FEis0 = c("phi_11"))
 VARmodel <- list()
 VARmodel <- list(VARmodel = VARmodeldata, q = 2)
-
-
-
 
 VARmodelformula(VARmodel = VARmodel)
 
