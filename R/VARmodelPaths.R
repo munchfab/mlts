@@ -94,7 +94,11 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
     % draw paths
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
-    \\draw  [path]  (mu_1)  to node  []  {}  (y1t);"
+    \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
+
+    % caption
+    \\node  [above = 8em, align = center]  at  (y1t)  {Decomposition.};
+    "
   } else { # for q > 1
     dc <- paste0(
     "
@@ -124,18 +128,20 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
     VARmodel$q, "}
     \\draw  [path]  (mu_\\i)  to node  []  {}  (y\\i t);
-    "
+
+    % caption
+    \\node  [above = 8em, align = center]  at ($(y1t)!0.5!(y", VARmodel$q, "t)$)  {Decomposition.};"
     )
   }
 
   # paste together
   decomposition <- paste(
-    begin_figure,
-    dc_caption,
+    # begin_figure, # not needed
+    # dc_caption,
     begin_tikz,
     dc,
     end_tikz,
-    end_figure,
+    # end_figure,
     sep = "\n"
   )
 
@@ -157,7 +163,11 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     \\node  [latent]  (delta1t)  [right =2.5em of y1wt]  {$\\delta_{{y_1},t}$};
 
     % draw paths
-    \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);"
+    \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);
+
+    % caption
+    \\node  [above = 5em, align = center]  at  ($(y1wt-1)!0.5!(delta1t)$)  {Within-model.};
+    "
     # draw paths conditional on isRandom
     phi <- paste0(
       "\\draw  [path", ifelse(
@@ -184,6 +194,9 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
     \\node  [latent]  (y1wt)  [right =5em of y1wt-1]  {$y_{1,t}^w$};
     \\node  [latent]  (delta1t)  [right =2.5em of y1wt]  {$\\delta_{1,t}$};
+
+    % caption
+    \\node  [above = 5em, align = center]  at  ($(y1wt-1)!0.5!(delta1t)$)  {Within-model.};
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
@@ -295,12 +308,12 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
   # paste together
   within_model <- paste(
-    begin_figure,
-    wm_caption,
+    # begin_figure,
+    # wm_caption,
     begin_tikz,
     within_model,
     end_tikz,
-    end_figure,
+    # end_figure,
     sep = "\n"
   )
 
@@ -311,7 +324,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   # between-model #############################################################
 
   # between-model caption
-  bm_caption <- "\\caption*{Between-model.}"
+  # bm_caption <- "\\caption*{Between-model.}"
 
   # draw nodes for q time-series constructs
   if (VARmodel$q == 1) {
@@ -332,6 +345,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
         model$Param == "ln.sigma2_1" & grepl("Fix", model$Type), "isRandom"
       ] == 0, ", color = gray]", "]"
     ), "  (lnsigma2_1)  [right = 1.5em of phi_11]  {$\\log(\\pi_{1})$};
+
     "
     )
     # draw (co-)variances conditional on existing correlations
@@ -353,6 +367,11 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     # paste together
     covs <- paste(r_mu_1.phi_11, r_mu_1.ln.sigma2_1, r_phi_11.ln.sigma2_1,
                   collapse = "")
+
+    # caption
+    bm_caption <- "
+    % caption
+    \\node  [above = 5em, align = center]  at  ($(mu_1)!0.5!(lnsigma2_1)$)  {Between-model.};"
 
   } else { # for q > 1
     all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
@@ -429,22 +448,28 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
         )
       )
     }
-
     covs <- paste(covs_vec, collapse = "")
+
+    # caption
+    bm_caption <- paste0(
+      "% caption
+      \\node  [above = 5em, align = center]  at  ($(",
+      all_bpars[1, "Param"], ")!0.5!(", all_bpars[nrow(all_bpars), "Param"], ")$)  {Between-model.};"
+    )
 
   }
 
   # paste together
-  between_model <- paste(bm, covs, sep = "\n")
+  between_model <- paste(bm, covs, bm_caption, sep = "\n")
 
   # paste together
   between_model <- paste(
-    begin_figure,
-    bm_caption,
+    # begin_figure,
+    # bm_caption,
     begin_tikz,
     between_model,
     end_tikz,
-    end_figure,
+    # end_figure,
     sep = "\n"
   )
 

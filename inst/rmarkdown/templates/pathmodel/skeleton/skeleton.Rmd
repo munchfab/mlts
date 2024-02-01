@@ -3,6 +3,9 @@
 # author: "Your Name"
 # date: "The Date"
 output: pdf_document
+documentclass: standalone
+classoption:
+  tikz=true
 header-includes: 
   - \usepackage{tikz}
   - \usepackage{pgfplots}
