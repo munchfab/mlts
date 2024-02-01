@@ -12,14 +12,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 
-RcppExport SEXP _rcpp_module_boot_stan_fit4latent_AR_mod();
-RcppExport SEXP _rcpp_module_boot_stan_fit4manifest_AR_mod();
-RcppExport SEXP _rcpp_module_boot_stan_fit4manifest_VAR_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4AR_manifest_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4AR_manifest_intOnly_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4VAR_manifest_mod();
+RcppExport SEXP _rcpp_module_boot_stan_fit4VAR_manifestCovsRand_mod();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_rcpp_module_boot_stan_fit4latent_AR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4latent_AR_mod, 0},
-    {"_rcpp_module_boot_stan_fit4manifest_AR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4manifest_AR_mod, 0},
-    {"_rcpp_module_boot_stan_fit4manifest_VAR_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4manifest_VAR_mod, 0},
+    {"_rcpp_module_boot_stan_fit4AR_manifest_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4AR_manifest_mod, 0},
+    {"_rcpp_module_boot_stan_fit4AR_manifest_intOnly_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4AR_manifest_intOnly_mod, 0},
+    {"_rcpp_module_boot_stan_fit4VAR_manifest_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4VAR_manifest_mod, 0},
+    {"_rcpp_module_boot_stan_fit4VAR_manifestCovsRand_mod", (DL_FUNC) &_rcpp_module_boot_stan_fit4VAR_manifestCovsRand_mod, 0},
     {NULL, NULL, 0}
 };
 
