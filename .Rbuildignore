@@ -1,2 +1,4 @@
 ^dsemr\.Rproj$
 ^\.Rproj\.user$
+rcppExports.cpp
+stanExports_*
