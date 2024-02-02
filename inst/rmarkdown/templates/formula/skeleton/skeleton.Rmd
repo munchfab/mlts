@@ -1,0 +1,15 @@
+---
+# title: "Template Title"
+# author: "Your Name"
+# date: "The Date"
+output: pdf_document
+header-includes: 
+  - \usepackage{amsmath}
+  - \usepackage{caption}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
