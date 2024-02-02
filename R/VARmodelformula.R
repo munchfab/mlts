@@ -18,7 +18,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     file.remove("formula.rmd")
   }
   rmarkdown::draft(file = "formula.rmd",
-                   template = "pathmodel",
+                   template = "formula",
                    package = "dsemr",
                    edit = FALSE)
 

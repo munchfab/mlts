@@ -39,6 +39,7 @@ devtools::load_all()
 
 # with random effects
 VARmodeldata = VARmodelBuild(q = 2)
+VARmodeldata[VARmodeldata$Param == "phi_11" & VARmodeldata$Type == "Fix effect", "isRandom"] <- 0
 VARmodel <- list()
 VARmodel <- list(VARmodel = VARmodeldata, q = 2)
 

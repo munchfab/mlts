@@ -374,7 +374,10 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     \\node  [above = 5em, align = center]  at  ($(mu_1)!0.5!(lnsigma2_1)$)  {Between-model.};"
 
   } else { # for q > 1
-    all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
+    all_bpars <- model[grepl("Fix", model$Type), ]
+    # the next line removes non-random effects completely
+    # all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
+
     # delete this if parameter names with underscore are implemented
     # replaces dots with nothing
     all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
@@ -418,37 +421,84 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
 
     # draw between-model covariances
-    all_covs <- model[grepl("RE Cor", model$Param_Label), ]
-    # replace ln. with ln for easier string subsetting using dot
-    all_covs$Param <- gsub("ln\\.", "ln", gsub(
-      # delete r_ at beginning
-      "r_", "", all_covs$Param
-      )
-    )
-    # this is probably not needed because paths are not labeled
-    all_covs$names <- gsub(
-      # replace underscore digit with latex subscript
-      "()_(\\d+)", "\\1_{\\2}", gsub(
-        # replace lnsigma with log(pi)
-        "(lnsigma2|lnsigma)_(\\d+)", "log(\\\\pi_{\\2})", all_covs
-      )
-    )
-    # split string at dot to generate path start and end
-    all_covs$from <- gsub("(\\w+)\\.(\\w+)", "\\1", all_covs$Param)
-    all_covs$to <- gsub("(\\w+)\\.(\\w+)", "\\2", all_covs$Param)
-    n_covs <- nrow(all_covs)
-    covs_vec <- c()
-    for (i in 1:n_covs) {
-      covs_vec <- c(
-        covs_vec, paste0(
-          "\\draw  [cov]  (",
-          all_covs$from[i],
-          ".north)  to node  []  {}  (",
-          all_covs$to[i], ".north);\n"
+
+    # place coordinates above between-level parameters
+    cov_coordinates_vec <- c()
+    for (i in 1:n_bpars) {
+      cov_coordinates_vec <- c(
+        cov_coordinates_vec, paste0(
+          "\\node  [coordinate]  (c", i, ")  [above = 2em of ",
+          all_bpars[i, "Param"], "]  {};\n"
         )
       )
     }
-    covs <- paste(covs_vec, collapse = "")
+    cov_coordinates <- paste(cov_coordinates_vec, collapse = "")
+
+    # draw arrows from coordinates to between-level parameters
+    cov_arrows_vec <- c()
+    for (i in 1:n_bpars) {
+      # if parameter is not random, don't draw arrow
+      if (all_bpars[i, "isRandom"] == 0) {
+        cov_arrows_vec <- c(
+          cov_arrows_vec, paste0("\n"))
+      } else {
+        cov_arrows_vec <- c(
+          cov_arrows_vec, paste0(
+            "\\draw  [path]  (c", i, ")  to node  []  {}  (",
+            all_bpars[i, "Param"], ");\n"
+          )
+        )
+      }
+    }
+    cov_arrows <- paste(cov_arrows_vec, collapse = "")
+
+    # draw line above arrows to connect for covariance
+    cov_line <- paste0(
+      "\\draw  [thick]  (c",
+      # start line above first random between-level parameter
+      which(all_bpars[, "isRandom"] == 1)[1],
+      ")  --  (c",
+      # end line above last random between-level parameter
+      which(all_bpars[, "isRandom"] == 1)[length(which(all_bpars[, "isRandom"] == 1))],
+      ");\n"
+    )
+
+    covs <- paste(cov_coordinates, cov_arrows, cov_line)
+
+
+    # old stuff
+
+    # all_covs <- model[grepl("RE Cor", model$Param_Label), ]
+    # # replace ln. with ln for easier string subsetting using dot
+    # all_covs$Param <- gsub("ln\\.", "ln", gsub(
+    #   # delete r_ at beginning
+    #   "r_", "", all_covs$Param
+    #   )
+    # )
+    # # this is probably not needed because paths are not labeled
+    # all_covs$names <- gsub(
+    #   # replace underscore digit with latex subscript
+    #   "()_(\\d+)", "\\1_{\\2}", gsub(
+    #     # replace lnsigma with log(pi)
+    #     "(lnsigma2|lnsigma)_(\\d+)", "log(\\\\pi_{\\2})", all_covs$Param
+    #   )
+    # )
+    # # split string at dot to generate path start and end
+    # all_covs$from <- gsub("(\\w+)\\.(\\w+)", "\\1", all_covs$Param)
+    # all_covs$to <- gsub("(\\w+)\\.(\\w+)", "\\2", all_covs$Param)
+    # n_covs <- nrow(all_covs)
+    # covs_vec <- c()
+    # for (i in 1:n_covs) {
+    #   covs_vec <- c(
+    #     covs_vec, paste0(
+    #       "\\draw  [cov]  (",
+    #       all_covs$from[i],
+    #       ".north)  to node  []  {}  (",
+    #       all_covs$to[i], ".north);\n"
+    #     )
+    #   )
+    # }
+    # covs <- paste(covs_vec, collapse = "")
 
     # caption
     bm_caption <- paste0(

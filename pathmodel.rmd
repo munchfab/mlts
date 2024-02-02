@@ -22,7 +22,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-<<<<<<< HEAD
 \begin{tikzpicture}[
     auto, > = latex, align=center,
   	latent/.style = {
@@ -169,7 +168,7 @@ knitr::opts_chunk$set(echo = TRUE)
     \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
     \draw  [path]  (delta\i t)  to node  []  {}  (y\i wt);
     
-\draw  [path, postaction = random]  (y1wt-1)  to node  []  {$\phi_{11}$}  (y1wt);
+\draw  [path]  (y1wt-1)  to node  []  {$\phi_{11}$}  (y1wt);
 \draw  [path, postaction = random_cl]  (y1wt-1)  to node  [pos = .2]  {$\phi_{12}$}  (y2wt);
 \draw  [path, postaction = random_cl]  (y2wt-1)  to node  [pos = .2]  {$\phi_{21}$}  (y1wt);
 \draw  [path, postaction = random]  (y2wt-1)  to node  []  {$\phi_{22}$}  (y2wt);
@@ -230,7 +229,7 @@ knitr::opts_chunk$set(echo = TRUE)
   	]
 \node  [latent]  (mu_1)  {$\mu_{1}$};
 \node  [latent]  (mu_2)  [right = 1em of mu_1]  {$\mu_{2}$};
-\node  [latent]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
+\node  [latent, color = gray]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
 \node  [latent]  (phi_12)  [right = 1em of phi_11]  {$\phi_{12}$};
 \node  [latent]  (phi_21)  [right = 1em of phi_12]  {$\phi_{21}$};
 \node  [latent]  (phi_22)  [right = 1em of phi_21]  {$\phi_{22}$};
@@ -238,30 +237,26 @@ knitr::opts_chunk$set(echo = TRUE)
 \node  [latent]  (lnsigma2_2)  [right = 1em of lnsigma2_1]  {$\log(\pi_{2})$};
 \node  [latent]  (lnsigma_12)  [right = 1em of lnsigma2_2]  {$\log(\pi_{12})$};
 
-\node  [coordinate]  (c1)  [above = 2em of mu_1]  {} ;
-\node  [coordinate]  (c2)  [above = 2em of mu_2]  {} ;
-\node  [coordinate]  (c3)  [above = 2em of phi_11]  {} ;
-\node  [coordinate]  (c4)  [above = 2em of phi_12]  {} ;
-\node  [coordinate]  (c5)  [above = 2em of phi_21]  {} ;
-\node  [coordinate]  (c6)  [above = 2em of phi_22]  {} ;
-\node  [coordinate]  (c7)  [above = 2em of lnsigma2_1]  {} ;
-\node  [coordinate]  (c8)  [above = 2em of lnsigma2_2]  {} ;
-\node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {} ;
+\node  [coordinate]  (c1)  [above = 2em of mu_1]  {};
+\node  [coordinate]  (c2)  [above = 2em of mu_2]  {};
+\node  [coordinate]  (c3)  [above = 2em of phi_11]  {};
+\node  [coordinate]  (c4)  [above = 2em of phi_12]  {};
+\node  [coordinate]  (c5)  [above = 2em of phi_21]  {};
+\node  [coordinate]  (c6)  [above = 2em of phi_22]  {};
+\node  [coordinate]  (c7)  [above = 2em of lnsigma2_1]  {};
+\node  [coordinate]  (c8)  [above = 2em of lnsigma2_2]  {};
+\node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {};
+ \draw  [path]  (c1)  to node  []  {}  (mu_1);
+\draw  [path]  (c2)  to node  []  {}  (mu_2);
 
-\draw  [thick]  (c1) -- (c9) {};
-\draw  [path]  (c1.north) to node [] {} (mu_1);
-\draw  [path]  (c2.north) to node [] {} (mu_2);
-\draw  [path]  (c3.north) to node [] {} (phi_11);
-\draw  [path]  (c4.north) to node [] {} (phi_12);
-\draw  [path]  (c5.north) to node [] {} (phi_21);
-\draw  [path]  (c6.north) to node [] {} (phi_22);
-\draw  [path]  (c7.north) to node [] {} (lnsigma2_1);
-\draw  [path]  (c8.north) to node [] {} (lnsigma2_2);
-\draw  [path]  (c9.north) to node [] {} (lnsigma_12);
-
+\draw  [path]  (c4)  to node  []  {}  (phi_12);
+\draw  [path]  (c5)  to node  []  {}  (phi_21);
+\draw  [path]  (c6)  to node  []  {}  (phi_22);
+\draw  [path]  (c7)  to node  []  {}  (lnsigma2_1);
+\draw  [path]  (c8)  to node  []  {}  (lnsigma2_2);
+\draw  [path]  (c9)  to node  []  {}  (lnsigma_12);
+ \draw  [thick]  (c1)  --  (c9);
 
 % caption
       \node  [above = 5em, align = center]  at  ($(mu_1)!0.5!(lnsigma_12)$)  {Between-model.};
 \end{tikzpicture}
-=======
->>>>>>> c36a19e6c66164773958f34b324275cd32969013
