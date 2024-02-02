@@ -38,9 +38,9 @@ VARmodel <- list(VARmodel = VARmodeldata, q = 2)
 devtools::load_all()
 
 # with random effects
-VARmodeldata = VARmodelBuild(q = 3)
+VARmodeldata = VARmodelBuild(q = 2)
 VARmodel <- list()
-VARmodel <- list(VARmodel = VARmodeldata, q = 3)
+VARmodel <- list(VARmodel = VARmodeldata, q = 2)
 
 VARmodelPaths(VARmodel = VARmodel)
 

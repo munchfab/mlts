@@ -238,42 +238,27 @@ knitr::opts_chunk$set(echo = TRUE)
 \node  [latent]  (lnsigma2_2)  [right = 1em of lnsigma2_1]  {$\log(\pi_{2})$};
 \node  [latent]  (lnsigma_12)  [right = 1em of lnsigma2_2]  {$\log(\pi_{12})$};
 
-\draw  [cov]  (mu_1.north)  to node  []  {}  (mu_2.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (phi_11.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (phi_12.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (phi_21.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (phi_22.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (mu_1.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (phi_11.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (phi_12.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (phi_21.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (phi_22.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (mu_2.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (phi_12.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (phi_21.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (phi_22.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (phi_11.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (phi_12.north)  to node  []  {}  (phi_21.north);
-\draw  [cov]  (phi_12.north)  to node  []  {}  (phi_22.north);
-\draw  [cov]  (phi_12.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (phi_12.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (phi_12.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (phi_21.north)  to node  []  {}  (phi_22.north);
-\draw  [cov]  (phi_21.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (phi_21.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (phi_21.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (phi_22.north)  to node  []  {}  (lnsigma2_1.north);
-\draw  [cov]  (phi_22.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (phi_22.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (lnsigma2_1.north)  to node  []  {}  (lnsigma2_2.north);
-\draw  [cov]  (lnsigma2_1.north)  to node  []  {}  (lnsigma_12.north);
-\draw  [cov]  (lnsigma2_2.north)  to node  []  {}  (lnsigma_12.north);
+\node  [coordinate]  (c1)  [above = 2em of mu_1]  {} ;
+\node  [coordinate]  (c2)  [above = 2em of mu_2]  {} ;
+\node  [coordinate]  (c3)  [above = 2em of phi_11]  {} ;
+\node  [coordinate]  (c4)  [above = 2em of phi_12]  {} ;
+\node  [coordinate]  (c5)  [above = 2em of phi_21]  {} ;
+\node  [coordinate]  (c6)  [above = 2em of phi_22]  {} ;
+\node  [coordinate]  (c7)  [above = 2em of lnsigma2_1]  {} ;
+\node  [coordinate]  (c8)  [above = 2em of lnsigma2_2]  {} ;
+\node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {} ;
+
+\draw  [thick]  (c1) -- (c9) {};
+\draw  [path]  (c1.north) to node [] {} (mu_1);
+\draw  [path]  (c2.north) to node [] {} (mu_2);
+\draw  [path]  (c3.north) to node [] {} (phi_11);
+\draw  [path]  (c4.north) to node [] {} (phi_12);
+\draw  [path]  (c5.north) to node [] {} (phi_21);
+\draw  [path]  (c6.north) to node [] {} (phi_22);
+\draw  [path]  (c7.north) to node [] {} (lnsigma2_1);
+\draw  [path]  (c8.north) to node [] {} (lnsigma2_2);
+\draw  [path]  (c9.north) to node [] {} (lnsigma_12);
+
 
 % caption
       \node  [above = 5em, align = center]  at  ($(mu_1)!0.5!(lnsigma_12)$)  {Between-model.};
