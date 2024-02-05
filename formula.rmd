@@ -4,14 +4,9 @@
 # date: "The Date"
 output: pdf_document
 header-includes: 
-  - \usepackage{tikz}
-  - \usepackage{pgfplots}
-  - \pgfplotsset{compat=1.18}
-  - \usetikzlibrary{shapes, positioning, calc, decorations.markings, chains, scopes}
-  - \newlength{\Radius}
-  - \setlength\Radius{4em}
   - \usepackage{amsmath}
   - \usepackage{caption}
+  - \thispagestyle{empty}
 ---
 
 ```{r setup, include=FALSE}
@@ -23,10 +18,11 @@ knitr::opts_chunk$set(echo = TRUE)
 \begin{center}
  Within-model. 
 \end{center}
- \[ 
+ \[
+\begin{aligned} 
 \begin{bmatrix}
  y_{1, t}^w \\
-y_{2, t}^w \\ \end{bmatrix} = 
+y_{2, t}^w \\ \end{bmatrix} &= 
 \begin{bmatrix}
  0 &\phi_{12} \\ 
 \phi_{21} & \phi_{22} \\ 
@@ -35,13 +31,17 @@ y_{2, t}^w \\ \end{bmatrix} =
  y_{1, t - 1}^w \\
 y_{2, t - 1}^w \\ \end{bmatrix} + 
 \begin{bmatrix}
- \zeta_{y,1} \\
-\zeta_{y,2} \\ \end{bmatrix} 
+ \zeta_{y,1, t} \\
+\zeta_{y,2, t} \\ \end{bmatrix} ,\\ 
+ & \text{with}~
+  \zeta_{y, i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Psi}) 
+\end{aligned}
 \]
 \begin{center}
  Between-model. 
 \end{center}
- \[ 
+ \[
+\begin{aligned} 
 \begin{bmatrix}
  \mu_{1,i}\\
 \mu_{2,i}\\
@@ -50,7 +50,7 @@ y_{2, t - 1}^w \\ \end{bmatrix} +
 \phi_{22,i}\\
 \log(\pi_{1,i})\\
 \log(\pi_{2,i})\\
-\log(\pi_{12,i})\\ \end{bmatrix} = 
+\log(\pi_{12,i})\\ \end{bmatrix} &= 
 \begin{bmatrix}
  \gamma_{\mu_{1}}\\
 \gamma_{\mu_{2}}\\
@@ -68,5 +68,8 @@ y_{2, t - 1}^w \\ \end{bmatrix} +
 \upsilon_{\phi_{22},i}\\
 \upsilon_{\log(\pi_{1}),i}\\
 \upsilon_{\log(\pi_{2}),i}\\
-\upsilon_{\log(\pi_{12}),i}\\ \end{bmatrix} 
+\upsilon_{\log(\pi_{12}),i}\\ \end{bmatrix} ,\\ 
+ & \text{with}~
+  \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega}) 
+\end{aligned}
 \]

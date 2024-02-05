@@ -6,6 +6,7 @@ output: pdf_document
 header-includes: 
   - \usepackage{amsmath}
   - \usepackage{caption}
+  - \thispagestyle{empty}
 ---
 
 ```{r setup, include=FALSE}

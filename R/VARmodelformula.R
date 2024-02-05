@@ -26,8 +26,8 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   begin_center <- "\n\\begin{center}\n"
   end_center <- "\n\\end{center}\n"
   # latex math begin and end
-  begin_math <- "\\["
-  end_math <- "\n\\]"
+  begin_math <- "\\[\n\\begin{aligned}"
+  end_math <- "\n\\end{aligned}\n\\]"
   # latex bmatrix begin and end
   begin_bmatrix <- "\n\\begin{bmatrix}\n"
   end_bmatrix <- "\\end{bmatrix}"
@@ -94,7 +94,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   innos_vec <- c()
   # innovations loop
   for (i in 1:VARmodel$q) {
-    innos_vec <- c(innos_vec, paste0("\\zeta_{y,", i, "} \\\\"))
+    innos_vec <- c(innos_vec, paste0("\\zeta_{y,", i, ", t} \\\\"))
   }
   innos <- paste(innos_vec, collapse = "\n")
 
@@ -106,8 +106,11 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     collapse = "\n"
   )
 
+  inno_dist <- ",\\\\ \n & \\text{with}~
+  \\zeta_{y, i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi})"
+
   # within-model formula
-  wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, end_math)
+  wmf <- paste(begin_math, wmf_lhs, "&=", wmf_rhs, inno_dist, end_math)
 
   # with caption
   within_model <- paste(begin_center, wmf_caption, end_center, wmf)
@@ -177,8 +180,11 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     collapse = "\n"
   )
 
+  ranef_dist <- ",\\\\ \n & \\text{with}~
+  \\upsilon_{i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Omega})"
+
   # between-model formula
-  bmf <- paste(begin_math, bmf_lhs, "=", bmf_rhs, end_math)
+  bmf <- paste(begin_math, bmf_lhs, "&=", bmf_rhs, ranef_dist, end_math)
 
   # with caption
   between_model <- paste(begin_center, bmf_caption, end_center, bmf)
