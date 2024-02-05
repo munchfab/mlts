@@ -93,9 +93,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
     \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
     \draw  [path]  (mu_\i)  to node  []  {}  (y\i t);
-
-    % caption
-    \node  [above = 8em, align = center]  at ($(y1t)!0.5!(y2t)$)  {Decomposition.};
+% caption
+  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};
 \end{tikzpicture}\begin{tikzpicture}[
     auto, > = latex, align=center,
   	latent/.style = {
@@ -151,9 +150,6 @@ knitr::opts_chunk$set(echo = TRUE)
     \node  [latent]  (y1wt)  [right =5em of y1wt-1]  {$y_{1,t}^w$};
     \node  [latent]  (delta1t)  [right =2.5em of y1wt]  {$\delta_{1,t}$};
 
-    % caption
-    \node  [above = 5em, align = center]  at  ($(y1wt-1)!0.5!(delta1t)$)  {Within-model.};
-
     % draw nodes
     \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
     \node  [latent]  (y\i wt-1)  [below = 2.5em of y\lasti wt-1]  {$y_{\i ,t-1}^w$};
@@ -178,6 +174,8 @@ knitr::opts_chunk$set(echo = TRUE)
 \draw  [var, postaction = random]  (delta2t.120)  to node  []  {$\pi_{2}$}  (delta2t.60);
  \draw  [cov, postaction = random]  (delta1t.0)  to node  []  {$\pi_{12}$}  (delta2t.0);
 
+% caption
+  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};
 \end{tikzpicture}\begin{tikzpicture}[
     auto, > = latex, align=center,
   	latent/.style = {
@@ -258,5 +256,5 @@ knitr::opts_chunk$set(echo = TRUE)
  \draw  [thick]  (c1)  --  (c9);
 
 % caption
-      \node  [above = 5em, align = center]  at  ($(mu_1)!0.5!(lnsigma_12)$)  {Between-model.};
+  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};
 \end{tikzpicture}
