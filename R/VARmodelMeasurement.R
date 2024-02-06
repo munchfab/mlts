@@ -4,6 +4,10 @@
 #' @param q integer. The number of time-varying constructs.
 #' @param p integer. A vector of length `q` with the number of manifest
 #' indicators per construct.
+#' @param btw.factor Logical. If `TRUE` (the default), a common between-level factor
+#' across is modeled across all indicator variables. If `FALSE`, instead of a between-level
+#' factor, indicator mean levels will be included as individual (random) effects stemming
+#' from a joint multivariate normal distribution.
 #'
 #' @return An object of class `data.frame`.
 #' @export
@@ -20,6 +24,10 @@ VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = T){
     message("VARmodel already contains a measurement model specification which will be overwritten.")
     VARmodel = VARmodel[VARmodel$Model != "Measurement",]
     }
+
+
+
+
 
   # for each of the q constructs depending on the number of indicators:
   mm.pars = list()
