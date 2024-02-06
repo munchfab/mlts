@@ -10,8 +10,12 @@
 #' @examples
 VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
+
+  # extrat model infos
+  infos <- VARmodelEval(VARmodel)
+
   # extract model data frame
-  model <- VARmodel$VARmodel
+  model <- VARmodel
 
   # create empty markdown file, delete if already existing
   if (file.exists("pathmodel.rmd")) {
@@ -86,7 +90,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   dc_caption <- "% caption
   \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};"
 
-  if (VARmodel$q == 1) {
+  if (infos$q == 1) {
     dc <- "
     % draw decomposition
     \\node  [manifest] (y1t)  {$y_{1,t}$};
@@ -107,24 +111,24 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-    VARmodel$q, "}
+    infos$q, "}
     \\node  [manifest]  (y\\i t)  [right = 2.5em of y\\lasti t]  {$y_{\\i,t}$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-    VARmodel$q, "}
+    infos$q, "}
     \\node  [latent]  (y\\i wt)  [above = 2.5em of y\\i t]  {$y_{\\i,t}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ...,",
-    VARmodel$q, "}
+    infos$q, "}
     \\node  [latent]  (mu_\\i)  [below = 2.5em of y\\i t]  {$\\mu_{\\i}$};
 
     % draw paths
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
-    VARmodel$q, "}
+    infos$q, "}
     \\draw  [path]  (y\\i wt)  to node  []  {}  (y\\i t);
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
-    VARmodel$q, "}
+    infos$q, "}
     \\draw  [path]  (mu_\\i)  to node  []  {}  (y\\i t);"
     )
   }
@@ -152,7 +156,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};"
 
   # draw nodes for q time-series constructs
-  if (VARmodel$q == 1) {
+  if (infos$q == 1) {
     wm <- "
     % draw within-level structural model
     \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
@@ -191,20 +195,20 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-      VARmodel$q, "}
+      infos$q, "}
     \\node  [latent]  (y\\i wt-1)  [below = 2.5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-    VARmodel$q, "}
+    infos$q, "}
     \\node  [latent]  (y\\i wt)  [below = 2.5em of y\\lasti wt]  {$y_{\\i ,t}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-    VARmodel$q, "}
+    infos$q, "}
     \\node  [latent]  (delta\\i t)  [below = 2.5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
 
     % draw paths from residuals to yiwt
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
-    VARmodel$q, "}
+    infos$q, "}
     \\draw  [path]  (delta\\i t)  to node  []  {}  (y\\i wt);
     ")
     # store number of phi-parameters for loops
@@ -266,7 +270,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
     all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
     # n_psi <- nrow(all_psis)
     psi_vec <- c()
-    if (VARmodel$q == 1) {
+    if (infos$q == 1) {
       psi_vec <- paste0(
         "\\draw  [cov", ifelse(
           # decorate with dot on path if parameter is random
@@ -276,8 +280,8 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
         "  (delta1t.0)  to node  []  {$\\pi_{12}$}  (delta2t.0);\n"
       )
     } else {
-      for (i in 1:(VARmodel$q - 1)) {
-        for (j in (i + 1):VARmodel$q) {
+      for (i in 1:(infos$q - 1)) {
+        for (j in (i + 1):infos$q) {
           psi_vec <- c(
             psi_vec, paste0(
               "\\draw  [cov", ifelse(
@@ -320,7 +324,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};"
 
   # draw nodes for q time-series constructs
-  if (VARmodel$q == 1) {
+  if (infos$q == 1) {
     bm <- paste0("
     % draw between-level structural model
     \\node  [latent", ifelse(
