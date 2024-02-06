@@ -27,7 +27,8 @@ VARfit(
 \arguments{
 \item{VARmodel}{data.frame. Output of VARmodel-Functions.}
 
-\item{data}{data.frame. Data input.}
+\item{data}{An object of class data.frame (or one that can be coerced to that
+class) containing data of all variables used in the model.}
 
 \item{ts.ind}{data.frame. Data input.}
 

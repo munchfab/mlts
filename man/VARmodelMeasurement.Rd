@@ -2,9 +2,9 @@
 % Please edit documentation in R/VARmodelMeasurement.R
 \name{VARmodelMeasurement}
 \alias{VARmodelMeasurement}
-\title{Title}
+\title{Add measurement model structure to a \code{VARmodel}-object}
 \usage{
-VARmodelMeasurement(VARmodel, q, p, btw.factor = T)
+VARmodelMeasurement(VARmodel, q, p, btw.factor = T, btw.model = NULL)
 }
 \arguments{
 \item{VARmodel}{data.frame. Output of VARmodel-Functions.}
@@ -18,10 +18,24 @@ indicators per construct.}
 across is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
 factor, indicator mean levels will be included as individual (random) effects stemming
 from a joint multivariate normal distribution.}
+
+\item{btw.model}{A list to indicate for which manifest indicator variables a common
+between-level factor should be modeled (see Details for detailed instructions). At this point restricted to one factor per latent construct.}
 }
 \value{
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Add (or replace) a measurement model of an existing \code{VARmodel}-object. As default
+option, a multiple-indicator model will be included assuming a common between-level factor.
+}
+\details{
+Update a \code{VARmodel}-object.
+}
+\examples{
+# build a manifest two-level AR(1) model
+VARmodel <- VARmodelBuild(q = 1)
+
+# add measurement model using three indicators
+VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 }

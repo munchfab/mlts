@@ -1,7 +1,8 @@
 #' Title
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
-#' @param data data.frame. Data input.
+#' @param data An object of class data.frame (or one that can be coerced to that
+#' class) containing data of all variables used in the model.
 #' @param ts.ind data.frame. Data input.
 #' @param covariates data.frame. Data input.
 #' @param outcomes data.frame. Data input.

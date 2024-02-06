@@ -1,4 +1,7 @@
-#' Title
+#' Add measurement model structure to a `VARmodel`-object
+#'
+#' Add (or replace) a measurement model of an existing `VARmodel`-object. As default
+#' option, a multiple-indicator model will be included assuming a common between-level factor.
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param q integer. The number of time-varying constructs.
@@ -8,11 +11,19 @@
 #' across is modeled across all indicator variables. If `FALSE`, instead of a between-level
 #' factor, indicator mean levels will be included as individual (random) effects stemming
 #' from a joint multivariate normal distribution.
-#'
+#' @param btw.model A list to indicate for which manifest indicator variables a common
+#' between-level factor should be modeled (see Details for detailed instructions). At this point restricted to one factor per latent construct.
 #' @return An object of class `data.frame`.
+#' @details Update a `VARmodel`-object.
+#' @examples
+#' # build a manifest two-level AR(1) model
+#' VARmodel <- VARmodelBuild(q = 1)
+#'
+#' # add measurement model using three indicators
+#' VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 #' @export
 #'
-VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = T){
+VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = T, btw.model = NULL){
 
 
   if(length(p) == 1){
