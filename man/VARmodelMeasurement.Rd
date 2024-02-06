@@ -13,6 +13,11 @@ VARmodelMeasurement(VARmodel, q, p, btw.factor = T)
 
 \item{p}{integer. A vector of length \code{q} with the number of manifest
 indicators per construct.}
+
+\item{btw.factor}{Logical. If \code{TRUE} (the default), a common between-level factor
+across is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
+factor, indicator mean levels will be included as individual (random) effects stemming
+from a joint multivariate normal distribution.}
 }
 \value{
 An object of class \code{data.frame}.
