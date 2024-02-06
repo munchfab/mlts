@@ -23,7 +23,7 @@
 #' VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 #' @export
 #'
-VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = T, btw.model = NULL){
+VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL){
 
 
   if(length(p) == 1){

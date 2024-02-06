@@ -2,7 +2,7 @@
 % Please edit documentation in R/ARprepare.R
 \name{ARprepare}
 \alias{ARprepare}
-\title{Title}
+\title{Prepare list object of data to pass to \code{VARfit}-function for two-level AR(1) models}
 \usage{
 ARprepare(
   VARmodel,
@@ -24,5 +24,5 @@ ARprepare(
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Prepare list object of data to pass to \code{VARfit}-function for two-level AR(1) models
 }

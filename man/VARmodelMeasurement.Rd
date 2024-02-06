@@ -4,7 +4,7 @@
 \alias{VARmodelMeasurement}
 \title{Add measurement model structure to a \code{VARmodel}-object}
 \usage{
-VARmodelMeasurement(VARmodel, q, p, btw.factor = T, btw.model = NULL)
+VARmodelMeasurement(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL)
 }
 \arguments{
 \item{VARmodel}{data.frame. Output of VARmodel-Functions.}

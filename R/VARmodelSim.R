@@ -10,7 +10,7 @@
 VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
                         btw.var.sds = NULL){
 
-  if(is.null(seed)){
+  if(!is.null(seed)){
     set.seed(seed)
   }
 
@@ -96,14 +96,15 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   # sample covariates and get expected values of individual parameters
   bmu = matrix(data = NA, nrow = N, ncol = infos$n_random)
   W = matrix(data = NA, nrow = N, ncol = infos$n_cov)
+  cov_name = c()
   W[,1] = 1 # intercept
   if(infos$n_cov>1){
     for(i in 2:infos$n_cov){
-      cov_name = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
-      W[1:N,i] = rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name])
-      colnames(W)[i] = cov_name
+      cov_name[i-1] = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
+      W[1:N,i] = rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
     }
   }
+  colnames(W) <- c("Intercept", cov_name)
 
   for(i in 1:infos$n_random){
     # get expected individual parameters
@@ -227,7 +228,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
         Z_pos = unique(na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
         btw.Z[1:N,Z_pos] = rnorm(n = N, mean = 0,
                                  sd = btw.var.sds[which(names(btw.var.sds) == Z_name)])
-        colnames(btw.Z)[i] = Z_name
+    #    colnames(btw.Z)[i] = Z_name
       }
     } else {
       btw.Z = btw_random
@@ -249,7 +250,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     "ID" = 1:N,
     outs
   )
-  colnames(OUT)[2:(infos$n_out+1)] = infos$out_var
+    colnames(OUT)[2:(infos$n_out+1)] = infos$out_var
   }
 
 
@@ -267,7 +268,8 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
  if(infos$n_out>0){
    data = merge(x = data, y = OUT, by = "ID")
    if(infos$n_z>0){
-     btw.Z = cbind("ID" = 1:N, bzw.Z)
+     colnames(btw.Z) = c(infos$re_pars$Param, infos$n_z_vars)
+     btw.Z = cbind("ID" = 1:N, btw.Z)
      data = merge(x = data, y = btw.Z[,c("ID",infos$n_z_vars)])
    }
  }

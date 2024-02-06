@@ -81,7 +81,7 @@ VARmodelEval <- function(VARmodel){
 
     n_cov = 1 + length(re_preds_unique)                  # add 1 for intercepts
     n_cov_bs = nrow(RE.PREDS)
-    n_cov_mat = matrix(unlist(RE.PREDS[,c("re_no")]),
+    n_cov_mat = matrix(unlist(RE.PREDS[,c("pred_no", "re_no")]),
                         ncol = 2, nrow = n_cov_bs)
     n_cov_mat[,1] = n_cov_mat[,1] + 1    # shift by 1 for intercepts
 
@@ -222,7 +222,7 @@ VARmodelEval <- function(VARmodel){
     n_z, n_z_vars,
 
     # priors
-    prior_gamma, prior_sd_R, prior_sigma, prior_b_re_pred,
+    prior_gamma, prior_sd_R, prior_LKJ, prior_sigma, prior_b_re_pred,
     prior_b_out, prior_alpha_out, prior_sigma_out
     )
 

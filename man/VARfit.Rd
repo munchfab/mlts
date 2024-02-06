@@ -7,7 +7,6 @@
 VARfit(
   VARmodel,
   data = NULL,
-  simData = NULL,
   ts.ind,
   covariates = NULL,
   outcomes = NULL,
