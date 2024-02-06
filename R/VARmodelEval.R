@@ -9,10 +9,13 @@ VARmodelEval <- function(VARmodel){
 
   # read features of specified VARmodel
 
-  # 1. create additional columns
+  # create additional columns
   ars = paste0("phi_", 1:9, 1:9)
   VARmodel$isAR = ifelse(VARmodel$Param %in% ars,1,0)
 
+  # check if measurement model is entered
+  isLatent = nrow(VARmodel[VARmodel$Model == "Measurement",])
+  isLatent = ifelse(isLatent>0, TRUE, FALSE)
 
   ## Dynamic model
   n_mus = sum(VARmodel$Param_Label == "Trait" & VARmodel$Type=="Fix effect")
@@ -39,6 +42,9 @@ VARmodelEval <- function(VARmodel){
       Dpos2[i] = Dpos2[i-1] +N_pred[i]
     }
   }
+
+  # number of (latent) constructs
+  q = as.integer(max(fix_pars_dyn$Dout))
 
   # which innovation variances as random effects?
   innos_rand = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "isRandom"]
@@ -192,6 +198,7 @@ VARmodelEval <- function(VARmodel){
   # create list to return
   VARmodelinfos = rstan::nlist(
     VARmodelext,
+    q,
     n_mus,
     n_pars,
     n_random,
