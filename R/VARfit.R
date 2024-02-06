@@ -2,21 +2,43 @@
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param data data.frame. Data input.
+#' @param ts.ind data.frame. Data input.
+#' @param covariates data.frame. Data input.
+#' @param outcomes data.frame. Data input.
+#' @param outcome.pred.btw data.frame. Data input.
+#' @param center.covs data.frame. Data input.
+#' @param std.outcome data.frame. Data input.
+#' @param iter A positive integer specifying the number of iterations for each
+#' chain (including 50% used as warmup). The default is 500.
+#' @param chains A positive integer specifying the number of Markov chains. The default is 2.
+#' @param cores The number of cores to use when executing the Markov chains in parallel. The default is 2 (see \code{\link[rstan]{stan}}).
+#' @param monitor.person.pars data.frame. Data input.
+#' @param std.outcome data.frame. Data input.
 #' @param printMessage logical. Print messages based on defined inputs (default = TRUE).
+#' @param printWarning logical. Print messages based on defined inputs (default = TRUE).
 #' @param fit.model logical. Set to FALSE to avoid fitting the model which may be
 #' helpful to inspect prepared data used for model estimation (default = T).
-#' @param ... Additional arguments passed to rstan `sampling`-function.
+#' @param ... Additional arguments passed to \code{\link[rstan]{sampling}}.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARfit <- function(VARmodel, data =NULL, simData = NULL,
-                   printMessage = T, printWarning = T,
-                   ts.ind, covariates = NULL, outcomes = NULL,
+VARfit <- function(VARmodel,
+                   data =NULL,
+                   simData = NULL,
+                   ts.ind,
+                   covariates = NULL,
+                   outcomes = NULL,
                    outcome.pred.btw = NULL,
-                   center.covs = T, std.outcome = T, iter = 500, chains = 2, cores = 2,
+                   center.covs = T,
+                   std.outcome = T,
+                   iter = 500,
+                   chains = 2,
+                   cores = 2,
                    monitor.person.pars = F,
                    fit.model = T,
+                   printMessage = T,
+                   printWarning = T,
                    ...
 ){
 
@@ -26,17 +48,15 @@ VARfit <- function(VARmodel, data =NULL, simData = NULL,
   par_labels <- VARmodelParLabels(VARmodel)
 
 
-  # for simulated data
-  if(!is.null(simData)){
+  # check if data is class "VARsimData"
+  if(class(data) == "VARsimData"){
+    message("Simulated data provided: True scores used in the simulation will
+            added to the returned object.")
 
-    if(!is.null(data)){
-      message("Simulated data provided: input via the data argument is ignored.")
-    }
-
-    data <- simData$data # overwrite data input
-    par_labels <- merge(x = par_labels, simData$VARmodel[,c("Param", "true.val")],
+    par_labels <- merge(x = par_labels, data$VARmodel[,c("Param", "true.val")],
                        by = "Param", sort = F)
-  }
+    data = data$data
+    }
 
   # Some initial checks:
   # avoiding specification of "covariates"- and "outcomes"-arguments,

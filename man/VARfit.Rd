@@ -8,8 +8,6 @@ VARfit(
   VARmodel,
   data = NULL,
   simData = NULL,
-  printMessage = T,
-  printWarning = T,
   ts.ind,
   covariates = NULL,
   outcomes = NULL,
@@ -21,6 +19,8 @@ VARfit(
   cores = 2,
   monitor.person.pars = F,
   fit.model = T,
+  printMessage = T,
+  printWarning = T,
   ...
 )
 }
@@ -29,12 +29,35 @@ VARfit(
 
 \item{data}{data.frame. Data input.}
 
-\item{printMessage}{logical. Print messages based on defined inputs (default = TRUE).}
+\item{ts.ind}{data.frame. Data input.}
+
+\item{covariates}{data.frame. Data input.}
+
+\item{outcomes}{data.frame. Data input.}
+
+\item{outcome.pred.btw}{data.frame. Data input.}
+
+\item{center.covs}{data.frame. Data input.}
+
+\item{std.outcome}{data.frame. Data input.}
+
+\item{iter}{A positive integer specifying the number of iterations for each
+chain (including 50\% used as warmup). The default is 500.}
+
+\item{chains}{A positive integer specifying the number of Markov chains. The default is 2.}
+
+\item{cores}{The number of cores to use when executing the Markov chains in parallel. The default is 2 (see \code{\link[rstan]{stan}}).}
+
+\item{monitor.person.pars}{data.frame. Data input.}
 
 \item{fit.model}{logical. Set to FALSE to avoid fitting the model which may be
 helpful to inspect prepared data used for model estimation (default = T).}
 
-\item{...}{Additional arguments passed to rstan \code{sampling}-function.}
+\item{printMessage}{logical. Print messages based on defined inputs (default = TRUE).}
+
+\item{printWarning}{logical. Print messages based on defined inputs (default = TRUE).}
+
+\item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }
 \value{
 An object of class \code{data.frame}.

@@ -278,6 +278,11 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
    data = data,
    RE.pars = btw_random
  )
+
+ # add class
+ class(VARsimData) <- "VARsimData"
+
+
  return(VARsimData)
 
 }
