@@ -3,12 +3,13 @@
 #' @param VARmodel The VARmodel object.
 #' @param data An optional `data.frame` including the variables to be used in the path diagram.
 #' @param labels An optional character string inluding the names to be used in the path diagram.
+#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files using `pdftools::pdf_convert`.
 #'
 #' @return An Rmarkdown file that is automatically rendered to a pdf document.
 #' @export
 #'
 #' @examples
-VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
+VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
 
 
   # extrat model infos
@@ -519,4 +520,20 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL) {
   rmarkdown::render(
     input = "pathmodel.rmd"
   )
+
+  # optional: store PDF pages as separate pngs ################################
+  if(add.png == T){
+  pdftools::pdf_convert(
+    pdf = "pathmodel.pdf",
+    format = "png",
+    pages = NULL,
+    filenames = NULL,
+    dpi = 720,
+    antialias = TRUE,
+    opw = "",
+    upw = "",
+    verbose = FALSE
+  )
+  }
+
 }
