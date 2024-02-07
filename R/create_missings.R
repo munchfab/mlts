@@ -8,17 +8,26 @@
 #' unit (as character).
 #' @param time The variable in `data` that contains the (continuous) time (as
 #' string).
-#'
+#' @param btw.vars The names of between-level variables in the data to be
+#' added in newly created rows with NAs.
+#' @param clean Remove helper columns .
 #' @return A `data.frame` with missings imputed for use in `dsem()`.
 #'
 #' @examples Tbd
 #' @export
-create_missings <- function(data, delta, id, time) {
+create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
 
   # create empty list for imputed data frames
   imp_list <- list()
   # create numeric id variable
   data$num_id <- as.numeric(as.factor(data[, id]))
+
+  # remove between-level variables to add them later again
+  btw.vars = c(id, btw.vars)
+  btw.data <- data[,c("num_id", btw.vars)] %>%
+      dplyr::distinct()
+  data[,btw.vars] <- NULL
+
   # loop over obersavtions in data set
   for (i in 1:length(unique(data$num_id))) {
     # store continuous time variable for id == i and have it start with 0
@@ -89,7 +98,19 @@ create_missings <- function(data, delta, id, time) {
   )
   # fill original IDs up
   sem_data <- dplyr::group_by(.data = dsem_data, num_id)
+  # add between-level variables again
+  dsem_data <- merge(x = dsem_data, y = btw.data, by = c("num_id"), all.x = T, sort = F)
+
   dsem_data <- tidyr::fill(dsem_data, id, .direction = "downup")
   dsem_data <- dplyr::ungroup(dsem_data)
+
+
+  if(clean == T) {
+    dsem_data <- dsem_data %>%
+      dplyr::select(!c(diff_cont_time, diff_int_time, overlap, nonoverlap,
+                int_time_shifted, shifts))
+  }
+
+
   return(dsem_data)
 }

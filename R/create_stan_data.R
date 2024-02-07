@@ -307,3 +307,4 @@ create_stan_data <- function(data, id, beep, y,
 
   return(stan_data)
 }
+

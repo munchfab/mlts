@@ -4,7 +4,7 @@
 \alias{create_missings}
 \title{Create missings for DSEM data}
 \usage{
-create_missings(data, delta, id, time)
+create_missings(data, delta, id, time, btw.vars, clean = T)
 }
 \arguments{
 \item{data}{An object of class \code{data.frame} (or one that can be coerced
@@ -18,6 +18,11 @@ unit (as character).}
 
 \item{time}{The variable in \code{data} that contains the (continuous) time (as
 string).}
+
+\item{btw.vars}{The names of between-level variables in the data to be
+added in newly created rows with NAs.}
+
+\item{clean}{Remove helper columns .}
 }
 \value{
 A \code{data.frame} with missings imputed for use in \code{dsem()}.
