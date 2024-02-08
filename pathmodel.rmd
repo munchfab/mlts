@@ -164,7 +164,7 @@ knitr::opts_chunk$set(echo = TRUE)
     \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
     \draw  [path]  (delta\i t)  to node  []  {}  (y\i wt);
     
-\draw  [path]  (y1wt-1)  to node  []  {$\phi_{11}$}  (y1wt);
+\draw  [path, postaction = random]  (y1wt-1)  to node  []  {$\phi_{11}$}  (y1wt);
 \draw  [path, postaction = random_cl]  (y1wt-1)  to node  [pos = .2]  {$\phi_{12}$}  (y2wt);
 \draw  [path, postaction = random_cl]  (y2wt-1)  to node  [pos = .2]  {$\phi_{21}$}  (y1wt);
 \draw  [path, postaction = random]  (y2wt-1)  to node  []  {$\phi_{22}$}  (y2wt);
@@ -227,7 +227,7 @@ knitr::opts_chunk$set(echo = TRUE)
   	]
 \node  [latent]  (mu_1)  {$\mu_{1}$};
 \node  [latent]  (mu_2)  [right = 1em of mu_1]  {$\mu_{2}$};
-\node  [latent, color = gray]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
+\node  [latent]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
 \node  [latent]  (phi_12)  [right = 1em of phi_11]  {$\phi_{12}$};
 \node  [latent]  (phi_21)  [right = 1em of phi_12]  {$\phi_{21}$};
 \node  [latent]  (phi_22)  [right = 1em of phi_21]  {$\phi_{22}$};
@@ -246,7 +246,7 @@ knitr::opts_chunk$set(echo = TRUE)
 \node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {};
  \draw  [path]  (c1)  to node  []  {}  (mu_1);
 \draw  [path]  (c2)  to node  []  {}  (mu_2);
-
+\draw  [path]  (c3)  to node  []  {}  (phi_11);
 \draw  [path]  (c4)  to node  []  {}  (phi_12);
 \draw  [path]  (c5)  to node  []  {}  (phi_21);
 \draw  [path]  (c6)  to node  []  {}  (phi_22);
