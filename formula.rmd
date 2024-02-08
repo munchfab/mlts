@@ -24,7 +24,7 @@ knitr::opts_chunk$set(echo = TRUE)
  y_{1, t}^w \\
 y_{2, t}^w \\ \end{bmatrix} &= 
 \begin{bmatrix}
- 0 &\phi_{12} \\ 
+ \phi_{11} & \phi_{12} \\ 
 \phi_{21} & \phi_{22} \\ 
  \end{bmatrix} 
 \begin{bmatrix}
@@ -45,6 +45,7 @@ y_{2, t - 1}^w \\ \end{bmatrix} +
 \begin{bmatrix}
  \mu_{1,i}\\
 \mu_{2,i}\\
+\phi_{11,i}\\
 \phi_{12,i}\\
 \phi_{21,i}\\
 \phi_{22,i}\\
@@ -54,6 +55,7 @@ y_{2, t - 1}^w \\ \end{bmatrix} +
 \begin{bmatrix}
  \gamma_{\mu_{1}}\\
 \gamma_{\mu_{2}}\\
+\gamma_{\phi_{11}}\\
 \gamma_{\phi_{12}}\\
 \gamma_{\phi_{21}}\\
 \gamma_{\phi_{22}}\\
@@ -63,6 +65,7 @@ y_{2, t - 1}^w \\ \end{bmatrix} +
 \begin{bmatrix}
  \upsilon_{\mu_{1},i}\\
 \upsilon_{\mu_{2},i}\\
+\upsilon_{\phi_{11},i}\\
 \upsilon_{\phi_{12},i}\\
 \upsilon_{\phi_{21},i}\\
 \upsilon_{\phi_{22},i}\\

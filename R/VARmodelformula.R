@@ -10,8 +10,11 @@
 #' @examples
 VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
+  # extract model infos
+  infos <- VARmodelEval(VARmodel)
+
   # extract model data frame
-  model <- VARmodel$VARmodel
+  model <- VARmodel
 
   # create empty markdown file, delete if already existing
   if (file.exists("formula.rmd")) {
@@ -41,7 +44,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   # initiate empty dv vector
   dvs_vec <- c()
   # left hand side
-  for (i in 1:VARmodel$q) {
+  for (i in 1:infos$q) {
     dvs_vec <- c(dvs_vec, paste0("y_{", i, ", t}^w \\\\"))
   }
   dvs <- paste(dvs_vec, collapse = "\n")
@@ -54,13 +57,13 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
   phi_mat_vec <- c()
   # loop across phi subscripts
-  for (i in 1:VARmodel$q) {
-    for (j in 1:VARmodel$q) {
+  for (i in 1:infos$q) {
+    for (j in 1:infos$q) {
       # if phi_ij exists in model frame (i.e., is not fixed to zero), paste in matrix
       if (any(all_phis$Param == paste0("phi_", i, j))) {
-        if (j == VARmodel$q) {
+        if (j == infos$q) {
           phi_mat_vec <- c(phi_mat_vec, paste0("\\phi_{", i, j, "} \\\\ \n"))
-        } else if (i == VARmodel$q & j == VARmodel$q) {
+        } else if (i == infos$q & j == infos$q) {
           # line before end of bmatrix must not be broken
           phi_mat_vec <- c(phi_mat_vec, paste0("\\phi_{", i, j, "} \\\\"))
         } else {
@@ -68,9 +71,9 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
         }
       } else {
         # if phi_ij does not exist in model frame, paste empty cell
-        if (j == VARmodel$q) {
+        if (j == infos$q) {
           phi_mat_vec <- c(phi_mat_vec, paste0("0 \n"))
-        } else if (i == VARmodel$q & j == VARmodel$q) {
+        } else if (i == infos$q & j == infos$q) {
           # line before end of bmatrix must not be broken
           phi_mat_vec <- c(phi_mat_vec, paste0("0 \\\\"))
         } else {
@@ -84,7 +87,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   # initiate empty time series vector
   ts_vec <- c()
   # time series loop
-  for (i in 1:VARmodel$q) {
+  for (i in 1:infos$q) {
     ts_vec <- c(ts_vec, paste0("y_{", i, ", t - 1}^w \\\\")
     )
   }
@@ -93,7 +96,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   # initiate empty innovation vector
   innos_vec <- c()
   # innovations loop
-  for (i in 1:VARmodel$q) {
+  for (i in 1:infos$q) {
     innos_vec <- c(innos_vec, paste0("\\zeta_{y,", i, ", t} \\\\"))
   }
   innos <- paste(innos_vec, collapse = "\n")
