@@ -26,12 +26,19 @@
 #'
 VARfit <- function(VARmodel,
                    data =NULL,
+                   id,
                    ts.ind,
                    covariates = NULL,
                    outcomes = NULL,
                    outcome.pred.btw = NULL,
                    center.covs = T,
                    std.outcome = T,
+                   time = NULL,
+                   tinterval,
+                   beep = NULL,
+                   days = NULL,
+                   n_overnight_NAs,
+                   na.rm = F,
                    iter = 500,
                    chains = 2,
                    cores = 2,
@@ -47,15 +54,26 @@ VARfit <- function(VARmodel,
   # Get the parameter table
   par_labels <- VARmodelParLabels(VARmodel)
 
+  # simulated data used
+  data.simulated = ifelse(class(data)[1] == "VARsimData", TRUE, FALSE)
 
   # check if data is class "VARsimData"
-  if(class(data) == "VARsimData"){
+  if(data.simulated == T){
     message("Simulated data provided: True scores used in the simulation will
             added to the returned object.")
 
     par_labels <- merge(x = par_labels, data$VARmodel[,c("Param", "true.val")],
                        by = "Param", sort = F)
-    data = data$data
+
+    # store true values of indivdual parameters
+    re.trues <- data$RE.pars
+
+    data <- data$data
+    id <- "ID"
+    beep <- "time"
+
+    #### for now only use na.rm = T -version for simulated data
+    na.rm <- TRUE
     }
 
   # Some initial checks:
@@ -106,6 +124,18 @@ VARfit <- function(VARmodel,
     }
   }
 
+  # PREPARE DATA =========================================================
+  data = prepare_data(data, id = id, ts.ind = ts.ind, time = time,
+                      tinterval = tinterval, beep = beep,
+                      days = days, n_overnight_NAs = n_overnight_NAs,
+                      na.rm = na.rm, covariates = covariates,
+                      outcomes = outcomes,
+                      outcome.pred.btw = outcome.pred.btw)
+
+  # ======================================================================
+
+
+
 
   # depending on VARmodel evaluate model type
   ## number of time-varying constructs
@@ -144,6 +174,7 @@ VARfit <- function(VARmodel,
     }
 
     # fit model
+    if(fit.model==T){
     stanfit <- rstan::sampling(
       stanmodels$AR_manifest,
       data = standata,
@@ -151,8 +182,11 @@ VARfit <- function(VARmodel,
       iter = iter,
       cores = cores,
       chains = chains,
-      ...
-    )
+      ...)
+    } else {
+      stanfit = NULL
+    }
+
   }
 
   ## Single-indicator AR(1) model with random intercepts only
@@ -176,16 +210,18 @@ VARfit <- function(VARmodel,
     if(monitor.person.pars == T){
       pars <- c(pars, "b_free")
     }
-
-    stanfit <- rstan::sampling(
-      stanmodels$AR_manifest_intOnly,
-      data = standata,
-      pars = pars,
-      iter = iter,
-      cores = cores,
-      chains = chains,
-      ...
-    )
+    if(fit.model==T){
+      stanfit <- rstan::sampling(
+        stanmodels$AR_manifest_intOnly,
+        data = standata,
+        pars = pars,
+        iter = iter,
+        cores = cores,
+        chains = chains,
+        ...)
+    } else {
+      stanfit = NULL
+    }
   }
 
   ## Multiple-indicator AR(1) model with at least two random effects
@@ -282,6 +318,7 @@ VARfit <- function(VARmodel,
     # create individual parameter summary table
     if(monitor.person.pars == TRUE){
       sums.i = sums[startsWith(sums$Param_stan, "b_free"),1:ncol(sums)]
+
       # extract infos
       pars <- gsub(sums.i$Param_stan, pattern = "b_free[", replacement = "", fixed = T)
       pars <- gsub(pars, pattern = "]", replacement = "", fixed = T)
@@ -292,10 +329,28 @@ VARfit <- function(VARmodel,
       row.names(sums.i) <- NULL
       sums.i$Param_stan <- NULL
       sums.i = cbind(
-        "ID_new" = ID_new,
+        "num_id" = ID_new,
         "Param" = pars,
         sums.i
       )
+
+      # if simulated data were used, add true values of person parameters
+      if(data.simulated == T){
+        sums.i.true = data.frame(
+          "num_id" = rep(1:nrow(re.trues), ncol(re.trues)),
+          "Param" = rep(colnames(re.trues), each = nrow(re.trues)),
+          "true.val" = as.vector(re.trues)
+        )
+        sums.i = merge(x = sums.i.true, sums.i, by = c("num_id", "Param"), all = T)
+      }
+
+
+      # add original subject identifier
+      id.match = unique(data[c(id, "num_id")])
+      sums.i = merge(id.match, y = sums.i, by = "num_id", all = T)
+
+
+
     } else {
         # we could think about adding the posterior means here
         sums.i <- NA
@@ -311,6 +366,7 @@ VARfit <- function(VARmodel,
   # combine preprocessed data and fitted stan object in a list object
   VARresult <- list(
     "VARmodel" = VARmodel,
+    "data" = data,
     "standata" = standata,
     "stanfit" = stanfit,
     "param.labels" = par_labels,

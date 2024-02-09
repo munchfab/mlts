@@ -15,9 +15,9 @@ ARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NULL
 
 
   # data specific information:
-  N = length(unique(data$ID))                  # number of subjects
+  N = length(unique(data$num_id))                  # number of subjects
   N_obs = nrow(data)                           # total number of observations
-  N_obs_id = data.frame(table(data$ID))$Freq   # number of obs per subject
+  N_obs_id = data.frame(table(data$num_id))$Freq   # number of obs per subject
 
   ## replace missing values with -Inf
   data[,ts.ind][is.na(data[,ts.ind])] = -Inf
@@ -48,15 +48,17 @@ ARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NULL
   # build matrix of predictors
   W = matrix(NA, nrow = N, ncol = n_cov)
   W[,1] = 1
-  for(i in 2:n_cov){
-    cov.use = which(covariates == unique(RE.PREDS$re_preds[RE.PREDS$pred_no == i-1]))
-    for(p in 1:N){
-      W[p,i] = unique(data[data$ID == p, names(covariates)[cov.use]])
-      }
+  if(n_cov > 1){
+    for(i in 2:n_cov){
+      cov.use = which(covariates == unique(RE.PREDS$re_preds[RE.PREDS$pred_no == i-1]))
+        for(p in 1:N){
+          W[p,i] = unique(data[data$num_id == p, names(covariates)[cov.use]])
+        }
      if(center.covs==T){
       W[,i] = W[,i] - mean(W[,i])
       }
     }
+  }
 
   # outcome prediction - REs as predictors
   n_out = infos$n_out
@@ -73,7 +75,7 @@ ARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NULL
   if(n_out>0){
     for(i in 1:n_out){
       for(p in 1:N){
-        out[i,p] = unique(data[data$ID==p,out_vars_data[i]])
+        out[i,p] = unique(data[data$num_id==p,out_vars_data[i]])
       }
     }
   }
@@ -87,7 +89,7 @@ ARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NULL
   if(n_z > 0){
     for(i in 1:n_z){
       for(p in 1:N){
-        Z[p,i] = unique(data[data$ID==p, n_z_vars_data[i]])
+        Z[p,i] = unique(data[data$num_id==p, n_z_vars_data[i]])
       }
     }
   }

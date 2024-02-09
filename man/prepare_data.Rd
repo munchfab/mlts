@@ -7,11 +7,11 @@
 prepare_data(
   data,
   id,
-  ts_ind,
-  time,
+  ts.ind,
+  time = NULL,
   tinterval,
-  beep,
-  days,
+  beep = NULL,
+  days = NULL,
   n_overnight_NAs,
   na.rm = FALSE,
   outcomes = NULL,
@@ -26,7 +26,7 @@ to that class) in long format.}
 \item{id}{character. The variable in \code{data} that identifies the person or
 observational unit.}
 
-\item{ts_ind}{character. The variable(s) in \code{data} that contain(s) the time series data.}
+\item{ts.ind}{character. The variable(s) in \code{data} that contain(s) the time series data.}
 
 \item{time}{character. The variable in \code{data} that contains the (continuous) time (as
 string).}
@@ -43,7 +43,7 @@ in \code{data} that contains the day identifier can be added to correct for over
 
 \item{na.rm}{logical. As default option missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
-missing values in variables given in \code{ts_ind}.}
+missing values in variables given in \code{ts.ind}.}
 
 \item{n_overnight.NAs}{Optional. The number of \code{NA} rows to add after the last observation of each day (if \code{day} is provided).}
 }
