@@ -9,11 +9,14 @@ VARmodelPaths(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 \arguments{
 \item{VARmodel}{The VARmodel object.}
 
-\item{data}{An optional \code{data.frame} including the variables to be used in the path diagram.}
+\item{data}{An optional \code{data.frame} including the variables to be used in
+the path diagram.}
 
-\item{labels}{An optional character string inluding the names to be used in the path diagram.}
+\item{labels}{An optional character string inluding the names to be used in
+the path diagram.}
 
-\item{add.png}{Logical. Set to \code{TRUE} to transform created PDF as .png files using \code{pdftools::pdf_convert}.}
+\item{add.png}{Logical. Set to \code{TRUE} to transform created PDF as .png files
+using \code{pdftools::pdf_convert}.}
 }
 \value{
 An Rmarkdown file that is automatically rendered to a pdf document.
