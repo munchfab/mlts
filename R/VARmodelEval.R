@@ -60,6 +60,8 @@ VARmodelEval <- function(VARmodel){
     # extract number of indicators
     p <- ind[which(diffs <= 0) - 1]
 
+  } else {
+    p <- 1
   }
 
   # which innovation variances as random effects?
@@ -182,7 +184,7 @@ VARmodelEval <- function(VARmodel){
   # add fix effect prior of constant innovation variance (as SD)
   prior_sigma = matrix(ncol = 2, nrow = n_innos_fix)
   if(n_innos_fix>0){
-  prior_sigma = VARmodel[VARmodel$Type=="Innovation Variance",cols]
+  prior_sigma = VARmodel[VARmodel$Param_Label=="Innovation Variance",cols]
   }
 
   # RE prediction

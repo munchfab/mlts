@@ -153,6 +153,10 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   if(infos$n_fixed>0){
     btw[,infos$is_fixed] = VARmodel$true.val[VARmodel$Type=="Fix effect"][infos$is_fixed[1,]]
   }
+  if(infos$n_innos_fix>0){
+    for(i in infos$innos_fix_pos)
+    btw[,infos$innos_pos[i]] = VARmodel$true.val[VARmodel$Type=="Fix effect" & VARmodel$Param_Label == "Innovation Variance"][i]
+  }
 
   #### WITHIN-LEVEL PROCESS ====================================================
   # prepare data frame
