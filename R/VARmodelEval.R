@@ -46,6 +46,22 @@ VARmodelEval <- function(VARmodel){
   # number of (latent) constructs
   q = as.integer(max(fix_pars_dyn$Dout))
 
+  # number of indicators per latent construct
+  if (isLatent == T) {
+    # separate measurement model intercepts
+    alphas <- VARmodel[VARmodel$Model == "Measurement" &
+                         grepl("alpha", VARmodel$Param),
+                       "Param"]
+    # create numeric vector with all indicators
+    # and add 1 to the end (to measure number of indicators of last construct)
+    ind <- c(as.numeric(gsub("(.+).(\\d)", "\\2", alphas)), 1)
+    # create a difference vector
+    diffs <- c(1, diff(ind))
+    # extract number of indicators
+    p <- ind[which(diffs <= 0) - 1]
+
+  }
+
   # which innovation variances as random effects?
   innos_rand = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "isRandom"]
   innos_pos = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "no"]
@@ -199,6 +215,7 @@ VARmodelEval <- function(VARmodel){
   VARmodelinfos = rstan::nlist(
     VARmodelext,
     q,
+    p,
     n_mus,
     n_pars,
     n_random,

@@ -1,10 +1,12 @@
 #' Create Path Diagrams from VARmodel object
 #'
 #' @param VARmodel The VARmodel object.
-#' @param data An optional `data.frame` including the variables to be used in the path diagram.
-#' @param labels An optional character string inluding the names to be used in the path diagram.
-#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files using `pdftools::pdf_convert`.
-#'
+#' @param data An optional `data.frame` including the variables to be used in
+#' the path diagram.
+#' @param labels An optional character string inluding the names to be used in
+#' the path diagram.
+#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files
+#'  using `pdftools::pdf_convert`.
 #' @return An Rmarkdown file that is automatically rendered to a pdf document.
 #' @export
 #'
@@ -102,6 +104,18 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
     \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
     "
+    if (any(infos$p) > 1) {
+      dc <- "
+      % draw decomposition
+      \\node  [manifest] (y1t)  {$y_{1,t}$};
+      \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
+      \\node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
+
+      % draw paths
+      \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
+      \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
+      "
+    }
   } else { # for q > 1
     dc <- paste0(
     "
