@@ -19,7 +19,8 @@ mlts_plot(
   add.true = FALSE,
   true.col = "red",
   true.shape = 22,
-  true.size = 1
+  true.size = 1,
+  hide.xaxis.text = T
 )
 }
 \arguments{

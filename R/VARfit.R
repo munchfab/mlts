@@ -246,11 +246,12 @@ VARfit <- function(VARmodel,
     # data preprocessing
     standata <- VARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
                           covariates = covariates, outcomes = outcomes,
-#                          outcome.pred.btw = outcome.pred.btw,
+                          outcome.pred.btw = outcome.pred.btw,
                           center.covs = center.covs, std.outcome = std.outcome)
 
     # model fit
-    pars <- c("gammas", "b_fix", "btw_free", "sd_R","sigma", "bcorr")
+    pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
+              "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
     if(monitor.person.pars == T){
       pars = c(pars, "b_free")
     }

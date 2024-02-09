@@ -9,7 +9,8 @@
 mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab = NULL, ylab = NULL,
                       n.facet.col = 1,pt.size = 1, pt.col = "black", pt.shape = 1,
                       err.bar.col = "black", err.bar.width = 0.3,
-                      add.true = FALSE, true.col = "red", true.shape = 22, true.size = 1){
+                      add.true = FALSE, true.col = "red", true.shape = 22, true.size = 1,
+                      hide.xaxis.text = T){
 
   type <- match.arg(type)
 
@@ -22,7 +23,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
     # order fix effects
     p.data$Param <- factor(p.data$Param, levels = rev(p.data$Param))
     # add parameter type used for facets
-    p.data$Param_type <- VARresults$VARmodel$Type
+    p.data$Param_type <- fit$VARmodel$Type
 
     # build general plot
     aes <- ggplot2::aes
@@ -31,7 +32,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
           ggplot2::geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`),
                                  color = err.bar.col,
                                  width = err.bar.width) +
-          ggplot2::facet_wrap(~Param_type, ncol = n.facet.col, scales = "free") +
+          ggplot2::facet_wrap(~Param_type, ncol = n.facet.col, scales = "free", shrink = T) +
           ggplot2::labs(x = xlab, y = ylab) +
           ggplot2::scale_x_continuous(n.breaks = 8) +
           ggplot2::theme_bw()
@@ -91,6 +92,11 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
                                   shape = true.shape,
                                   size = true.size)
      }
+
+     if(hide.xaxis.text){
+     P <- P + ggplot2::theme(axis.text.x = ggplot2::element_blank())
+     }
+
   }
 
   if(type == "re.cor"){ # random effect estimates

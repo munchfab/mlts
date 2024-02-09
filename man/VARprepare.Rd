@@ -10,6 +10,7 @@ VARprepare(
   ts.ind,
   covariates = NULL,
   outcomes = NULL,
+  outcome.pred.btw = NULL,
   center.covs = T,
   std.outcome = T
 )

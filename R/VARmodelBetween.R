@@ -100,6 +100,10 @@ VARmodelBetween <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
     out_pred_params = c()
     n_out_pred = length(out.pred)
     for(j in 1:n_out_pred){
+      # reorder entered REs as predictors in order of random effects
+      out.pred[[j]] =  c(pars_random[pars_random %in% out.pred[[j]]], #REs ordered
+                         out.pred[[j]][!(out.pred[[j]] %in% pars_random)])
+
       for(i in 1:length(out.pred[[j]])){
         # create parameter names of regression coefficients
         out_pred_params = c(out_pred_params, paste0("b_",names(out.pred)[j], ".ON.",out.pred[[j]][i]))

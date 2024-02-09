@@ -37,7 +37,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Trait"] = 1
     ## Phis
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = sample(
-      c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = T,
+      c(round(seq(from = 0.1, to = 0.3, by = 0.05),3)), replace = T,
       size = nrow(infos$fix_pars_dyn))
     ## log innovation variances
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Variance"] = -0.3
@@ -71,7 +71,9 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
 
     # RE as OUTCOME =========================
     model.type = "RE prediction"
-    VARmodel$true.val[VARmodel$Type == model.type] = 0.1
+    VARmodel$true.val[VARmodel$Type == model.type] = sample(
+      c(round(seq(from = -0.2, to = 0.2, by = 0.05),3)), replace = T,
+        size = sum(VARmodel$Type == model.type))
 
     # OUTCOME PREDICTION ===================
     model.type = "Outcome prediction"
