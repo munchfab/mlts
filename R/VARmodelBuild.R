@@ -16,7 +16,7 @@ VARmodelBuild <- function(q, p = NULL){
   }
 
 
-  # Structural Model ===========================================================
+  # Structural Model ==========================================================
   n_mus = q                                 # trait level parameters
   mus_pars = paste0("mu_",1:n_mus)
 
@@ -43,7 +43,7 @@ VARmodelBuild <- function(q, p = NULL){
 
 message("Note: When specifying a VAR(1) model with person-specific innovation
 covariances, a latent-variable approach will be used which affords introducing
-contraints on the loading parameters of the latent covariance facotor(s).
+contraints on the loading parameters of the latent covariance factor(s).
 (see Hamaker et al., 2018). If innovation covariances are set as a constant
 or set to 0 in a subsequent step, this warning can be ignored.")
 

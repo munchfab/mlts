@@ -2,7 +2,8 @@
 #'
 #' @param VARmodel The VARmodel object.
 #' @param data An optional `data.frame` including the variables to be used in the formula.
-#' @param labels An optional character string inluding the names to be used in the path diagram.
+#' @param labels An optional character string inluding the names to be used in the
+#' path diagram.
 #'
 #' @return An Rmarkdown file that is automatically rendered to a pdf document.
 #' @export

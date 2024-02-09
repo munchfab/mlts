@@ -1,9 +1,12 @@
 #' Create Path Diagrams from VARmodel object
 #'
 #' @param VARmodel The VARmodel object.
-#' @param data An optional `data.frame` including the variables to be used in the path diagram.
-#' @param labels An optional character string inluding the names to be used in the path diagram.
-#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files using `pdftools::pdf_convert()`.
+#' @param data An optional `data.frame` including the variables to be used in
+#' the path diagram.
+#' @param labels An optional character string inluding the names to be used in
+#' the path diagram.
+#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files
+#' using `pdftools::pdf_convert()`.
 #'
 #' @return An Rmarkdown file that is automatically rendered to a pdf document.
 #' @export
