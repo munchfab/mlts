@@ -73,26 +73,14 @@ knitr::opts_chunk$set(echo = TRUE)
   	]
 
     % draw decomposition
-    \node  [manifest]  (y1t)  {$y_{1,t}$};
+    \node  [manifest] (y1t)  {$y_{1,t}$};
     \node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
     \node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\mu_{1}$};
 
-    % draw nodes
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-    \node  [manifest]  (y\i t)  [right = 2.5em of y\lasti t]  {$y_{\i,t}$};
-
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-    \node  [latent]  (y\i wt)  [above = 2.5em of y\i t]  {$y_{\i,t}^w$};
-
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ...,2}
-    \node  [latent]  (mu_\i)  [below = 2.5em of y\i t]  {$\mu_{\i}$};
-
     % draw paths
-    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
-    \draw  [path]  (y\i wt)  to node  []  {}  (y\i t);
-
-    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
-    \draw  [path]  (mu_\i)  to node  []  {}  (y\i t);
+    \draw  [path]  (y1wt)  to node  []  {}  (y1t);
+    \draw  [path]  (mu_1)  to node  []  {}  (y1t);
+    
 % caption
   \node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};
 \end{tikzpicture}\begin{tikzpicture}[
@@ -147,33 +135,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
     % draw within-level structural model
     \node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
-    \node  [latent]  (y1wt)  [right =5em of y1wt-1]  {$y_{1,t}^w$};
-    \node  [latent]  (delta1t)  [right =2.5em of y1wt]  {$\delta_{1,t}$};
+    \node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
+    \node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\delta_{{y_1},t}$};
 
-    % draw nodes
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-    \node  [latent]  (y\i wt-1)  [below = 2.5em of y\lasti wt-1]  {$y_{\i ,t-1}^w$};
-
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-    \node  [latent]  (y\i wt)  [below = 2.5em of y\lasti wt]  {$y_{\i ,t}^w$};
-
-    \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-    \node  [latent]  (delta\i t)  [below = 2.5em of delta\lasti t]  {$\delta_{\i ,t}$};
-
-    % draw paths from residuals to yiwt
-    \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
-    \draw  [path]  (delta\i t)  to node  []  {}  (y\i wt);
+    % draw paths
+    \draw  [path]  (delta1t)  to node  []  {}  (y1wt);
     
-\draw  [path]  (y1wt-1)  to node  []  {$\phi_{11}$}  (y1wt);
-\draw  [path, postaction = random_cl]  (y1wt-1)  to node  [pos = .2]  {$\phi_{12}$}  (y2wt);
-\draw  [path, postaction = random_cl]  (y2wt-1)  to node  [pos = .2]  {$\phi_{21}$}  (y1wt);
-\draw  [path, postaction = random]  (y2wt-1)  to node  []  {$\phi_{22}$}  (y2wt);
-
+\draw  [path, postaction = random]  (y1wt-1)  to node  []  {$\phi_{1}$}  (y1wt);
 \draw  [var, postaction = random]  (delta1t.120)  to node  []  {$\pi_{1}$}  (delta1t.60);
- \draw  [cov, postaction = random]  (delta1t.0)  to node  []  {$\pi_{12}$}  (delta2t.0);
-\draw  [var, postaction = random]  (delta2t.120)  to node  []  {$\pi_{2}$}  (delta2t.60);
- \draw  [cov, postaction = random]  (delta1t.0)  to node  []  {$\pi_{12}$}  (delta2t.0);
-
 % caption
   \node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};
 \end{tikzpicture}\begin{tikzpicture}[
@@ -225,36 +194,14 @@ knitr::opts_chunk$set(echo = TRUE)
       }
     },
   	]
-\node  [latent]  (mu_1)  {$\mu_{1}$};
-\node  [latent]  (mu_2)  [right = 1em of mu_1]  {$\mu_{2}$};
-\node  [latent, color = gray]  (phi_11)  [right = 1em of mu_2]  {$\phi_{11}$};
-\node  [latent]  (phi_12)  [right = 1em of phi_11]  {$\phi_{12}$};
-\node  [latent]  (phi_21)  [right = 1em of phi_12]  {$\phi_{21}$};
-\node  [latent]  (phi_22)  [right = 1em of phi_21]  {$\phi_{22}$};
-\node  [latent]  (lnsigma2_1)  [right = 1em of phi_22]  {$\log(\pi_{1})$};
-\node  [latent]  (lnsigma2_2)  [right = 1em of lnsigma2_1]  {$\log(\pi_{2})$};
-\node  [latent]  (lnsigma_12)  [right = 1em of lnsigma2_2]  {$\log(\pi_{12})$};
 
-\node  [coordinate]  (c1)  [above = 2em of mu_1]  {};
-\node  [coordinate]  (c2)  [above = 2em of mu_2]  {};
-\node  [coordinate]  (c3)  [above = 2em of phi_11]  {};
-\node  [coordinate]  (c4)  [above = 2em of phi_12]  {};
-\node  [coordinate]  (c5)  [above = 2em of phi_21]  {};
-\node  [coordinate]  (c6)  [above = 2em of phi_22]  {};
-\node  [coordinate]  (c7)  [above = 2em of lnsigma2_1]  {};
-\node  [coordinate]  (c8)  [above = 2em of lnsigma2_2]  {};
-\node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {};
- \draw  [path]  (c1)  to node  []  {}  (mu_1);
-\draw  [path]  (c2)  to node  []  {}  (mu_2);
+    % draw between-level structural model
+    \node  [latent]  (mu_1)  {$\mu_{1}$};
+    \node  [latent]  (phi_11)  [right = 1.5em of mu_1]  {$\phi_{11}$};
+    \node  [latent]  (lnsigma2_1)  [right = 1.5em of phi_11]  {$\log(\pi_{1})$};
 
-\draw  [path]  (c4)  to node  []  {}  (phi_12);
-\draw  [path]  (c5)  to node  []  {}  (phi_21);
-\draw  [path]  (c6)  to node  []  {}  (phi_22);
-\draw  [path]  (c7)  to node  []  {}  (lnsigma2_1);
-\draw  [path]  (c8)  to node  []  {}  (lnsigma2_2);
-\draw  [path]  (c9)  to node  []  {}  (lnsigma_12);
- \draw  [thick]  (c1)  --  (c9);
-
+    
+\draw  [cov]  (mu_1.north)  to node  []  {}  (phi_11.north); \draw  [cov]  (mu_1.north)  to node  []  {}  (lnsigma2_1.north); \draw  [cov]  (phi_11.north)  to node  []  {}  (lnsigma2_1.north);
 % caption
   \node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};
 \end{tikzpicture}
