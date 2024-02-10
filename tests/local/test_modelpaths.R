@@ -42,9 +42,12 @@ devtools::load_all()
 
 devtools::load_all()
 # with random effects
-VARmodel = VARmodelBuild(q = 2, p = c(1, 2))
+VARmodel = VARmodelBuild(q = 2, p = c(3, 3))
 VARmodel
 VARmodel[VARmodel$Model == "Measurement",]
+VARmodelEval(VARmodel)
+VARmodelPaths(VARmodel = VARmodel)
+
 
 VARmodel = VARmodelConstraints(VARmodel = VARmodeldata, FEis0 = c("phi_11"))
 VARmodel <- list()

@@ -96,7 +96,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   if (infos$q == 1) {
     dc <- "
     % draw decomposition
-    \\node  [manifest] (y1t)  {$y_{1,t}$};
+    \\node  [manifest]  (y1t)  {$y_{1,t}$};
     \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
     \\node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
 
@@ -104,18 +104,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
     \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
     "
-    if (any(infos$p) > 1) {
-      dc <- "
-      % draw decomposition
-      \\node  [manifest] (y1t)  {$y_{1,t}$};
-      \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
-      \\node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
 
-      % draw paths
-      \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
-      \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
-      "
-    }
   } else { # for q > 1
     dc <- paste0(
     "
@@ -146,6 +135,70 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     infos$q, "}
     \\draw  [path]  (mu_\\i)  to node  []  {}  (y\\i t);"
     )
+    if (any(infos$p > 1)) {
+      # initiate empty vectors to store tikz nodes
+      ind_vec <- c() # indicator variables
+      coord_vec <- c() # coordinates for positioning of latent variables
+      wlat_vec <- c() # within-level latent variables
+      blat_vec <- c() # between-level latent variables
+      wlat_paths_vec <- c() # paths from latent variables to indicators
+      blat_paths_vec <- c() # paths from latent variables to indicators
+      for (i in 1:infos$q) {
+        wlat_vec <- c(wlat_vec, paste0(
+          "\\node  [latent]  (etaw", i, "t)  [above = 2.5em of c", i,
+          "]  {$\\eta^w_{", i, "t}$};"
+        ))
+        blat_vec <- c(blat_vec, paste0(
+          "\\node  [latent]  (etab", i, ")  [below = 2.5em of c", i,
+          "]  {$\\eta^b_{", i, "}$};"
+        ))
+        for (j in 1:infos$p[i]) {
+          if (i == 1 & j == 1) {
+            # first indicator variable
+            ind_vec <- c(ind_vec, paste0(
+              "\\node  [manifest]  (y", i, j, "t)  {$y_{", i, j, ",t}$};"
+            ))
+          } else if (i > 1 & j == 1) {
+            # first indicator variable of next construct
+            ind_vec <- c(ind_vec, paste0(
+              "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
+              i - 1, infos$p[i - 1], "t]  {$y_{", i, j, ",t}$};"
+            ))
+          } else {
+            # all other indicators
+            ind_vec <- c(ind_vec, paste0(
+              "\\node  [manifest]  (y", i, j, "t)  [right = 2.5em of y",
+              i, j - 1, "t]  {$y_{", i, j, ",t}$};"
+            ))
+            if (j == infos$p[i]) {
+              # place coordinates between first and last indicator variables
+              # of construct i
+              coord_vec <- c(coord_vec, paste0(
+                "\\node  [coordinate]  (c", i,
+                ")  at ($(y", i, "1t) !0.5! (y", i, j, "t)$)  {};"
+              ))
+            }
+          }
+          # draw paths
+          wlat_paths_vec <- c(wlat_paths_vec, paste0(
+            "\\draw  [path]  (etaw",
+            i, "t)  to node  []  {$\\lambda^w_{", i, j, "}$}  (y", i, j, "t);"
+          ))
+          blat_paths_vec <- c(blat_paths_vec, paste0(
+            "\\draw  [path]  (etab",
+            i, ")  to node  []  {$\\lambda^b_{", i, j, "}$}  (y", i, j, "t);"
+          ))
+        }
+      }
+      ind <- paste(ind_vec, collapse = "\n")
+      coord <- paste(coord_vec, collapse = "\n")
+      wlat <- paste(wlat_vec, collapse = "\n")
+      blat <- paste(blat_vec, collapse = "\n")
+      wlat_paths <- paste(wlat_paths_vec, collapse = "\n")
+      blat_paths <- paste(blat_paths_vec, collapse = "\n")
+      # paste together
+      dc <- paste(ind, coord, wlat, blat, wlat_paths, blat_paths, sep = "\n")
+    }
   }
 
   # paste together
