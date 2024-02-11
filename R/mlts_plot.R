@@ -1,22 +1,48 @@
 #' Plot results of mlts
 #'
 #' @param fit An object of class `mlts.fit`
-#' @param what one of "fixef", "ranef", "raneftab"
-#' @return A `list` that can be passed to `stan()`.
+#' @param type Type of plot.
+#'             type = "fixef" (Default)
+#'                  Forest-plot of model coefficients.
+#'             type = "ranef"
+#'                  Plot of individual (random) effects
+#'             type = "raneftab"
+#'                  (not yet implemented)
+#' @param bpe The Bayesian point estimate is, by default, the median of the
+#' posterior distribution (`bpe = "median"`). Set `bpe = "mean"` to use
+#' the mean of the posterior distribution as point estimates.
+#' @param sort.est Add parameter label for sorting of random effects.
+#' @param xlab Title for the x axis.
+#' @param ylab Title for the y axis.
+#' @param facet.ncol Number of facet columns (see `ggplot2::facet_grid`).
+#' @param dot.size Numeric, size of the dots that indicate the point estimates.
+#' @param dot.color Character vector, indicating the color of the point estimates.
+#' @param dot.shape Numeric, shape of the dots that indicate the point estimates.
+#'
+#' @return Returns a `ggplot`-object .
+#'
 #' @export
 #'
 #' @examples TBA
-mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab = NULL, ylab = NULL,
-                      n.facet.col = 1,pt.size = 1, pt.col = "black", pt.shape = 1,
+mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
+                      sort.est = NULL, xlab = NULL, ylab = NULL,
+                      facet.ncol = 1, dot.size = 1, dot.color = "black", dot.shape = 1,
                       err.bar.col = "black", err.bar.width = 0.3,
                       add.true = FALSE, true.col = "red", true.shape = 22, true.size = 1,
                       hide.xaxis.text = T){
 
   type <- match.arg(type)
+  bpe <- match.arg(bpe)
+
 
   if(type == "fe"){ # fixed effect estimates
-    xlab <- ifelse(!is.null(xlab), xlab, "Posterior Mean (95% Credibility Interval)")
-    ylab <- ifelse(!is.null(ylab), ylab, "Parameter")
+    if(bpe == "median"){
+      fit$pop.pars.summary$bpe = fit$pop.pars.summary$`50%`
+      xlab <- ifelse(!is.null(xlab), xlab, "Posterior Median (95% Credibility Interval)")
+    } else {
+      fit$pop.pars.summary$bpe = fit$pop.pars.summary$mean
+      xlab <- ifelse(!is.null(xlab), xlab, "Posterior Mean (95% Credibility Interval)")
+    }
 
     # extract data used for plotting
     p.data <- fit$pop.pars.summary
@@ -27,12 +53,12 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
 
     # build general plot
     aes <- ggplot2::aes
-    P <- ggplot2::ggplot(data = p.data, aes(y = Param, x = mean)) +
-          ggplot2::geom_point(color = pt.col, size = pt.size, shape = pt.shape) +
+    P <- ggplot2::ggplot(data = p.data, aes(y = Param, x = bpe)) +
+          ggplot2::geom_point(color = dot.color, size = dot.size, shape = dot.shape) +
           ggplot2::geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`),
                                  color = err.bar.col,
                                  width = err.bar.width) +
-          ggplot2::facet_wrap(~Param_type, ncol = n.facet.col, scales = "free", shrink = T) +
+          ggplot2::facet_wrap(~Param_type, ncol = facet.ncol, scales = "free", shrink = T) +
           ggplot2::labs(x = xlab, y = ylab) +
           ggplot2::scale_x_continuous(n.breaks = 8) +
           ggplot2::theme_bw()
@@ -48,7 +74,14 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
 
   if(type == "re"){ # random effect estimates
     xlab <- ifelse(!is.null(xlab), xlab, colnames(fit$person.pars.summary)[2])
-    ylab <- ifelse(!is.null(ylab), ylab, "Posterior Mean (95% Credibility Interval)")
+
+    if(bpe == "median"){
+      fit$person.pars.summary$bpe = fit$person.pars.summary$`50%`
+      ylab <- ifelse(!is.null(ylab), ylab, "Posterior Median (95% Credibility Interval)")
+    } else {
+      fit$person.pars.summary$bpe = fit$person.pars.summary$mean
+      ylab <- ifelse(!is.null(ylab), ylab, "Posterior Mean (95% Credibility Interval)")
+    }
 
     # evaluate model
     infos <- VARmodelEval(fit$VARmodel)
@@ -79,7 +112,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), sort.est = NULL, xlab
            ggplot2::geom_errorbar(aes(ymin = `2.5%`, ymax = `97.5%`),
                                   color = err.bar.col,
                                   width = err.bar.width) +
-           ggplot2::facet_wrap(~Param, scale = "free", ncol = n.facet.col) +
+           ggplot2::facet_wrap(~Param, scale = "free", ncol = facet.ncol) +
            ggplot2::theme_bw() +
            ggplot2::labs(y = ylab, x = xlab) +
            ggplot2::theme(axis.text.x = ggplot2::element_text(

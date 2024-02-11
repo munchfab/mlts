@@ -7,13 +7,14 @@
 mlts_plot(
   fit,
   type = c("fe", "re", "re.cor"),
+  bpe = c("median", "mean"),
   sort.est = NULL,
   xlab = NULL,
   ylab = NULL,
-  n.facet.col = 1,
-  pt.size = 1,
-  pt.col = "black",
-  pt.shape = 1,
+  facet.ncol = 1,
+  dot.size = 1,
+  dot.color = "black",
+  dot.shape = 1,
   err.bar.col = "black",
   err.bar.width = 0.3,
   add.true = FALSE,
@@ -26,10 +27,34 @@ mlts_plot(
 \arguments{
 \item{fit}{An object of class \code{mlts.fit}}
 
-\item{what}{one of "fixef", "ranef", "raneftab"}
+\item{type}{Type of plot.
+type = "fixef" (Default)
+Forest-plot of model coefficients.
+type = "ranef"
+Plot of individual (random) effects
+type = "raneftab"
+(not yet implemented)}
+
+\item{bpe}{The Bayesian point estimate is, by default, the median of the
+posterior distribution (\code{bpe = "median"}). Set \code{bpe = "mean"} to use
+the mean of the posterior distribution as point estimates.}
+
+\item{sort.est}{Add parameter label for sorting of random effects.}
+
+\item{xlab}{Title for the x axis.}
+
+\item{ylab}{Title for the y axis.}
+
+\item{facet.ncol}{Number of facet columns (see \code{ggplot2::facet_grid}).}
+
+\item{dot.size}{Numeric, size of the dots that indicate the point estimates.}
+
+\item{dot.color}{Character vector, indicating the color of the point estimates.}
+
+\item{dot.shape}{Numeric, shape of the dots that indicate the point estimates.}
 }
 \value{
-A \code{list} that can be passed to \code{stan()}.
+Returns a \code{ggplot}-object .
 }
 \description{
 Plot results of mlts
