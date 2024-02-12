@@ -43,9 +43,9 @@ devtools::load_all()
 devtools::load_all()
 # with random effects
 VARmodel = VARmodelBuild(q = 2, p = c(3, 3))
-VARmodel
-VARmodel[VARmodel$Model == "Measurement",]
-VARmodelEval(VARmodel)
+# VARmodel
+# VARmodel[VARmodel$Model == "Measurement",]
+# VARmodelEval(VARmodel)
 VARmodelPaths(VARmodel = VARmodel)
 
 

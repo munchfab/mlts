@@ -85,7 +85,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   	]"
 
   # end tikz picture
-  end_tikz <- "\\end{tikzpicture}"
+  end_tikz <- "\\end{tikzpicture}\n"
 
 
   # decomposition #############################################################
@@ -98,20 +98,80 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     % draw decomposition
     \\node  [manifest]  (y1t)  {$y_{1,t}$};
     \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
-    \\node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
+    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
 
     % draw paths
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
-    \\draw  [path]  (mu_1)  to node  []  {}  (y1t);
+    \\draw  [path]  (mu1)  to node  []  {}  (y1t);
     "
-
+    if (infos$p > 1) {
+      # initiate empty vectors to store tikz nodes
+      ind_vec <- c() # indicator variables
+      # latent variables (within and between)
+      wlat <- "\\node  [latent]  (eta1wt)  [above = 3.5em of c]  {$\\eta^w_{1,t}$};"
+      blat <- "\\node  [latent]  (mu1)  [below = 3.5em of c]  {$\\mu_{1}$};"
+      wlat_paths_vec <- c() # paths from latent variables to indicators
+      blat_paths_vec <- c() # paths from latent variables to indicators
+      eps_vec <- c() # residuals
+      eps_paths_vec <- c() # paths from residuals to indicators
+      for (i in 1:infos$p) {
+        eps_vec <- c(eps_vec, paste0(
+          "\\node  [error]  (eps", i, "t)  [above left = .75em of y", i, "t]  {};"
+        ))
+        if (i == 1) {
+          # first indicator variable
+          ind_vec <- c(ind_vec, paste0(
+            "\\node  [manifest]  (y", i, "t)  {$y_{", i, ",t}$};"
+          ))
+          # first error (labeled)
+          eps_vec <- c(eps_vec, paste0(
+            "\\node  [error]  (eps", i, "t)  [above left = 1em of y",
+            i, "t]  {\\scriptsize$\\varepsilon^w_{", i, ",t}$};"
+          ))
+        } else {
+          # all other indicators
+          ind_vec <- c(ind_vec, paste0(
+            "\\node  [manifest]  (y", i, "t)  [right = 1.5em of y",
+            i - 1, "t]  {$y_{", i, ",t}$};"
+          ))
+          if (i == infos$p) {
+            # place coordinates between first and last indicator variables
+            # of construct
+            coord <- paste0(
+              "\\node  [coordinate]  (c)  at ($(y1t) !0.5! (y", i, "t)$)  {};"
+            )
+          }
+        }
+        # draw paths
+        wlat_paths_vec <- c(wlat_paths_vec, paste0(
+          "\\draw  [path]  (eta1wt)  to node  [fill = white, anchor = center]
+            {\\scriptsize$\\lambda^w_{", i, "}$}  (y", i, "t.north);"
+        ))
+        blat_paths_vec <- c(blat_paths_vec, paste0(
+          "\\draw  [path]  (mu1)  to node  [fill = white, anchor = center]
+            {\\scriptsize$\\lambda^{\\mu}_{", i, "}$}  (y", i, "t.south);"
+        ))
+        eps_paths_vec <- c(eps_paths_vec, paste0(
+          "\\draw  [path]  (eps", i, "t)  to node  []  {}  (y", i, "t.north west);"
+        ))
+      }
+      ind <- paste(ind_vec, collapse = "\n")
+      wlat_paths <- paste(wlat_paths_vec, collapse = "\n")
+      blat_paths <- paste(blat_paths_vec, collapse = "\n")
+      eps <- paste(eps_vec, collapse = "\n")
+      eps_paths <- paste(eps_paths_vec, collapse = "\n")
+      # paste together
+      dc <- paste(ind, coord, wlat, blat,
+                  wlat_paths, blat_paths,
+                  eps, eps_paths, sep = "\n")
+    }
   } else { # for q > 1
     dc <- paste0(
     "
     % draw decomposition
     \\node  [manifest]  (y1t)  {$y_{1,t}$};
     \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
-    \\node  [latent]  (mu_1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
+    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
@@ -124,7 +184,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ...,",
     infos$q, "}
-    \\node  [latent]  (mu_\\i)  [below = 2.5em of y\\i t]  {$\\mu_{\\i}$};
+    \\node  [latent]  (mu\\i)  [below = 2.5em of y\\i t]  {$\\mu_{\\i}$};
 
     % draw paths
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
@@ -133,7 +193,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
     infos$q, "}
-    \\draw  [path]  (mu_\\i)  to node  []  {}  (y\\i t);"
+    \\draw  [path]  (mu\\i)  to node  []  {}  (y\\i t);"
     )
     if (any(infos$p > 1)) {
       # initiate empty vectors to store tikz nodes
@@ -143,20 +203,30 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       blat_vec <- c() # between-level latent variables
       wlat_paths_vec <- c() # paths from latent variables to indicators
       blat_paths_vec <- c() # paths from latent variables to indicators
+      eps_vec <- c() # residuals
+      eps_paths_vec <- c() # paths from residuals to indicators
       for (i in 1:infos$q) {
         wlat_vec <- c(wlat_vec, paste0(
-          "\\node  [latent]  (etaw", i, "t)  [above = 2.5em of c", i,
-          "]  {$\\eta^w_{", i, "t}$};"
+          "\\node  [latent]  (etaw", i, "t)  [above = 3.5em of c", i,
+          "]  {$\\eta^w_{", i, ",t}$};"
         ))
         blat_vec <- c(blat_vec, paste0(
-          "\\node  [latent]  (etab", i, ")  [below = 2.5em of c", i,
-          "]  {$\\eta^b_{", i, "}$};"
+          "\\node  [latent]  (etab", i, ")  [below = 3.5em of c", i,
+          "]  {$\\mu_{", i, "}$};"
         ))
         for (j in 1:infos$p[i]) {
+          eps_vec <- c(eps_vec, paste0(
+            "\\node  [error]  (eps", i, j, "t)  [above left = .75em of y", i, j, "t]  {};"
+          ))
           if (i == 1 & j == 1) {
             # first indicator variable
             ind_vec <- c(ind_vec, paste0(
               "\\node  [manifest]  (y", i, j, "t)  {$y_{", i, j, ",t}$};"
+            ))
+            # first error (labeled)
+            eps_vec <- c(eps_vec, paste0(
+              "\\node  [error]  (eps", i, j, "t)  [above left = 1em of y",
+              i, j, "t]  {\\scriptsize$\\varepsilon^w_{", i, j, ",t}$};"
             ))
           } else if (i > 1 & j == 1) {
             # first indicator variable of next construct
@@ -167,7 +237,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
           } else {
             # all other indicators
             ind_vec <- c(ind_vec, paste0(
-              "\\node  [manifest]  (y", i, j, "t)  [right = 2.5em of y",
+              "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
               i, j - 1, "t]  {$y_{", i, j, ",t}$};"
             ))
             if (j == infos$p[i]) {
@@ -182,11 +252,16 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
           # draw paths
           wlat_paths_vec <- c(wlat_paths_vec, paste0(
             "\\draw  [path]  (etaw",
-            i, "t)  to node  []  {$\\lambda^w_{", i, j, "}$}  (y", i, j, "t);"
+            i, "t)  to node  [fill = white, anchor = center]  {\\scriptsize$\\lambda^w_{",
+            i, j, "}$}  (y", i, j, "t.north);"
           ))
           blat_paths_vec <- c(blat_paths_vec, paste0(
             "\\draw  [path]  (etab",
-            i, ")  to node  []  {$\\lambda^b_{", i, j, "}$}  (y", i, j, "t);"
+            i, ")  to node  [fill = white, anchor = center]  {\\scriptsize$\\lambda^{\\mu}_{",
+            i, j, "}$}  (y", i, j, "t.south);"
+          ))
+          eps_paths_vec <- c(eps_paths_vec, paste0(
+            "\\draw  [path]  (eps", i, j, "t)  to node  []  {}  (y", i, j, "t.north west);"
           ))
         }
       }
@@ -196,8 +271,12 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       blat <- paste(blat_vec, collapse = "\n")
       wlat_paths <- paste(wlat_paths_vec, collapse = "\n")
       blat_paths <- paste(blat_paths_vec, collapse = "\n")
+      eps <- paste(eps_vec, collapse = "\n")
+      eps_paths <- paste(eps_paths_vec, collapse = "\n")
       # paste together
-      dc <- paste(ind, coord, wlat, blat, wlat_paths, blat_paths, sep = "\n")
+      dc <- paste(ind, coord, wlat, blat,
+                  wlat_paths, blat_paths,
+                  eps, eps_paths, sep = "\n")
     }
   }
 
@@ -229,11 +308,22 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     % draw within-level structural model
     \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
     \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
-    \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{{y_1},t}$};
+    \\node  [latent]  (delta1t)  [right = 2.5em of ywt]  {$\\delta_{{y_1},t}$};
 
     % draw paths
-    \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);
+    \\draw  [path]  (deltat)  to node  []  {}  (ywt);
     "
+    if (infos$p > 1) {
+      wm <- "
+      % draw within-level structural model
+      \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
+      \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
+      \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{{\\eta^w_{1}},t}$};
+
+      % draw paths
+      \\draw  [path]  (delta1t)  to node  []  {}  (eta1wt);
+      "
+    }
     # draw paths conditional on isRandom
     phi <- paste0(
       "\\draw  [path", ifelse(
@@ -241,8 +331,13 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
           model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"
         ] == 1,
         ", postaction = random]", "]"
-      ),
-      "  (y1wt-1)  to node  []  {$\\phi_{1}$}  (y1wt);"
+      ), ifelse(
+        # select start node conditional on infos$p
+        infos$p > 1, "  (eta1wt-1)", "  (y1wt-1)"
+      ), "  to node  []  {$\\phi_{11}$}  (", ifelse(
+        # select target node conditional on infos$p
+        infos$p > 1, "eta1wt", "y1wt"
+      ), ");"
     )
     ln.sigma2 <- paste0(
       "\\draw  [var", ifelse(
@@ -279,6 +374,34 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     infos$q, "}
     \\draw  [path]  (delta\\i t)  to node  []  {}  (y\\i wt);
     ")
+    if (any(infos$p > 1)) {
+      wm <- paste0(
+      "
+      % draw within-level structural model
+      \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
+      \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
+      \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{1,t}$};
+
+      % draw nodes
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+          infos$q, "}
+      \\node  [latent]  (eta\\i wt-1)  [below = 2.5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};
+
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+          infos$q, "}
+      \\node  [latent]  (eta\\i wt)  [below = 2.5em of eta\\lasti wt]  {$\\eta_{\\i ,t}^w$};
+
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+          infos$q, "}
+      \\node  [latent]  (delta\\i t)  [below = 2.5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
+
+      % draw paths from residuals to etaiwt
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
+          infos$q, "}
+      \\draw  [path]  (delta\\i t)  to node  []  {}  (eta\\i wt);
+      ")
+    }
+
     # store number of phi-parameters for loops
     all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
     n_phi <- nrow(all_phis)
@@ -297,7 +420,13 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
                 all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
                 ", postaction = random]", "]"
               ),
-              "  (y", i, "wt-1)  to node  []  {$\\phi_{", i, j, "}$}  (y", i, "wt);\n"
+              "  (", ifelse(
+                # select start node conditional on infos$p
+                infos$p > 1, "eta", "y"
+              ), i, "wt-1)  to node  []  {$\\phi_{", i, j, "}$}  (", ifelse(
+                # select target node conditional on infos$p
+                infos$p > 1, "eta", "y"
+              ), i, "wt);\n"
             )
           )
         } else {
@@ -309,7 +438,13 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
                 all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
                 ", postaction = random_cl]", "]"
               ),
-              "  (y", i, "wt-1)  to node  [pos = .2]  {$\\phi_{", i, j, "}$}  (y", j, "wt);\n"
+              "  (", ifelse(
+                # select start node conditional on infos$p
+                infos$p > 1, "eta", "y"
+              ), i, "wt-1)  to node  [pos = .2]  {$\\phi_{", i, j, "}$}  (", ifelse(
+                # select target node conditional on infos$p
+                infos$p > 1, "eta", "y"
+              ), j, "wt);\n"
             )
           )
         }
@@ -394,24 +529,22 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   # draw nodes for q time-series constructs
   if (infos$q == 1) {
     bm <- paste0("
-    % draw between-level structural model
-    \\node  [latent", ifelse(
-      model[
-        model$Param == "mu_1" & grepl("Fix", model$Type), "isRandom"
-      ] == 0, ", color = gray]", "]"
-    ), "  (mu_1)  {$\\mu_{1}$};
-    \\node  [latent", ifelse(
-      model[
-        model$Param == "phi_11" & grepl("Fix", model$Type), "isRandom"
-      ] == 0, ", color = gray]", "]"
-    ), "  (phi_11)  [right = 1.5em of mu_1]  {$\\phi_{11}$};
-    \\node  [latent", ifelse(
-      model[
-        model$Param == "ln.sigma2_1" & grepl("Fix", model$Type), "isRandom"
-      ] == 0, ", color = gray]", "]"
-    ), "  (lnsigma2_1)  [right = 1.5em of phi_11]  {$\\log(\\pi_{1})$};
-
-    "
+      % draw between-level structural model
+      \\node  [latent", ifelse(
+        model[
+          model$Param == "mu_1" & grepl("Fix", model$Type), "isRandom"
+        ] == 0, ", color = gray]", "]"
+      ), "  (mu_1)  {$\\mu_{1}$};
+      \\node  [latent", ifelse(
+        model[
+          model$Param == "phi_11" & grepl("Fix", model$Type), "isRandom"
+        ] == 0, ", color = gray]", "]"
+      ), "  (phi_11)  [right = 1.5em of mu_1]  {$\\phi_{11}$};
+      \\node  [latent", ifelse(
+        model[
+          model$Param == "ln.sigma2_1" & grepl("Fix", model$Type), "isRandom"
+        ] == 0, ", color = gray]", "]"
+      ), "  (lnsigma2_1)  [right = 1.5em of phi_11]  {$\\log(\\pi_{1})$};"
     )
     # draw (co-)variances conditional on existing correlations
     r_mu_1.phi_11 <- ifelse(
