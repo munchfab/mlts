@@ -17,7 +17,7 @@ VARmodelPriors <- function(VARmodel, default = F){
 
     # STRUCTURAL MODEL =========================================================
     ## Fixed effects
-    VARmodel[VARmodel$Type=="Fix effect" & VARmodel$Param_Label=="Trait",cols] = data.frame("normal", 0, 10)
+    VARmodel[VARmodel$Type=="Fix effect" & startsWith(VARmodel$Param_Label,prefix = "Trait"),cols] = data.frame("normal", 0, 10)
     VARmodel[VARmodel$Type=="Fix effect" & VARmodel$Param_Label=="Dynamic", cols] = data.frame("normal", 0, 2)
     VARmodel[VARmodel$Type=="Fix effect" & VARmodel$Param_Label == "Log Innovation Variance",cols] = data.frame("normal", 0, 10)
     VARmodel[VARmodel$Type=="Fix effect" & VARmodel$Param_Label == "Innovation Variance",cols] = data.frame("cauchy", 0, 2.5)

@@ -103,35 +103,8 @@ VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
 
-
-
-
-  # update random effect correlations
-  rand.pars = (VARmodel[VARmodel$Type == "Fix effect" & VARmodel$isRandom == 1,"Param"])
-  n_rand = length(rand.pars)
-  btw.cov_pars = c()
-  if(n_rand>1){
-    n_cors = (n_rand * (n_rand-1))/2
-    qs = c()
-    ps = c()
-    for(i in 1:(n_rand-1)){
-    qs = c(qs, rep(rand.pars[i], each = n_rand-i))
-    }
-    for(i in 2:n_rand){
-      ps = c(ps, rep(rand.pars[i:n_rand], 1))
-    }
-
-  btw.cov_pars = paste0("r_", qs,".", ps)
-
-  # remove and replace
-  VARmodel = VARmodel[VARmodel$Type!="RE correlation" |
-    (VARmodel$Type=="RE correlation" & VARmodel$Param %in% btw.cov_pars),]
-  } else if(n_rand == 1){
-
-    VARmodel = VARmodel[VARmodel$Type != "RE correlation",]
-
-  }
-
+  # update RE correlations
+  VARmodel = update_model_REcors(VARmodel)
 
   # update priors =============================================================
   VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
