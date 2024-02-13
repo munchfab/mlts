@@ -18,8 +18,12 @@ VARmodelEval <- function(VARmodel){
   isLatent = ifelse(isLatent>0, TRUE, FALSE)
 
   ## Dynamic model
-  n_mus = sum(VARmodel$Param_Label == "Trait" & VARmodel$Type=="Fix effect")
   fix_pars = VARmodel[VARmodel$Type == "Fix effect",]
+  # extract the number of (latent constructs) --> n_mus
+  constructs = lapply(fix_pars$Param[startsWith(fix_pars$Param_Label, "Trait")], function(x){
+    substr(strsplit(x, split = c("_"))[[1]][2], start = 1, stop = 1)
+  })
+  n_mus = max(as.numeric(unlist(constructs)))
   fix_pars$no = 1:nrow(fix_pars)
   fix_pars_dyn = fix_pars[fix_pars$Param_Label == "Dynamic",]
   n_dyn.pars = nrow(fix_pars_dyn)
@@ -44,7 +48,7 @@ VARmodelEval <- function(VARmodel){
   }
 
   # number of (latent) constructs
-  q = as.integer(max(fix_pars_dyn$Dout))
+  q = as.integer(n_mus)
 
   # number of indicators per latent construct
   if (isLatent == T) {
@@ -60,8 +64,98 @@ VARmodelEval <- function(VARmodel){
     # extract number of indicators
     p <- ind[which(diffs <= 0) - 1]
 
+    # extract indicator information
+    ## start with within-part (which always contains all indicators)
+    ind_base = extract_indicator_info(VARmodel, level = "Within", type = "Loading", incl.pos_p = T)
+
+    ## step-wise addition: ---------------------------------------------------
+    indicators = merge(
+      x = ind_base, y = extract_indicator_info(VARmodel, level = "Within", type = "Measurement Error SD"), all.x = T)
+
+    add = extract_indicator_info(VARmodel, level = "Between", type = "Item intercepts")
+    if(nrow(add)>0){
+      indicators = merge(x = indicators, y = add, all.x = T)
+    } else {
+      indicators$alpha_isFree = 0
+    }
+    add = extract_indicator_info(VARmodel, level = "Between", type = "Loading")
+    if(nrow(add)>0){
+      indicators = merge(x = indicators, y = add, all.x = T)
+    } else {
+      indicators$lambdaB_isFree = 0
+    }
+    add = extract_indicator_info(VARmodel, level = "Between", type = "Measurement Error SD")
+    if(nrow(add)>0){
+      indicators = merge(x = indicators, y = add, all.x = T)
+    } else {
+      indicators$sigmaB_isFree = 0
+    }
+
+    # get between-level fixed effect infos
+    # base decision on the presence of indicator-specific mean values
+    fixefs = VARmodel[VARmodel$Level == "Within" & startsWith(VARmodel$Param, "mu_"),]
+    ind_means = extract_indicator_info(fixefs, level = "Within", type = "Fix effect")
+
+    if(nrow(ind_means)>0){
+      ind_means$mu_isFree = 1
+      # add to indicator infos
+      indicators = merge(indicators, y = ind_means, by = c("q","p"), all.x = T)
+    }
+
+    # add etaB label for matching
+    if(!is.null(indicators$mu_isFree)){
+      indicators$etaB_label = ifelse(!is.na(indicators$mu_isFree),
+                                   paste0("mu_",indicators$q, ".", indicators$p),
+                                   paste0("etaB_", indicators$q))
+    } else {
+      indicators$etaB_label = paste0("etaB_", indicators$q)
+    }
+
+
+    # add positions
+    fixefs = VARmodel[VARmodel$Level == "Within" & startsWith(VARmodel$Param_Label, "Trait"),]
+    indicators$etaB_pos = unlist(lapply(indicators$etaB_label, function(x){
+      which(fixefs$Param == x)
+    }))
+    indicators$YB_free_pos = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree),
+                                    indicators$p_pos, 0)
+
+    # prepare infos to be passed to stan model ---------------------------------
+    n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = T)
+    n_loadWfree = sum(indicators$lambdaW_isFree, na.rm = T)
+    n_alphafree = sum(indicators$alpha_isFree, na.rm = T)
+    n_sigmaBfree = sum(indicators$sigmaB_isFree, na.rm = T)
+    n_sigmaWfree = sum(indicators$sigmaW_isFree, na.rm = T)
+
+    pos_loadBfree = which(indicators$lambdaB_isFree == 1)
+    pos_loadWfree = which(indicators$lambdaW_isFree == 1)
+    pos_alphafree = which(indicators$alpha_isFree == 1)
+    pos_sigmaBfree = which(indicators$sigmaB_isFree == 1)
+    pos_sigmaWfree = which(indicators$sigmaW_isFree == 1)
+
+    #
+    n_YB_free = sum(indicators$sigmaB_isFree, na.rm = T)
+    YB_free_pos = indicators$YB_free_pos
+    mu_is_etaB = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree), 0, 1)
+    mu_etaB_pos = indicators$etaB_pos
+
   } else {
     p <- 1
+    indicators = NA
+    n_loadBfree = 0
+    n_loadWfree = 0
+    n_alphafree = 0
+    n_sigmaWfree = 0
+    n_sigmaBfree = 0
+    pos_loadBfree = 0
+    pos_loadWfree = 0
+    pos_alphafree = 0
+    pos_sigmaBfree = 0
+    pos_sigmaWfree = 0
+    n_YB_free = 0
+    YB_free_pos = 0
+    mu_is_etaB = 0
+    mu_etaB_pos = 0
   }
 
   # which innovation variances as random effects?
@@ -246,6 +340,11 @@ VARmodelEval <- function(VARmodel){
     # outcome model information
     OUT, n_out, out_var, n_out_bs, n_out_bs_sum, n_out_bs_max, n_out_b_pos,
     n_z, n_z_vars,
+
+    # measurement model parameters
+    isLatent, indicators, n_loadBfree, n_loadWfree, n_alphafree, n_sigmaWfree, n_sigmaBfree,
+    pos_loadBfree, pos_loadWfree, pos_alphafree, pos_sigmaBfree, pos_sigmaWfree,
+    n_YB_free, YB_free_pos, mu_is_etaB, mu_etaB_pos,
 
     # priors
     prior_gamma, prior_sd_R, prior_LKJ, prior_sigma, prior_b_re_pred,

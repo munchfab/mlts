@@ -31,10 +31,29 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   if(default==T){
     VARmodel$true.val = NA
 
+    # MEASUREMENT MODEL PARAMETERS =============================================
+    n_p = sum(infos$p)
+    model = "Measurement"
+    VARmodel$true.val[VARmodel$Model == model & VARmodel$Type == "Item intercepts" & VARmodel$Constraint == "= 0"] = 0
+    VARmodel$true.val[VARmodel$Model == model & VARmodel$Type == "Item intercepts" & VARmodel$Constraint == "free"] =
+      sample(x = seq(0.5, 2, by = 0.5), size = infos$n_alphafree, replace = T)
+    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading" & VARmodel$Constraint == "= 1"] = 1
+    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading" & VARmodel$Constraint == "free"] =
+      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadWfree, replace = T)
+    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Loading" & VARmodel$Constraint == "= 1"] = 1
+    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Loading" & VARmodel$Constraint == "free"] =
+      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = T)
+    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
+    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
+      sample(x = seq(0.2, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = T)
+    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
+    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
+      sample(x = seq(0.2, 0.3, by = 0.05), size = infos$n_sigmaBfree, replace = T)
+
     # FIX EFFECTS ========
     model.type = "Fix effect"
     ## Mus
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Trait"] = 1
+    VARmodel$true.val[VARmodel$Type==model.type & startsWith(VARmodel$Param_Label, "Trait")] = 1
     ## Phis
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = sample(
       c(round(seq(from = 0.1, to = 0.3, by = 0.05),3)), replace = T,
@@ -53,7 +72,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     # RANDOM EFFECT SDs ==========
     model.type = "Random effect SD"
     ## Mus
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Trait"] = 1
+    VARmodel$true.val[VARmodel$Type==model.type & startsWith(VARmodel$Param_Label, "Trait")] = 1
     ## Phis
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = 0.15
     ## log innovation variances
@@ -121,7 +140,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   # variance covariance matrix of random effects
   cov_mat = diag(VARmodel$true.val[VARmodel$Type=="Random effect SD"]^2)
 
-  # calulate covariances from correlations
+  # calculate covariances from correlations
   n_random = infos$n_random
   rand.pars = infos$re_pars$Param
   for(i in 1:n_random){
@@ -211,9 +230,11 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
       }
     }
 
-    # add trait scores
-    for(j in 1:infos$n_mus){
-    within[within$ID==i,y_cols[j]] = btw[i,j] + within[within$ID==i,y_cols[j]]
+    # add trait scores (for manifest indicators)
+    if(infos$isLatent == F){
+      for(j in 1:infos$n_mus){
+      within[within$ID==i,y_cols[j]] = btw[i,j] + within[within$ID==i,y_cols[j]]
+      }
     }
   }
 
@@ -222,6 +243,39 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   within = within[within$time>0,]
   # --------
 
+
+  ##### add measurement model here -------------------------------------------
+  # create manifest indicator scores
+  if(infos$isLatent == TRUE){
+  N_inds = max(infos$indicators$p_pos)
+  for(i in 1:N_inds){
+    q = infos$indicators$q[i]
+    p = infos$indicators$p[i]
+    ind.lab = paste0("Y",q,".",p)
+    # within
+    loadW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading"][i]
+    sigmaW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD"][i]
+    # between
+    alpha = VARmodel$true.val[VARmodel$Param == paste0("alpha_",q,".",p)]
+    alpha = ifelse(length(alpha) == 0, 0, alpha)
+    loadB = VARmodel$true.val[VARmodel$Param == paste0("lambdaB_",q,".",p)]
+    loadB = ifelse(length(loadB) == 0, 1, loadB)
+    sigmaB = VARmodel$true.val[VARmodel$Param == paste0("sigmaB_",q,".",p)]
+    sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
+
+    for(p in 1:N){
+      # create WITHIN-PART:
+      etaW = within[within$ID==p, paste0("Y",q)]
+      YW = loadW * etaW + ifelse(sigmaW == 0, 0, rnorm(n = N, mean = 0, sd = sigmaW))
+
+      # create BETWEEN-PART:
+      YB = alpha + loadB * btw[p,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, rnorm(n = 1, mean = 0, sd = sigmaB))
+
+      # indicator
+      within[within$ID==p,ind.lab] = YB + YW
+    }
+  }
+  }
 
   # CREATE OUTCOMES ==========================================================
   outs = matrix(NA, ncol = infos$n_out, nrow = N)
@@ -258,9 +312,6 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   )
     colnames(OUT)[2:(infos$n_out+1)] = infos$out_var
   }
-
-
- ##### add measurement model here -------------------------------------------
 
 
 

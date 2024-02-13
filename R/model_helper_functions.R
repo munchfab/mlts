@@ -60,3 +60,30 @@ replace_model_row <- function(VARmodel, row, replacement){
 
   return(VARmodel)
 }
+
+extract_indicator_info <- function(VARmodel, level = "Within", type = "Loading", incl.pos_p = F){
+  # a helper function to extract indicator information
+
+  # create a table where all indocators are present
+  # get subset
+  info = VARmodel[VARmodel$Level == level & VARmodel$Type == type,]
+
+  # extract infos from parameter
+  inds = unlist(lapply(info$Param, function(x){strsplit(x, split = "_")[[1]][2]}))
+  param = unique(unlist(lapply(info$Param, function(x){strsplit(x, split = "_")[[1]][1]})))
+
+  ind.info = data.frame(
+    "q" = unlist(lapply(inds, function(x){strsplit(x, split = ".", fixed = T)[[1]][1]})),
+    "p" = unlist(lapply(inds, function(x){strsplit(x, split = ".", fixed = T)[[1]][2]}))
+  )
+
+  # add general indicator number
+  if(incl.pos_p == T){
+    ind.info$p_pos = 1:nrow(ind.info)
+  }
+  # add parameter
+  ind.info[,paste0(param,"_isFree")]= ifelse(info$Constraint == "free", 1, 0)
+
+  return(ind.info)
+}
+

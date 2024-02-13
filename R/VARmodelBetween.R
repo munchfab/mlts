@@ -72,7 +72,7 @@ VARmodelBetween <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
     RE.PRED = VARmodelPriors(RE.PRED, default = T)
 
     # add to VARmodel
-    VARmodel = rbind(VARmodel, RE.PRED)
+    VARmodel = plyr::rbind.fill(VARmodel, RE.PRED)
   }
 
   # outcome prediction models
@@ -134,7 +134,7 @@ VARmodelBetween <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
     OUT.PRED = VARmodelPriors(OUT.PRED, default = T)
 
     # add to VARmodel
-    VARmodel = rbind(VARmodel, OUT.PRED)
+    VARmodel = plyr::rbind.fill(VARmodel, OUT.PRED)
   }
 
   ###### Should we update the label of random effects SDs if
