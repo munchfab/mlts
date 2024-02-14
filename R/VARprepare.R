@@ -24,6 +24,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   n_miss_D = sapply(ts.ind, FUN = function(x){ # store number of NAs per D
     sum(is.na(data[,x]))
   })
+  n_miss_D = as.array(n_miss_D)
   # NA positions as matrix
   pos_miss_D = matrix(0, nrow = D, ncol = max(n_miss_D), byrow = T)
   for(i in 1:D){
@@ -49,10 +50,10 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   re_pars = infos$re_pars     # subset of VARmodel of random effect parameters
 
   # innovations
-  innos_rand = infos$innos_rand # Are innovation variance(s) random?
+  innos_rand = as.array(infos$innos_rand) # Are innovation variance(s) random?
   n_innos_fix = infos$n_innos_fix
-  innos_fix_pos = infos$innos_fix_pos
-  innos_pos = infos$innos_pos
+  innos_fix_pos = as.array(infos$innos_fix_pos)
+  innos_pos = as.array(infos$innos_pos)
 
   # innovation covariances
   n_inno_covs = infos$n_inno_covs
@@ -66,9 +67,10 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   # dynamic model specification by dimension (D)
   N_pred = infos$N_pred
   D_pred = infos$D_pred
-  Dpos1 = infos$Dpos1
-  Dpos2 = infos$Dpos2
+  Dpos1 = as.array(infos$Dpos1)
+  Dpos2 = as.array(infos$Dpos2)
   # covariate(s) as predictor(s) of random effects
+  RE.PREDS = infos$RE.PREDS
   n_cov = infos$n_cov
   n_cov_bs = infos$n_cov_bs
   n_cov_mat = infos$n_cov_mat
@@ -150,6 +152,42 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
     prior_LKJ, prior_gamma, prior_sd_R, prior_sigma, prior_b_re_pred,
     prior_b_out, prior_alpha_out, prior_sigma_out
   )
+
+  # for latent models:
+  if(infos$isLatent == TRUE){
+    standata$D = infos$q
+    standata$n_p = nrow(infos$indicators)
+    standata$D_perP = as.integer(infos$indicators$q)
+
+    # alternative missing data indexing
+    n_miss = sum(is.na(data[,ts.ind]))           # overall number of NAs
+    n_miss_p = sapply(ts.ind, FUN = function(x){sum(is.na(data[,x]))})
+    pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = T)
+    for(i in 1:standata$n_p){
+      if(n_miss_p[i] > 0){
+        pos_miss_p[i,1:n_miss_p[i]] = which(is.na(data[,ts.ind[i]]))
+      }
+    }
+    standata$n_miss <- n_miss
+    standata$n_miss_p <- n_miss_p
+    standata$pos_miss_p <- pos_miss_p
+
+    standata$n_loadBfree <- infos$n_loadBfree
+    standata$n_loadWfree <- infos$n_loadWfree
+    standata$n_alphafree <- infos$n_alphafree
+    standata$n_sigmaBfree <- infos$n_sigmaBfree
+    standata$n_sigmaWfree <- infos$n_sigmaWfree
+    standata$pos_loadBfree <- infos$pos_loadBfree
+    standata$pos_loadWfree <- infos$pos_loadWfree
+    standata$pos_alphafree <- infos$pos_alphafree
+    standata$pos_sigmaBfree <- infos$pos_sigmaBfree
+    standata$pos_sigmaWfree <- infos$pos_sigmaWfree
+
+    standata$n_YB_free <- infos$n_YB_free
+    standata$YB_free_pos <- infos$YB_free_pos
+    standata$mu_etaB_pos <- infos$mu_etaB_pos
+    standata$mu_is_etaB <- infos$mu_is_etaB
+  }
 
 
   return(standata)

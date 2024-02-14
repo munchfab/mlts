@@ -152,42 +152,42 @@ VARfit <- function(VARmodel,
 
   # AR(1) Models -------------------------------------------------------------
   ## Single-indicator AR(1) model with at least two random effects
-  if(isAR == T & n_random > 1 & isLatent == F){
-    # data preprocessing
-    if(printMessage==T){
-      standata <- ARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
-                           covariates = covariates, outcomes = outcomes,
-                           outcome.pred.btw = outcome.pred.btw,
-                           center.covs = center.covs, std.outcome = std.outcome)
-    } else {
-      standata <- suppressMessages(
-        ARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
-                  covariates = covariates, outcomes = outcomes,
-                  outcome.pred.btw = outcome.pred.btw,
-                  center.covs = center.covs, std.outcome = std.outcome))
-    }
-
-    # parameter to monitor
-    pars <- c("gammas", "sigma", "sd_R", "bcorr", "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
-    if(monitor.person.pars == T){
-      pars <- c(pars, "b_free")
-    }
-
-    # fit model
-    if(fit.model==T){
-    stanfit <- rstan::sampling(
-      stanmodels$AR_manifest,
-      data = standata,
-      pars = pars,
-      iter = iter,
-      cores = cores,
-      chains = chains,
-      ...)
-    } else {
-      stanfit = NULL
-    }
-
-  }
+  # if(isAR == T & n_random > 1 & isLatent == F){
+  #   # data preprocessing
+  #   if(printMessage==T){
+  #     standata <- ARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
+  #                          covariates = covariates, outcomes = outcomes,
+  #                          outcome.pred.btw = outcome.pred.btw,
+  #                          center.covs = center.covs, std.outcome = std.outcome)
+  #   } else {
+  #     standata <- suppressMessages(
+  #       ARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
+  #                 covariates = covariates, outcomes = outcomes,
+  #                 outcome.pred.btw = outcome.pred.btw,
+  #                 center.covs = center.covs, std.outcome = std.outcome))
+  #   }
+  #
+  #   # parameter to monitor
+  #   pars <- c("gammas", "sigma", "sd_R", "bcorr", "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
+  #   if(monitor.person.pars == T){
+  #     pars <- c(pars, "b_free")
+  #   }
+  #
+  #   # fit model
+  #   if(fit.model==T){
+  #   stanfit <- rstan::sampling(
+  #     stanmodels$AR_manifest,
+  #     data = standata,
+  #     pars = pars,
+  #     iter = iter,
+  #     cores = cores,
+  #     chains = chains,
+  #     ...)
+  #   } else {
+  #     stanfit = NULL
+  #   }
+  #
+  # }
 
   ## Single-indicator AR(1) model with random intercepts only
   if(isAR == T & n_random == 1 & isLatent == F){
@@ -224,25 +224,11 @@ VARfit <- function(VARmodel,
     }
   }
 
-  ## Multiple-indicator AR(1) model with at least two random effects
-  if(isAR == T & n_random > 1 & isLatent == T){
-    # data preprocessing
-    standata <- data
-
-    # model fit
-  }
-
-  ## Multiple-indicator AR(1) model with random intercepts only
-  if(isAR == T & n_random == 1 & isLatent == T){
-    # data preprocessing
-    standata <- data
-
-    # model fit
-  }
 
   # VAR(1) Models -------------------------------------------------------------
   ## Single-indicator VAR(1) model
-  if(isAR == F & isLatent == F){
+  # if(isAR == F & isLatent == F){ OLD
+  if(n_random > 1 & isLatent == F){
     # data preprocessing
     standata <- VARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
                           covariates = covariates, outcomes = outcomes,
@@ -289,13 +275,56 @@ VARfit <- function(VARmodel,
 
   }
 
-  ## Multiple-indicator VAR(1) model
-  if(isAR == F & isLatent == T){
+  ## Multiple-indicator Model ==================================================
+  if(isLatent == T){
     # data preprocessing
-    standata <- data
+    standata <- VARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
+                           covariates = covariates, outcomes = outcomes,
+                           outcome.pred.btw = outcome.pred.btw,
+                           center.covs = center.covs, std.outcome = std.outcome)
 
     # model fit
+    pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
+              "b_re_pred", "b_out_pred", "alpha_out", "sigma_out",
+              "alpha", "loadB", "sigmaB", "loadW", "sigmaW")
+    if(monitor.person.pars == T){
+      pars = c(pars, "b_free")
+    }
+
+    if(standata$n_inno_covs == 0){
+      if(fit.model==T){
+        stanfit <- rstan::sampling(
+          stanmodels$VAR_latent,
+          data = standata,
+          pars = pars,
+          iter = iter,
+          cores = cores,
+          chains = chains,
+          ...
+        )
+      } else {
+        stanfit <- NULL
+      }
+#    } else {
+      # if(fit.model==T){
+      #   stanfit <- rstan::sampling(
+      #     stanmodels$VAR_manifestCovsRand,
+      #     data = standata,
+      #     pars = pars,
+      #     iter = iter,
+      #     cores = cores,
+      #     chains = chains,
+      #     ...
+      #   )
+  #    } else {
+#        stanfit <- NULL
+#      }
+    }
+
   }
+
+
+  # ============================================================================
 
 
   if(fit.model == T){

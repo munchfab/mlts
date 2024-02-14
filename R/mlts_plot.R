@@ -35,6 +35,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
   bpe <- match.arg(bpe)
 
 
+
   if(type == "fe"){ # fixed effect estimates
     if(bpe == "median"){
       fit$pop.pars.summary$bpe = fit$pop.pars.summary$`50%`
@@ -50,6 +51,12 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     p.data$Param <- factor(p.data$Param, levels = rev(p.data$Param))
     # add parameter type used for facets
     p.data$Param_type <- fit$VARmodel$Type
+    # order parameter type
+    p.data$Param_type <- factor(p.data$Param_type, levels = c(
+      "Fix effect", "Random effect SD", "RE correlation",
+      "Item intercepts", "Loading", "Measruement Error SD"
+    ))
+
 
     # build general plot
     aes <- ggplot2::aes
@@ -73,6 +80,9 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
   }
 
   if(type == "re"){ # random effect estimates
+    if(is.null(nrow(fit$person.pars.summary))){
+      stop("No individual (random) parameter results available. Model needs to be refitted with monitor.person.pars = TRUE in VARfit().")
+    }
     xlab <- ifelse(!is.null(xlab), xlab, colnames(fit$person.pars.summary)[2])
 
     if(bpe == "median"){

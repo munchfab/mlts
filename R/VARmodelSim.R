@@ -66,6 +66,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     ###### NEEDS UPDATING ----
     ## Log innovation covariance
     VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Covariance"] = -1
+    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Innovation correlation"] = -0.15
     ###### ----
 
 
@@ -184,7 +185,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     "ID" = rep(1:N, each = NT),
     "time" = rep(1:NT, times = N)
   )
-  q = infos$n_mus   # number of constructs
+  q = infos$q   # number of constructs
   y_cols = paste0("Y",1:q)   # prepare columns
   within[, y_cols] = NA
 
@@ -208,7 +209,17 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
       inno_var_mat = diag(innoVars.i)
 
       ########## ADD INNOVATION COVARIANCES HERE ::::::::::::::::::::::::::::::::
-
+      if(infos$n_inno_cors > 0){
+        for(xx in 1:q){
+          for(yy in 1:q){
+            if(xx < yy){
+              cor = VARmodel$true.val[VARmodel$Param == paste0("r_zeta_",xx,yy)]
+              cov = cor * sqrt(inno_var_mat[xx,xx]) * sqrt(inno_var_mat[yy,yy])
+              inno_var_mat[xx,yy] <- inno_var_mat[yy,xx] = cov
+            }
+          }
+        }
+      }
 
 
       # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -232,7 +243,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
 
     # add trait scores (for manifest indicators)
     if(infos$isLatent == F){
-      for(j in 1:infos$n_mus){
+      for(j in 1:infos$q){
       within[within$ID==i,y_cols[j]] = btw[i,j] + within[within$ID==i,y_cols[j]]
       }
     }
@@ -249,8 +260,8 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   if(infos$isLatent == TRUE){
   N_inds = max(infos$indicators$p_pos)
   for(i in 1:N_inds){
-    q = infos$indicators$q[i]
-    p = infos$indicators$p[i]
+    q = as.integer(infos$indicators$q[i])
+    p = as.integer(infos$indicators$p[i])
     ind.lab = paste0("Y",q,".",p)
     # within
     loadW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading"][i]
@@ -263,16 +274,20 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
     sigmaB = VARmodel$true.val[VARmodel$Param == paste0("sigmaB_",q,".",p)]
     sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
 
-    for(p in 1:N){
+    for(j in 1:N){
       # create WITHIN-PART:
-      etaW = within[within$ID==p, paste0("Y",q)]
-      YW = loadW * etaW + ifelse(sigmaW == 0, 0, rnorm(n = N, mean = 0, sd = sigmaW))
+      etaW = within[within$ID==j, paste0("Y",q)]
+      if(sigmaW == 0){
+        YW = loadW * etaW
+      } else {
+        YW = loadW * etaW + rnorm(n = TP, mean = 0, sd = sigmaW)
+      }
 
       # create BETWEEN-PART:
-      YB = alpha + loadB * btw[p,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, rnorm(n = 1, mean = 0, sd = sigmaB))
+      YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, rnorm(n = 1, mean = 0, sd = sigmaB))
 
       # indicator
-      within[within$ID==p,ind.lab] = YB + YW
+      within[within$ID==j,ind.lab] = YB + YW
     }
   }
   }

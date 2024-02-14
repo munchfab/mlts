@@ -15,12 +15,13 @@ VARmodelMeasurement(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL)
 indicators per construct.}
 
 \item{btw.factor}{Logical. If \code{TRUE} (the default), a common between-level factor
-across is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
+is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
 factor, indicator mean levels will be included as individual (random) effects stemming
 from a joint multivariate normal distribution.}
 
 \item{btw.model}{A list to indicate for which manifest indicator variables a common
-between-level factor should be modeled (see Details for detailed instructions). At this point restricted to one factor per latent construct.}
+between-level factor should be modeled (see Details for detailed instructions).
+At this point restricted to one factor per latent construct.}
 }
 \value{
 An object of class \code{data.frame}.
@@ -38,4 +39,14 @@ VARmodel <- VARmodelBuild(q = 1)
 
 # add measurement model using three indicators
 VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+
+# only indicator-specific (random) intercepts are modeled
+VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+
+# A more fine-grained between-level measurement model can be specified via:
+VARmodel <- VARmodelMeasurement(
+              VARmodel, q = 1, p = 3,
+              btw.model = list(""))
+Which models a common latent factor on the between-level for the first three
+indicators and a random indicator mean for the fourth indicator.
 }

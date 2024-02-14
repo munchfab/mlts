@@ -1,20 +1,22 @@
 // autoregressive DSEM with manifest variables
 data {
-  int<lower=1> N; 	// number of observational units
-  int<lower=1> D; 	// number of time-varying constructs
-  int<lower=1> N_obs; 	// observations in total: N * TP
+  int<lower=1> N; 	        // number of observational units
+  int<lower=1> D;           // number of latent constructs
+  int<lower=2> n_p; 	      // number of manifest indicators
+  int D_perP[n_p];          // indicate dimension per indicator
+  int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
-  int<lower=D> n_random;   // number of random effects
+  int<lower=D> n_random;    // number of random effects
   int n_fixed;
   int is_fixed[1,n_fixed];
   int is_random[n_random];  // which parameters to model person-specific
   int<lower=1> N_obs_id[N]; // number of observations for each unit
-  vector[N_obs] y[D]; 	    // D*N_obs array of observations
+  vector[N_obs] y[n_p];     // observations as array of vectors
 
   // handling of missing values
-  int n_miss;                      // total number of missings across D
-  int n_miss_D[D];                 // missings per D
-  int pos_miss_D[D,max(n_miss_D)]; // array of missings' positions
+  int n_miss;                        // total number of missings across indicators
+  int n_miss_p[n_p];                 // missings per indicator
+  int pos_miss_p[n_p,max(n_miss_p)]; // array of missings' positions
 
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
@@ -47,6 +49,24 @@ data {
   matrix[N, n_z] Z;     // observations of Z
   vector[N] out[n_out];        // outcome
 
+  // indexing information on constraints
+  int n_loadBfree;
+  int n_loadWfree;
+  int n_alphafree;
+  int n_sigmaBfree;
+  int n_sigmaWfree;
+  int pos_loadBfree[n_loadBfree]; // positions in relation to the 1:n_p indicators
+  int pos_loadWfree[n_loadWfree];
+  int pos_alphafree[n_alphafree];
+  int pos_sigmaBfree[n_sigmaBfree];
+  int pos_sigmaWfree[n_sigmaWfree];
+  // index random manifest indicator means
+  int n_YB_free;        // number of indicators for which mu (YB) is not determined by random item mean
+  int YB_free_pos[n_p]; //
+  int mu_is_etaB[n_p];  //
+  int mu_etaB_pos[n_p]; // indicate whether to use etaB or random item mean
+
+
   // priors
   matrix[n_random,2] prior_gamma;
   matrix[n_random,2] prior_sd_R;
@@ -61,7 +81,6 @@ data {
   // int<lower=1> n_inno_covs; // number of potential innovation covs to include
   // int<lower=0,upper=1> inno_cov0;    // fixed to zero
   // int<lower=0,upper=1> inno_cov_fix; // fixed to zero
-
 }
 
 parameters {
@@ -77,6 +96,14 @@ parameters {
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
 
+  // measurement model parameters
+  vector[n_loadBfree] loadB_free;
+  vector[n_loadWfree] loadW_free;
+  vector[n_alphafree] alpha_free;
+  vector<lower=0>[n_sigmaBfree] sigmaB_free;
+  vector<lower=0>[n_sigmaWfree] sigmaW_free;
+  vector[N_obs] etaW[D];
+  vector[N] YB_free[n_YB_free];
 }
 
 transformed parameters {
@@ -84,6 +111,12 @@ transformed parameters {
   matrix[N,n_pars] b;
   vector<lower = 0>[N] sd_noise[D];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
+
+  vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
+  vector[n_p] loadW = rep_vector(1, n_p);
+  vector[n_p] alpha = rep_vector(0, n_p);
+  vector[n_p] sigmaB = rep_vector(0, n_p);
+  vector[n_p] sigmaW = rep_vector(0, n_p);
 
  // REs regressed on covariates
   b_re_pred_mat[1,] = gammas;
@@ -113,6 +146,14 @@ transformed parameters {
       sd_noise[i,] = sqrt(exp(b[,innos_pos[i]]));
     }
   }
+
+
+  // replace values for parameters to estimate
+  loadB[pos_loadBfree] = loadB_free;
+  loadW[pos_loadWfree] = loadW_free;
+  alpha[pos_alphafree] = alpha_free;
+  sigmaB[pos_sigmaBfree] = sigmaB_free;
+  sigmaW[pos_sigmaWfree] = sigmaW_free;
  }
 
 model {
@@ -120,15 +161,16 @@ model {
   int p_miss = 1;    // running counter variable to index positions on y_impute
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
-  vector[N_obs] y_merge[D];
+  vector[N_obs] y_merge[n_p];
+  vector[N_obs] Ymus[n_p];
+  vector[N] YB[n_p];
 
-  y_merge = y;      // add observations
-  if(n_miss>0){
-    for(i in 1:D){
-    // add imputed values for missings on each indicator
-    y_merge[i,pos_miss_D[i,1:n_miss_D[i]]] = segment(y_impute, p_miss, n_miss_D[i]);
-    p_miss = p_miss + n_miss_D[i];    // update counter for next indicator i+1
-  }
+  y_merge = y;          // add observations
+  if(n_miss>0){         // add imputed values for missings on each indicator
+    for(i in 1:n_p){
+    y_merge[i,pos_miss_p[i,1:n_miss_p[i]]] = segment(y_impute, p_miss, n_miss_p[i]);
+    p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
+    }
   }
 
   // (Hyper-)Priors
@@ -153,6 +195,21 @@ model {
     b_fix ~ normal(0,2);
   }
 
+  // priors on measurement model parameter
+  alpha_free ~ normal(0,10);
+  loadB_free ~ normal(0,2);
+  loadW_free ~ normal(0,2);
+  sigmaB_free ~ cauchy(0,2.5);
+  sigmaW_free ~ cauchy(0,2.5);
+
+  // indicator between-part
+  for(i in 1:n_p){
+    if(mu_is_etaB[i] == 1){
+      YB[i,] = b[,mu_etaB_pos[i]];
+    } else {
+      YB[i,] = YB_free[YB_free_pos[i],];
+    }
+  }
 
   for (pp in 1:N) {
     // store number of observations per person
@@ -161,36 +218,37 @@ model {
     // individual parameters from multivariate normal distribution
     b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
 
-    // local variable declaration: array of predicted values
+    // dynamic process
     {
     vector[obs_id-1] mus[D];
-
-    // create latent mean centered versions of observations
-    vector[obs_id] y_cen[D];
-
-    for(d in 1:D){ // start loop over dimensions
-    y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,d];
-    }
-
     for(d in 1:D){ // start loop over dimensions
       // build prediction matrix for specific dimensions
-      {
-      matrix[(obs_id-1),N_pred[d]] b_mat; // adjust for non-fully crossed models
-      for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
-        b_mat[,nd] = y_cen[D_pred[d, nd],1:(obs_id-1)];
+      matrix[(obs_id-1),N_pred[d]] b_mat;         // adjust for non-fully crossed models
+      for(nd in 1:N_pred[d]){                     // start loop over number of predictors in each dimension
+        b_mat[,nd] = etaW[D_pred[d, nd],(pos):(pos-2+obs_id)];
       }
 
       // use build predictor matrix to calculate latent time-series means
-      mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-
-      // sampling statement
-      y_merge[d,(pos+1):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
-      }
-     }
+      mus[d,] = b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+      etaW[d,(pos+1):(pos-1+obs_id)] ~ normal(mus[d,], sd_noise[d,pp]);
     }
-    // update index variables
+    }
+
+    // expected indicator scores
+    for(i in 1:n_p){
+      Ymus[i,pos:(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW[D_perP[i],pos:(pos-1+obs_id)];
+    }
+
     pos = pos + obs_id;
-  }
+    } // end loop over subjects
+
+    // sampling statements
+    for(i in 1:n_p){
+      if(mu_is_etaB[i] == 0){
+        YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
+      }
+        y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
+      }
 
   // outcome prediction: get expectations of outcome values
   if(n_out > 0){

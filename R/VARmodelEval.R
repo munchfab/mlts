@@ -19,24 +19,25 @@ VARmodelEval <- function(VARmodel){
 
   ## Dynamic model
   fix_pars = VARmodel[VARmodel$Type == "Fix effect",]
-  # extract the number of (latent constructs) --> n_mus
+  # extract the number of (latent constructs)
   constructs = lapply(fix_pars$Param[startsWith(fix_pars$Param_Label, "Trait")], function(x){
     substr(strsplit(x, split = c("_"))[[1]][2], start = 1, stop = 1)
   })
-  n_mus = max(as.numeric(unlist(constructs)))
+  q = max(as.numeric(unlist(constructs)))   # number of (latent) constructs
+  n_mus = sum(startsWith(fix_pars$Param_Label,prefix = "Trait"))
   fix_pars$no = 1:nrow(fix_pars)
   fix_pars_dyn = fix_pars[fix_pars$Param_Label == "Dynamic",]
   n_dyn.pars = nrow(fix_pars_dyn)
-  if(n_mus < 10){  ### ACHTUNG AKTUELLE LÖSUNG FUNKTIONIERT NUR MIT D < 10
+  if(q < 10){  ### ACHTUNG AKTUELLE LÖSUNG FUNKTIONIERT NUR MIT D < 10
     fix_pars_dyn$Dout = substr(fix_pars_dyn$Param, start = 5, stop = 5)
     fix_pars_dyn$Dpred = substr(fix_pars_dyn$Param, start = 6, stop = 6)
   }
   # lagged relations between constructs
   N_pred = table(fix_pars_dyn$Dout) # number of lagged preds in each dimension
-  D_pred = matrix(0, nrow = n_mus, ncol = n_mus, byrow = T)
+  D_pred = matrix(0, nrow = q, ncol = q, byrow = T)
   Dpos1 = c()
   Dpos2 = c()
-  for(i in 1:n_mus){
+  for(i in 1:q){
     D_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred[fix_pars_dyn$Dout == i])
     if(i == 1){
       Dpos1[i] = n_mus+1
@@ -47,8 +48,6 @@ VARmodelEval <- function(VARmodel){
     }
   }
 
-  # number of (latent) constructs
-  q = as.integer(n_mus)
 
   # number of indicators per latent construct
   if (isLatent == T) {
@@ -87,6 +86,7 @@ VARmodelEval <- function(VARmodel){
     add = extract_indicator_info(VARmodel, level = "Between", type = "Measurement Error SD")
     if(nrow(add)>0){
       indicators = merge(x = indicators, y = add, all.x = T)
+      indicators$sigmaB_isFree[is.na(indicators$sigmaB_isFree)] = 0
     } else {
       indicators$sigmaB_isFree = 0
     }
@@ -117,8 +117,7 @@ VARmodelEval <- function(VARmodel){
     indicators$etaB_pos = unlist(lapply(indicators$etaB_label, function(x){
       which(fixefs$Param == x)
     }))
-    indicators$YB_free_pos = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree),
-                                    indicators$p_pos, 0)
+    indicators$YB_free_pos = cumsum(indicators$sigmaB_isFree)
 
     # prepare infos to be passed to stan model ---------------------------------
     n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = T)
@@ -161,7 +160,7 @@ VARmodelEval <- function(VARmodel){
   # which innovation variances as random effects?
   innos_rand = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "isRandom"]
   innos_pos = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "no"]
-  n_innos_fix = n_mus - sum(innos_rand)
+  n_innos_fix = q - sum(innos_rand)
   innos_fix_pos = cumsum(1 - innos_rand)
 
 
@@ -179,6 +178,9 @@ VARmodelEval <- function(VARmodel){
   n_inno_cov_fix = n_inno_covs - sum(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),"isRandom"])
   inno_cov_pos = matrix(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"), "no"],
                         nrow = 1, ncol = n_inno_covs)
+  inno_cors = fix_pars[grepl(fix_pars$Param, pattern="r_zeta"),]
+  n_inno_cors = nrow(inno_cors)
+
 
   # REs as OUTCOME ============================================================
   RE.PREDS = VARmodel[VARmodel$Type == "RE prediction",]
@@ -333,6 +335,8 @@ VARmodelEval <- function(VARmodel){
     n_inno_covs,
     n_inno_cov_fix,
     inno_cov_pos,
+    inno_cors,
+    n_inno_cors,
 
     # REs as outcomes
     RE.PREDS, n_cov, n_cov_bs, n_cov_mat, n_cov_vars,
