@@ -694,18 +694,17 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   )
 
   # optional: store PDF pages as separate pngs ################################
-  if(add.png == T){
-  pdftools::pdf_convert(
-    pdf = "pathmodel.pdf",
-    format = "png",
-    pages = NULL,
-    filenames = NULL,
-    dpi = 720,
-    antialias = TRUE,
-    opw = "",
-    upw = "",
-    verbose = FALSE
-  )
+  if (add.png == T) {
+    pdftools::pdf_convert(
+      pdf = "pathmodel.pdf",
+      format = "png",
+      pages = NULL,
+      filenames = NULL,
+      dpi = 720,
+      antialias = TRUE,
+      opw = "",
+      upw = "",
+      verbose = FALSE
+    )
   }
-
 }
