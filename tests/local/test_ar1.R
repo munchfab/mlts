@@ -4,6 +4,8 @@
 
 devtools::load_all()
 
+ar1_data <- VARmodelSim(VARmodel = VARmodel)
+
 # create artificial data
 ar1_data <- sim_data_AR1_man(
   N = 100,
