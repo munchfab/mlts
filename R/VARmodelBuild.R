@@ -11,8 +11,21 @@ VARmodelBuild <- function(q, p = NULL){
   # checks needed?
   ### Müssen wir hier einen manuellen Check einbauen, ob p entweder
   ### length(p) == 1 oder length(p) == q ist?
+  # setze ich in testthat um
   if(length(p) == 1){
     p = rep(p, times = q)
+    if (q > 1) {
+      message("Note: The number of indicators is assumed to be ", p[1],
+              " for each latent variable. If this is not intended, please",
+              " specify a vector of length q containing the number of",
+              " indicators for each latent construct",
+              " (see Vignettes for examples).")
+    }
+  }
+  if (length(p) != q) {
+    stop("If multiple indicators are used for latent constructs,",
+         " p should be a vector of length q containing the number of",
+         " indicators for each latent construct (see Vignettes for examples).")
   }
 
 
@@ -43,7 +56,7 @@ VARmodelBuild <- function(q, p = NULL){
 
 message("Note: When specifying a VAR(1) model with person-specific innovation
 covariances, a latent-variable approach will be used which affords introducing
-contraints on the loading parameters of the latent covariance facotor(s).
+contraints on the loading parameters of the latent covariance factor(s).
 (see Hamaker et al., 2018). If innovation covariances are set as a constant
 or set to 0 in a subsequent step, this warning can be ignored.")
 

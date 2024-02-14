@@ -38,6 +38,13 @@ VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = N
 
   if(length(p) == 1){
     p = rep(p, times = q)
+    if (q > 1) {
+      message("Note: The number of indicators is assumed to be ", p[1],
+              " for each latent variable. If this is not intended, please",
+              " specify a vector of length q containing the number of",
+              " indicators for each latent construct",
+              " (see Vignettes for examples).")
+    }
   }
 
   # print a warning if VARmodel already contains a measurement model
