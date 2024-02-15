@@ -22,7 +22,7 @@ VARmodelBuild <- function(q, p = NULL){
               " (see Vignettes for examples).")
     }
   }
-  if (length(p) != q) {
+  if (length(p) != q & !is.null(p)) {
     stop("If multiple indicators are used for latent constructs,",
          " p should be a vector of length q containing the number of",
          " indicators for each latent construct (see Vignettes for examples).")
