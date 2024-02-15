@@ -75,8 +75,7 @@ create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
     # check whether or not shifted more than 4 intervals and print warning
     temp$shifts <- temp$int_time_shifted - temp$int_time
     if (max(temp$shifts) > 4) {
-      print(paste("Warning: obs shifted", temp$shifts,
-                  "intervals for id", id))
+      warning("Observations shifted", temp$shifts, "intervals for id", id)
     }
     # rescale to start counts with 1
     temp$int_time_shifted <- temp$int_time_shifted -

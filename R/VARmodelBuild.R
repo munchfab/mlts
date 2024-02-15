@@ -8,14 +8,10 @@
 #'
 VARmodelBuild <- function(q, p = NULL){
 
-  # checks needed?
-  ### Müssen wir hier einen manuellen Check einbauen, ob p entweder
-  ### length(p) == 1 oder length(p) == q ist?
-  # setze ich in testthat um
   if(length(p) == 1){
     p = rep(p, times = q)
     if (q > 1) {
-      message("Note: The number of indicators is assumed to be ", p[1],
+      warning("Note: The number of indicators is assumed to be ", p[1],
               " for each latent variable. If this is not intended, please",
               " specify a vector of length q containing the number of",
               " indicators for each latent construct",
