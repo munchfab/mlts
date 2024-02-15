@@ -52,3 +52,4 @@ devtools::install_github("munchfab/dsemr")
 * `VARmodelSim()`:
   * include tests for unit testing with `testthat()`
   * write Vignettes
+* Decide on package name and rename functions accordingly?
