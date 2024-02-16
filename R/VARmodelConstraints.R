@@ -25,7 +25,7 @@ VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
 
     # remove random effect SDs
     VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                          VARmodel$Param_Label == "Dynamic"),]
+                            VARmodel$Param_Label == "Dynamic"),]
   }
 
 
@@ -36,10 +36,10 @@ VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
 
     # remove random effect SDs
     VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                          VARmodel$Param_Label == "Log Innovation Variance"),]
+                            VARmodel$Param_Label == "Log Innovation Variance"),]
     # adjust labels of fixed effects
     VARmodel[(VARmodel$Type == "Fix effect" &
-             VARmodel$Param_Label == "Log Innovation Variance"), "Param_Label"] = "Innovation Variance"
+                VARmodel$Param_Label == "Log Innovation Variance"), "Param_Label"] = "Innovation Variance"
     # adjust params
     VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma2_")] = gsub(
       VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma2_")],
@@ -54,11 +54,11 @@ VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
 
     # remove random effect SDs
     VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                          VARmodel$Param_Label == "Log Innovation Covariance"),]
+                            VARmodel$Param_Label == "Log Innovation Covariance"),]
 
     # adjust labels of fixed effects
     VARmodel$Param_Label[(VARmodel$Type == "Fix effect" &
-              VARmodel$Param_Label == "Log Innovation Covariance")] = "Innovation correlation"
+                            VARmodel$Param_Label == "Log Innovation Covariance")] = "Innovation correlation"
 
     # adjust params
     VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma_")] = gsub(
@@ -74,6 +74,8 @@ VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
   # remove individual effects from the dynamic model
   if(!is.null(FEis0)){
     VARmodel = VARmodel[!(VARmodel$Param %in% c(FEis0)),]
+    # remove respective random effects
+    VARmodel = VARmodel[!(VARmodel$Param %in% c(paste0("sigma_",FEis0))),]
   }
 
   # remove random effect SDs of constant parameters

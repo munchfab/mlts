@@ -9,9 +9,16 @@ VARmodelEval <- function(VARmodel){
 
   # read features of specified VARmodel
 
+  # extract included lag-order
+  isPHI = which(startsWith(VARmodel$Param, "phi("))
+  VARmodel$Lag = NA
+  VARmodel$Lag[isPHI] = as.integer(substr(VARmodel$Param[isPHI], 5, 5))
+  maxLag = max(VARmodel$Lag, na.rm = T)
+
   # create additional columns
-  ars = paste0("phi_", 1:9, 1:9)
+  ars = paste0("phi(",rep(1:3,each = 9),")_", 1:9, 1:9) # attention: max lag of 3 is hard-coded
   VARmodel$isAR = ifelse(VARmodel$Param %in% ars,1,0)
+
 
   # check if measurement model is entered
   isLatent = nrow(VARmodel[VARmodel$Model == "Measurement",])
@@ -29,16 +36,18 @@ VARmodelEval <- function(VARmodel){
   fix_pars_dyn = fix_pars[fix_pars$Param_Label == "Dynamic",]
   n_dyn.pars = nrow(fix_pars_dyn)
   if(q < 10){  ### ACHTUNG AKTUELLE LÖSUNG FUNKTIONIERT NUR MIT D < 10
-    fix_pars_dyn$Dout = substr(fix_pars_dyn$Param, start = 5, stop = 5)
-    fix_pars_dyn$Dpred = substr(fix_pars_dyn$Param, start = 6, stop = 6)
+    fix_pars_dyn$Dout = substr(fix_pars_dyn$Param, start = 8, stop = 8)
+    fix_pars_dyn$Dpred = substr(fix_pars_dyn$Param, start = 9, stop = 9)
   }
   # lagged relations between constructs
   N_pred = table(fix_pars_dyn$Dout) # number of lagged preds in each dimension
-  D_pred = matrix(0, nrow = q, ncol = q, byrow = T)
+  D_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = T)
+  Lag_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = T)
   Dpos1 = c()
   Dpos2 = c()
   for(i in 1:q){
     D_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred[fix_pars_dyn$Dout == i])
+    Lag_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag[fix_pars_dyn$Dout == i])
     if(i == 1){
       Dpos1[i] = n_mus+1
       Dpos2[i] = n_mus+N_pred[i]
@@ -47,6 +56,7 @@ VARmodelEval <- function(VARmodel){
       Dpos2[i] = Dpos2[i-1] +N_pred[i]
     }
   }
+
 
 
   # number of indicators per latent construct
@@ -105,8 +115,8 @@ VARmodelEval <- function(VARmodel){
     # add etaB label for matching
     if(!is.null(indicators$mu_isFree)){
       indicators$etaB_label = ifelse(!is.na(indicators$mu_isFree),
-                                   paste0("mu_",indicators$q, ".", indicators$p),
-                                   paste0("etaB_", indicators$q))
+                                     paste0("mu_",indicators$q, ".", indicators$p),
+                                     paste0("etaB_", indicators$q))
     } else {
       indicators$etaB_label = paste0("etaB_", indicators$q)
     }
@@ -185,7 +195,7 @@ VARmodelEval <- function(VARmodel){
   # REs as OUTCOME ============================================================
   RE.PREDS = VARmodel[VARmodel$Type == "RE prediction",]
 
-   if(nrow(RE.PREDS)>0){
+  if(nrow(RE.PREDS)>0){
     # which REs to regress on
     RE.PREDS$re_as_dv = substring(
       RE.PREDS$Param, 3,regexpr(RE.PREDS$Param,pattern = ".ON.", fixed = T)-1)
@@ -202,14 +212,14 @@ VARmodelEval <- function(VARmodel){
     n_cov = 1 + length(re_preds_unique)                  # add 1 for intercepts
     n_cov_bs = nrow(RE.PREDS)
     n_cov_mat = matrix(unlist(RE.PREDS[,c("pred_no", "re_no")]),
-                        ncol = 2, nrow = n_cov_bs)
+                       ncol = 2, nrow = n_cov_bs)
     n_cov_mat[,1] = n_cov_mat[,1] + 1    # shift by 1 for intercepts
 
-   } else { # covariates
-     n_cov = 1
-     n_cov_bs = 0    # use a random placeholder as it will be overwritten when n_cov = 1
-     n_cov_mat = matrix(1, ncol = n_cov+1, nrow = n_cov_bs)
-     n_cov_vars = NA
+  } else { # covariates
+    n_cov = 1
+    n_cov_bs = 0    # use a random placeholder as it will be overwritten when n_cov = 1
+    n_cov_mat = matrix(1, ncol = n_cov+1, nrow = n_cov_bs)
+    n_cov_vars = NA
 
   }
 
@@ -280,7 +290,7 @@ VARmodelEval <- function(VARmodel){
   # add fix effect prior of constant innovation variance (as SD)
   prior_sigma = matrix(ncol = 2, nrow = n_innos_fix)
   if(n_innos_fix>0){
-  prior_sigma = VARmodel[VARmodel$Param_Label=="Innovation Variance",cols]
+    prior_sigma = VARmodel[VARmodel$Param_Label=="Innovation Variance",cols]
   }
 
   # RE prediction
@@ -314,6 +324,7 @@ VARmodelEval <- function(VARmodel){
     VARmodelext,
     q,
     p,
+    maxLag,
     n_mus,
     n_pars,
     n_random,
@@ -326,6 +337,7 @@ VARmodelEval <- function(VARmodel){
     n_dyn.pars,
     N_pred,
     D_pred,
+    Lag_pred,
     Dpos1,
     Dpos2,
     innos_rand,
@@ -353,7 +365,7 @@ VARmodelEval <- function(VARmodel){
     # priors
     prior_gamma, prior_sd_R, prior_LKJ, prior_sigma, prior_b_re_pred,
     prior_b_out, prior_alpha_out, prior_sigma_out
-    )
+  )
 
   return(VARmodelinfos)
 }

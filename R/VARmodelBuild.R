@@ -6,7 +6,11 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelBuild <- function(q, p = NULL){
+VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3)){
+
+  if(length(maxLag) == 3){
+    maxLag = 1
+  }
 
   if(length(p) == 1){
     p = rep(p, times = q)
@@ -29,8 +33,10 @@ VARmodelBuild <- function(q, p = NULL){
   n_mus = q                                 # trait level parameters
   mus_pars = paste0("mu_",1:n_mus)
 
-  n_phi = q^2                               # dynamic parameters
-  phi_pars = paste0("phi_",rep(1:q, each = q), rep(1:q, times = q))
+  n_phi = (q^2)*maxLag                        # dynamic parameters
+  phi_order = rep(paste0("phi(",1:maxLag,")_"), each = q, times = q)
+  phis = paste0(rep(1:q, each = q*maxLag), rep(1:q, times = q*maxLag))
+  phi_pars = paste0(phi_order, phis)
 
   n_sigma = q                               # innovation variances
   sigma_pars = paste0("ln.sigma2_", 1:q)
@@ -50,7 +56,7 @@ VARmodelBuild <- function(q, p = NULL){
 
   if(q > 1){
 
-message("Note: When specifying a VAR(1) model with person-specific innovation
+    message("Note: When specifying a VAR(1) model with person-specific innovation
 covariances, a latent-variable approach will be used which affords introducing
 contraints on the loading parameters of the latent covariance factor(s).
 (see Hamaker et al., 2018). If innovation covariances are set as a constant
@@ -118,32 +124,32 @@ or set to 0 in a subsequent step, this warning can be ignored.")
     )
   }
 
-    ## add random effect correlations
-    rand.pars = FE[FE$isRandom == 1,"Param"]
-    n_rand = length(rand.pars)
-    btw.cov_pars = c()
-    if(n_rand>1){
-      n_cors = (n_rand * (n_rand-1))/2
-      qs = c()
-      ps = c()
-      for(i in 1:(n_rand-1)){
-        qs = c(qs, rep(rand.pars[i], each = n_rand-i))
-      }
-      for(i in 2:n_rand){
-        ps = c(ps, rep(rand.pars[i:n_rand], 1))
-      }
+  ## add random effect correlations
+  rand.pars = FE[FE$isRandom == 1,"Param"]
+  n_rand = length(rand.pars)
+  btw.cov_pars = c()
+  if(n_rand>1){
+    n_cors = (n_rand * (n_rand-1))/2
+    qs = c()
+    ps = c()
+    for(i in 1:(n_rand-1)){
+      qs = c(qs, rep(rand.pars[i], each = n_rand-i))
+    }
+    for(i in 2:n_rand){
+      ps = c(ps, rep(rand.pars[i:n_rand], 1))
+    }
 
-      btw.cov_pars = paste0("r_", qs,".", ps)
+    btw.cov_pars = paste0("r_", qs,".", ps)
 
-      ## random effect correlations
-      REcors = data.frame(
-        "Model" = "Structural",
-        "Level" = "Between",
-        "Type" = rep("RE correlation",n_cors),
-        "Param" = btw.cov_pars,
-        "Param_Label" = "RE Cor",
-        "isRandom" = 0
-      )
+    ## random effect correlations
+    REcors = data.frame(
+      "Model" = "Structural",
+      "Level" = "Between",
+      "Type" = rep("RE correlation",n_cors),
+      "Param" = btw.cov_pars,
+      "Param_Label" = "RE Cor",
+      "isRandom" = 0
+    )
 
 
     ## combine

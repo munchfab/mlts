@@ -43,8 +43,8 @@ VARmodelParLabels <- function(VARmodel){
     REcors$Param_stan = REcors$Param
     for(i in 1:length(rand_pars)){
       REcors$Param_stan = gsub(REcors$Param_stan,
-                                   pattern = rand_pars[i],
-                                   replacement = rand_pars_pos[i])
+                               pattern = rand_pars[i],
+                               replacement = rand_pars_pos[i], fixed = T)
     }
     REcors$Param_stan = gsub(REcors$Param_stan, fixed = T,
                                  patter = ".", replacement = ",")

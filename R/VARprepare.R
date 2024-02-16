@@ -65,8 +65,10 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
 
 
   # dynamic model specification by dimension (D)
+  maxLag = infos$maxLag
   N_pred = infos$N_pred
   D_pred = infos$D_pred
+  Lag_pred = infos$Lag_pred
   Dpos1 = as.array(infos$Dpos1)
   Dpos2 = as.array(infos$Dpos2)
   # covariate(s) as predictor(s) of random effects
@@ -136,10 +138,10 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   # combine all information
   standata = rstan::nlist(
     # data specifications
-    N, D, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
+    N, D,maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
     # model specifications
     n_pars, n_random, n_fixed, is_random, is_fixed,
-    N_pred, D_pred, Dpos1, Dpos2,
+    N_pred, D_pred, Lag_pred, Dpos1, Dpos2,
     ## innovations
     innos_rand, innos_pos, n_innos_fix,
     ## innovation covariances

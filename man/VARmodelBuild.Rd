@@ -4,7 +4,7 @@
 \alias{VARmodelBuild}
 \title{Title}
 \usage{
-VARmodelBuild(q, p = NULL)
+VARmodelBuild(q, p = NULL, maxLag = c(1, 2, 3))
 }
 \arguments{
 \item{q}{integer. The number of time-varying constructs.}

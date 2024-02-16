@@ -2,6 +2,7 @@
 data {
   int<lower=1> N; 	// number of observational units
   int<lower=1> D; 	// number of time-varying constructs
+  int<lower=1, upper=3> maxLag; // maximum lag 
   int<lower=1> N_obs; 	// observations in total: N * TP
   int<lower=1> n_pars;
   int<lower=D> n_random;   // number of random effects
@@ -26,7 +27,8 @@ data {
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D];   // matrix to index predictors to use per dimension
+  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
+  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
   int Dpos2[D];
 
@@ -163,28 +165,30 @@ model {
 
     // local variable declaration: array of predicted values
     {
-    vector[obs_id-1] mus[D];
+    vector[obs_id-maxLag] mus[D];
 
     // create latent mean centered versions of observations
     vector[obs_id] y_cen[D];
 
     for(d in 1:D){ // start loop over dimensions
-    y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,d];
+      y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,d];
     }
 
     for(d in 1:D){ // start loop over dimensions
       // build prediction matrix for specific dimensions
       {
-      matrix[(obs_id-1),N_pred[d]] b_mat; // adjust for non-fully crossed models
+      matrix[(obs_id-maxLag),N_pred[d]] b_mat; // adjust for non-fully crossed models
+      
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
-        b_mat[,nd] = y_cen[D_pred[d, nd],1:(obs_id-1)];
+          int lag_use = Lag_pred[d,nd];
+          b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
       }
 
       // use build predictor matrix to calculate latent time-series means
       mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
 
       // sampling statement
-      y_merge[d,(pos+1):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+      y_merge[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
       }
      }
     }
@@ -202,12 +206,10 @@ model {
       k = k + n_bs; // update index
     }
   }
-}
+  }
+
 
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
-//  matrix[n_random,n_random] bcov; // random coefficients covariance matrix
-  // create random coefficient matrices
   bcorr = multiply_lower_tri_self_transpose(L);
-//  bcov = quad_form_diag(bcorr, sd_R);
 }
