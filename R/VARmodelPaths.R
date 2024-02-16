@@ -90,9 +90,12 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 
   # decomposition #############################################################
 
-  dc_caption <- "% caption
-  \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};"
+  dc_caption <- paste0(
+    "% caption\n\\node  [above = 1em, align = center]  at  ",
+    "(current bounding box.north)  {Decomposition.};"
+  )
 
+  # one manifest construct
   if (infos$q == 1) {
     dc <- "
     % draw decomposition
@@ -350,20 +353,28 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   # within-model ##############################################################
 
   # within-model caption
-  wm_caption <- "% caption
-  \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};"
+  wm_caption <- paste0(
+    "% caption\n\\node  [above = 1em, align = center]  at  ",
+    "(current bounding box.north)  {Within-model.};"
+  )
 
   # draw nodes for q time-series constructs
   if (infos$q == 1) {
-    wm <- "
-    % draw within-level structural model
-    \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
-    \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
-    \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{1,t}$};
+    wm <- paste0(
+      "% draw within-level structural model
+      \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
+      \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
+      \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{1,t}$};
 
-    % draw paths
-    \\draw  [path]  (deltat)  to node  []  {}  (ywt);
-    "
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+      infos$maxLag, "}
+      \\node  [latent]  (y1wt-\\i)  ",
+      "[left = 5em of y1wt-\\lasti]  {$y_{1,t-\\i}^w$};
+
+      % draw paths
+      \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);
+      "
+    )
     if (infos$p > 1) {
       wm <- "
       % draw within-level structural model
@@ -375,30 +386,30 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       \\draw  [path]  (delta1t)  to node  []  {}  (eta1wt);
       "
     }
-    # draw paths conditional on isRandom
-    phi <- paste0(
-      "\\draw  [path", ifelse(
-        model[
-          model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"
-        ] == 1,
-        ", postaction = random]", "]"
-      ), ifelse(
-        # select start node conditional on infos$p
-        infos$p > 1, "  (eta1wt-1)", "  (y1wt-1)"
-      ), "  to node  []  {$\\phi_{11}$}  (", ifelse(
-        # select target node conditional on infos$p
-        infos$p > 1, "eta1wt", "y1wt"
-      ), ");"
-    )
-    ln.sigma2 <- paste0(
-      "\\draw  [var", ifelse(
-        model[
-          model$Param == "ln.sigma2_1" & model$Type == "Fix effect", "isRandom"
-        ] == 1,
-        ", postaction = random]", "]"
-      ),
-      "  (delta1t.120)  to node  []  {$\\pi_{1}$}  (delta1t.60);"
-    )
+    # # draw paths conditional on isRandom
+    # phi <- paste0(
+    #   "\\draw  [path", ifelse(
+    #     model[
+    #       model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"
+    #     ] == 1,
+    #     ", postaction = random]", "]"
+    #   ), ifelse(
+    #     # select start node conditional on infos$p
+    #     infos$p > 1, "  (eta1wt-1)", "  (y1wt-1)"
+    #   ), "  to node  []  {$\\phi_{11}$}  (", ifelse(
+    #     # select target node conditional on infos$p
+    #     infos$p > 1, "eta1wt", "y1wt"
+    #   ), ");"
+    # )
+    # ln.sigma2 <- paste0(
+    #   "\\draw  [var", ifelse(
+    #     model[
+    #       model$Param == "ln.sigma2_1" & model$Type == "Fix effect", "isRandom"
+    #     ] == 1,
+    #     ", postaction = random]", "]"
+    #   ),
+    #   "  (delta1t.120)  to node  []  {$\\pi_{1}$}  (delta1t.60);"
+    # )
   } else { # for q > 1
     wm <- paste0(
     "
@@ -452,78 +463,108 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       \\draw  [path]  (delta\\i t)  to node  []  {}  (eta\\i wt);
       ")
     }
+  }
 
-    # store number of phi-parameters for loops
-    all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
-    n_phi <- nrow(all_phis)
-    phi_vec <- c()
-    # draw paths conditional on isRandom
-    # and do that for every phi in the model
-    for (i in 1:sqrt(n_phi)) {
-      # loop across phi subscripts
-      for (j in 1:sqrt(n_phi)){
-        # for autoregressive paths
-        if (i == j) {
+  # store number of phi-parameters for loops
+  all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
+  all_phis$names <- gsub(
+    # replace underscore digit with latex subscript
+    "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\3;\\2}$", all_phis$Param
+  )
+  # generate path start and end
+  all_phis$from <- gsub(
+    "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\3wt-\\2", all_phis$Param
+  )
+  all_phis$to <- gsub(
+    "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\4wt", all_phis$Param
+  )
+  # indicate if path has to be bend (for lagged AR effects)
+  all_phis$lagged <- ifelse(
+    as.numeric(
+      gsub("(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\2", all_phis$Param)
+    ) > 1,
+    as.numeric(
+      gsub("(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\2", all_phis$Param)
+    ) - 1, NA
+  )
+  # loop across all phis
+  n_phi <- nrow(all_phis)
+  phi_vec <- c()
+  for (i in 1:n_phi) {
+    phi_vec <- c(
+      phi_vec, paste0(
+        "\\draw  [path", ifelse(
+          # decorate with dot on path if parameter is random
+          all_phis[i, "isRandom"] == 1,
+          ", postaction = random]", "]"
+        ), "  (",
+        # select start node conditional on infos$p
+        ifelse(infos$p > 1, "eta", "y"), all_phis$from[i],
+        # bend path for lagged AR effects
+        ifelse(
+          !is.na(all_phis$lagged[i]),
+          paste0(
+            ".north)  |-  +(0em, ",
+            all_phis$lagged[i], "em) -|  node  []  {"
+          ),
+          ")  to node  []  {"
+        ), all_phis$names[i], "}  (",
+        # select target node conditional on infos$p
+        ifelse(
+          infos$p > 1, "eta", "y"
+        ), all_phis$to[i],
+        ifelse(
+          !is.na(all_phis$lagged[i]),
+          ".north);", ");"
+        )
+      )
+    )
+    # replicate AR1-effects if necessary
+    if (infos$maxLag > 1) {
+      if (is.na(all_phis$lagged[i])) {
+        for (j in 2:infos$maxLag) {
           phi_vec <- c(
             phi_vec, paste0(
-              "\\draw  [path", ifelse(
-                # decorate with dot on path if parameter is random
-                all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
-                ", postaction = random]", "]"
-              ),
-              "  (", ifelse(
-                # select start node conditional on infos$p
-                infos$p > 1, "eta", "y"
-              ), i, "wt-1)  to node  []  {$\\phi_{", i, j, "}$}  (", ifelse(
-                # select target node conditional on infos$p
-                infos$p > 1, "eta", "y"
-              ), i, "wt);\n"
-            )
-          )
-        } else {
-          # for cross-lagged paths
-          phi_vec <- c(
-            phi_vec, paste0(
-              "\\draw  [path", ifelse(
-                # decorate with dot on path if parameter is random
-                all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
-                ", postaction = random_cl]", "]"
-              ),
-              "  (", ifelse(
-                # select start node conditional on infos$p
-                infos$p > 1, "eta", "y"
-              ), i, "wt-1)  to node  [pos = .2]  {$\\phi_{", i, j, "}$}  (", ifelse(
-                # select target node conditional on infos$p
-                infos$p > 1, "eta", "y"
-              ), j, "wt);\n"
+              gsub(
+                # match target node (not followed by lag digit)
+                paste0("wt(?!(?=-\\d))"), paste0("wt-", j - 1), perl = TRUE,
+                gsub(
+                  # match start node (followed by lag digit)
+                  paste0("wt-\\d"), paste0("wt-", j), phi_vec[i]
+                )
+              )
             )
           )
         }
       }
     }
-    # paste phis in one string
-    phi <- paste(phi_vec, collapse = "")
+  }
+  # paste phis in one string
+  phi <- paste(phi_vec, collapse = "\n")
 
-    # do the same for innovation variances
-    all_sigmas <- model[grepl("ln.sigma2", model$Param) & grepl("Fix", model$Type), ]
-    n_sigma <- nrow(all_sigmas)
-    sigma_vec <- c()
-    for (i in 1:n_sigma) {
-      sigma_vec <- c(
-        sigma_vec, paste0(
-          "\\draw  [var", ifelse(
-            # decorate with dot on path if parameter is random
-            all_sigmas[all_sigmas$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
-            ", postaction = random]", "]"
-          ),
-          "  (delta", i, "t.120)  to node  []  {$\\pi_{", i, "}$}  (delta", i, "t.60);\n"
-        )
+  # do the same for innovation variances
+  all_sigmas <- model[grepl("ln.sigma2", model$Param) & grepl("Fix", model$Type), ]
+  n_sigma <- nrow(all_sigmas)
+  sigma_vec <- c()
+  for (i in 1:n_sigma) {
+    sigma_vec <- c(
+      sigma_vec, paste0(
+        "\\draw  [var", ifelse(
+          # decorate with dot on path if parameter is random
+          all_sigmas[all_sigmas$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
+          ", postaction = random]", "]"
+        ),
+        "  (delta", i, "t.120)  to node  []  {$\\pi_{", i, "}$}  (delta", i, "t.60);"
       )
-    }
-    # do the same for innovation covariances
-    all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
-    # n_psi <- nrow(all_psis)
-    psi_vec <- c()
+    )
+  }
+  # paste sigmas in one string
+  sigma <- paste(sigma_vec, collapse = "\n")
+  # do the same for innovation covariances
+  all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
+  # n_psi <- nrow(all_psis)
+  psi_vec <- c()
+  if (length(psi_vec) > 1) {
     if (infos$q == 1) {
       psi_vec <- paste0(
         "\\draw  [cov", ifelse(
@@ -531,7 +572,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
           all_psis[all_psis$Param == "ln.sigma_12", "isRandom"] == 1,
           ", postaction = random]", "]"
         ),
-        "  (delta1t.0)  to node  []  {$\\pi_{12}$}  (delta2t.0);\n"
+        "  (delta1t.0)  to node  []  {$\\pi_{12}$}  (delta2t.0);"
       )
     } else {
       for (i in 1:(infos$q - 1)) {
@@ -543,17 +584,19 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
                 all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
                 ", postaction = random]", "]"
               ),
-              "  (delta", i, "t.0)  to node  []  {$\\pi_{", i, j, "}$}  (delta", j, "t.0);\n"
+              "  (delta", i, "t.0)  to node  []  {$\\pi_{", i, j, "}$}  (delta", j, "t.0);"
             )
           )
         }
       }
     }
-    # paste sigmas in one string
-    ln.sigma2 <- paste(sigma_vec, psi_vec, collapse = "")
   }
+  # paste psis in one string
+  psi <- paste(psi_vec, collapse = "\n")
+
   # paste together
-  within_model <- paste(wm, phi, ln.sigma2, sep = "\n")
+  within_model <- paste(wm, phi, sigma, psi, sep = "\n")
+  # within_model <- paste(wm, sep = "\n")
 
   # paste together
   within_model <- paste(
@@ -569,6 +612,52 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 
   # paste within_model to markdown
   cat(within_model, file = "pathmodel.rmd", append = TRUE)
+
+  # old stuff
+  # # draw paths conditional on isRandom
+  # # and do that for every phi in the model
+  # for (i in 1:sqrt(infos$q)) {
+  #   # loop across phi subscripts
+  #   for (j in 1:sqrt(infos$q)){
+  #     # for autoregressive paths
+  #     if (i == j) {
+  #       phi_vec <- c(
+  #         phi_vec, paste0(
+  #           "\\draw  [path", ifelse(
+  #             # decorate with dot on path if parameter is random
+  #             all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
+  #             ", postaction = random]", "]"
+  #           ),
+  #           "  (", ifelse(
+  #             # select start node conditional on infos$p
+  #             infos$p > 1, "eta", "y"
+  #           ), i, "wt-1)  to node  []  {$\\phi_{", i, j, "}$}  (", ifelse(
+  #             # select target node conditional on infos$p
+  #             infos$p > 1, "eta", "y"
+  #           ), i, "wt);\n"
+  #         )
+  #       )
+  #     } else {
+  #       # for cross-lagged paths
+  #       phi_vec <- c(
+  #         phi_vec, paste0(
+  #           "\\draw  [path", ifelse(
+  #             # decorate with dot on path if parameter is random
+  #             all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
+  #             ", postaction = random_cl]", "]"
+  #           ),
+  #           "  (", ifelse(
+  #             # select start node conditional on infos$p
+  #             infos$p > 1, "eta", "y"
+  #           ), i, "wt-1)  to node  [pos = .2]  {$\\phi_{", i, j, "}$}  (", ifelse(
+  #             # select target node conditional on infos$p
+  #             infos$p > 1, "eta", "y"
+  #           ), j, "wt);\n"
+  #         )
+  #       )
+  #     }
+  #   }
+  # }
 
 
   # between-model #############################################################

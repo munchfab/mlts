@@ -1,48 +1,11 @@
 devtools::load_all()
 
-## AR(1) Models ================================================================
-# 1. Random effect model ----------------------------------------------------
-### Build general model
-(VARmodeldata = VARmodelBuild(q = 1))
-
-# create artificial data
-ar1_data <- sim_data_AR1_man(
-  N = 100,
-  TP = 70,
-  mu = 10, phi = .3, logv = 2,
-  sigma_mu = 1.4, sigma_phi = .2, sigma_logv = .7,
-  mu_ec = 5, sigma_ec = 2,
-  cor_mu_phi = .3, cor_mu_logv = .3, cor_phi_logv = .3,
-  cor_mu_ec = .3, cor_phi_ec = .3, cor_logv_ec = .3,
-  seed = 1234
-)
-
-data <- ARprepare(VARmodel = VARmodel, data = ar1_data)
-
-ar1_data_stan <- create_stan_data(
-  data = ar1_data,
-  y = "y", id = "id", beep = "TP",
-  miss_handling = "remove"
-)
-
-(VARmodeldata = VARmodelBuild(q = 2))
-
-VARmodel <- list()
-
-VARmodel <- list(VARmodel = VARmodeldata, q = 2)
-
-
-
-
-#######################################
-devtools::load_all()
-
 
 
 
 devtools::load_all()
 # with random effects
-VARmodel = VARmodelBuild(q = 2, p = c(3))
+VARmodel = VARmodelBuild(q = 1, maxLag = 3)
 # VARmodel
 # VARmodel[VARmodel$Model == "Measurement",]
 # VARmodelEval(VARmodel)

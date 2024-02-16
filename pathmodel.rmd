@@ -20,8 +20,6 @@ header-includes:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
-
 \begin{tikzpicture}[
     auto, > = latex, align=center,
   	latent/.style = {
@@ -71,218 +69,24 @@ knitr::opts_chunk$set(echo = TRUE)
       }
     },
   	]
-\node  [manifest]  (y11t)  {$y_{11,t}$};
-\node  [manifest]  (y12t)  [right = 1.5em of y11t]  {$y_{12,t}$};
-\node  [manifest]  (y13t)  [right = 1.5em of y12t]  {$y_{13,t}$};
-\node  [manifest]  (y21t)  [right = 1.5em of y13t]  {$y_{21,t}$};
-\node  [manifest]  (y22t)  [right = 1.5em of y21t]  {$y_{22,t}$};
-\node  [manifest]  (y23t)  [right = 1.5em of y22t]  {$y_{23,t}$};
-\node  [coordinate]  (c1)  at ($(y11t) !0.5! (y13t)$)  {};
-\node  [coordinate]  (c2)  at ($(y21t) !0.5! (y23t)$)  {};
-\node  [latent]  (etaw1t)  [above = 4em of c1]  {$\eta^w_{1,t}$};
-\node  [latent]  (etaw2t)  [above = 4em of c2]  {$\eta^w_{2,t}$};
-\node  [latent]  (etab1)  [below = 4em of c1]  {$\eta^b_{1}$};
-\node  [latent]  (etab2)  [below = 4em of c2]  {$\eta^b_{2}$};
-\draw  [path]  (etaw1t)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y11t.north);
-\draw  [path]  (etaw1t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{12}$}  (y12t.north);
-\draw  [path]  (etaw1t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{13}$}  (y13t.north);
-\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y21t.north);
-\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{22}$}  (y22t.north);
-\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{23}$}  (y23t.north);
-\draw  [path]  (etab1)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y11t.south);
-\draw  [path]  (etab1)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{12}$}  (y12t.south);
-\draw  [path]  (etab1)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{13}$}  (y13t.south);
-\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y21t.south);
-\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{22}$}  (y22t.south);
-\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{23}$}  (y23t.south);
-\node  [error]  (eps11wt)  [above left = 1em of y11t]  {\scriptsize$\varepsilon^w_{11,t}$};
-\node  [error]  (eps12wt)  [above left = .75em of y12t]  {};
-\node  [error]  (eps13wt)  [above left = .75em of y13t]  {};
-\node  [error]  (eps21wt)  [above left = .75em of y21t]  {};
-\node  [error]  (eps22wt)  [above left = .75em of y22t]  {};
-\node  [error]  (eps23wt)  [above left = .75em of y23t]  {};
-\draw  [path]  (eps11wt)  to node  []  {}  (y11t.north west);
-\draw  [path]  (eps12wt)  to node  []  {}  (y12t.north west);
-\draw  [path]  (eps13wt)  to node  []  {}  (y13t.north west);
-\draw  [path]  (eps21wt)  to node  []  {}  (y21t.north west);
-\draw  [path]  (eps22wt)  to node  []  {}  (y22t.north west);
-\draw  [path]  (eps23wt)  to node  []  {}  (y23t.north west);
-\node  [error]  (eps11b)  [below left = 1em of y11t]  {\scriptsize$\varepsilon^b_{11}$};
-\node  [error]  (eps12b)  [below left = .75em of y12t]  {};
-\node  [error]  (eps13b)  [below left = .75em of y13t]  {};
-\node  [error]  (eps21b)  [below left = .75em of y21t]  {};
-\node  [error]  (eps22b)  [below left = .75em of y22t]  {};
-\node  [error]  (eps23b)  [below left = .75em of y23t]  {};
-\draw  [path]  (eps11b)  to node  []  {}  (y11t.south west);
-\draw  [path]  (eps12b)  to node  []  {}  (y12t.south west);
-\draw  [path]  (eps13b)  to node  []  {}  (y13t.south west);
-\draw  [path]  (eps21b)  to node  []  {}  (y21t.south west);
-\draw  [path]  (eps22b)  to node  []  {}  (y22t.south west);
-\draw  [path]  (eps23b)  to node  []  {}  (y23t.south west);
-% caption
-  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};
-\end{tikzpicture}
-\begin{tikzpicture}[
-    auto, > = latex, align=center,
-  	latent/.style = {
-  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
-  	},
-  	manifest/.style = {
-  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
-  	},
-  	intercept/.style = {
-  	  regular polygon,regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = \Radius
-  	},
-  	mean/.style = {
-  	  regular polygon, regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = 8mm
-  	},
-  	path/.style = {
-  	  arrows = ->, thick, > = {stealth[]}
-  	},
-  	error/.style = {
-  	  circle, draw = none, fill = none, thick,
-  	  inner sep = 0pt, minimum size = 5mm
-  	},
-  	var/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
-  	},
-  	cov/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 300
-  	},
-  	% style to add a circle in the middle of a path
-    random/.style = {
-      postaction = {
-        decorate, decoration = {
-          markings,
-          mark = at position .5 with {
-            \draw[fill = black] circle[radius = 2pt];
-          }
-        }
-      }
-    },
-    random_cl/.style = {
-      postaction = {decorate, decoration = {
-        markings,
-        mark = at position .2 with {
-          \draw[fill = black] circle[radius = 2pt];}
-        }
-      }
-    },
-  	]
+% draw within-level structural model
+      \node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
+      \node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
+      \node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\delta_{1,t}$};
 
-      % draw within-level structural model
-      \node  [latent]  (eta1wt-1)  {$\eta_{1,t-1}^w$};
-      \node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\eta_{1,t}^w$};
-      \node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\delta_{1,t}$};
+      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 3}
+      \node  [latent]  (y1wt-\i)  [left = 5em of y1wt-\lasti]  {$y_{1,t-\i}^w$};
 
-      % draw nodes
-      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-      \node  [latent]  (eta\i wt-1)  [below = 2.5em of eta\lasti wt-1]  {$\eta_{\i ,t-1}^w$};
-
-      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-      \node  [latent]  (eta\i wt)  [below = 2.5em of eta\lasti wt]  {$\eta_{\i ,t}^w$};
-
-      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
-      \node  [latent]  (delta\i t)  [below = 2.5em of delta\lasti t]  {$\delta_{\i ,t}$};
-
-      % draw paths from residuals to etaiwt
-      \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
-      \draw  [path]  (delta\i t)  to node  []  {}  (eta\i wt);
+      % draw paths
+      \draw  [path]  (delta1t)  to node  []  {}  (y1wt);
       
-\draw  [path, postaction = random]  (eta1wt-1)  to node  []  {$\phi_{11}$}  (eta1wt);
-\draw  [path, postaction = random]  (eta1wt-1)  to node  []  {$\phi_{11}$}  (eta1wt);
-\draw  [path, postaction = random_cl]  (eta1wt-1)  to node  [pos = .2]  {$\phi_{12}$}  (eta2wt);
-\draw  [path, postaction = random_cl]  (eta1wt-1)  to node  [pos = .2]  {$\phi_{12}$}  (eta2wt);
-\draw  [path, postaction = random_cl]  (eta2wt-1)  to node  [pos = .2]  {$\phi_{21}$}  (eta1wt);
-\draw  [path, postaction = random_cl]  (eta2wt-1)  to node  [pos = .2]  {$\phi_{21}$}  (eta1wt);
-\draw  [path, postaction = random]  (eta2wt-1)  to node  []  {$\phi_{22}$}  (eta2wt);
-\draw  [path, postaction = random]  (eta2wt-1)  to node  []  {$\phi_{22}$}  (eta2wt);
-
+\draw  [path, postaction = random]  (y1wt-1)  to node  []  {$\phi_{11;(1)}$}  (y1wt);
+\draw  [path, postaction = random]  (y1wt-2)  to node  []  {$\phi_{11;(1)}$}  (y1wt-1);
+\draw  [path, postaction = random]  (y1wt-3)  to node  []  {$\phi_{11;(1)}$}  (y1wt-2);
+\draw  [path, postaction = random]  (y1wt-2.north)  |-  +(0em, 1em) -|  node  []  {$\phi_{11;(2)}$}  (y1wt.north);
+\draw  [path, postaction = random]  (y1wt-3.north)  |-  +(0em, 2em) -|  node  []  {$\phi_{11;(3)}$}  (y1wt.north);
 \draw  [var, postaction = random]  (delta1t.120)  to node  []  {$\pi_{1}$}  (delta1t.60);
- \draw  [cov, postaction = random]  (delta1t.0)  to node  []  {$\pi_{12}$}  (delta2t.0);
-\draw  [var, postaction = random]  (delta2t.120)  to node  []  {$\pi_{2}$}  (delta2t.60);
- \draw  [cov, postaction = random]  (delta1t.0)  to node  []  {$\pi_{12}$}  (delta2t.0);
 
 % caption
-  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};
-\end{tikzpicture}
-\begin{tikzpicture}[
-    auto, > = latex, align=center,
-  	latent/.style = {
-  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
-  	},
-  	manifest/.style = {
-  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
-  	},
-  	intercept/.style = {
-  	  regular polygon,regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = \Radius
-  	},
-  	mean/.style = {
-  	  regular polygon, regular polygon sides = 3, draw, thick,
-  	  inner sep = 0pt, minimum size = 8mm
-  	},
-  	path/.style = {
-  	  arrows = ->, thick, > = {stealth[]}
-  	},
-  	error/.style = {
-  	  circle, draw = none, fill = none, thick,
-  	  inner sep = 0pt, minimum size = 5mm
-  	},
-  	var/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
-  	},
-  	cov/.style = {
-  	  <->, thick, > = {stealth[]}, bend right = 300
-  	},
-  	% style to add a circle in the middle of a path
-    random/.style = {
-      postaction = {
-        decorate, decoration = {
-          markings,
-          mark = at position .5 with {
-            \draw[fill = black] circle[radius = 2pt];
-          }
-        }
-      }
-    },
-    random_cl/.style = {
-      postaction = {decorate, decoration = {
-        markings,
-        mark = at position .2 with {
-          \draw[fill = black] circle[radius = 2pt];}
-        }
-      }
-    },
-  	]
-\node  [latent]  (etaB_1)  {$\eta^{b}_{1}$};
-\node  [latent]  (etaB_2)  [right = 1em of etaB_1]  {$\eta^{b}_{2}$};
-\node  [latent]  (phi_11)  [right = 1em of etaB_2]  {$\phi_{11}$};
-\node  [latent]  (phi_12)  [right = 1em of phi_11]  {$\phi_{12}$};
-\node  [latent]  (phi_21)  [right = 1em of phi_12]  {$\phi_{21}$};
-\node  [latent]  (phi_22)  [right = 1em of phi_21]  {$\phi_{22}$};
-\node  [latent]  (lnsigma2_1)  [right = 1em of phi_22]  {$\log(\pi_{1})$};
-\node  [latent]  (lnsigma2_2)  [right = 1em of lnsigma2_1]  {$\log(\pi_{2})$};
-\node  [latent]  (lnsigma_12)  [right = 1em of lnsigma2_2]  {$\log(\pi_{12})$};
-\node  [coordinate]  (c1)  [above = 2em of etaB_1]  {};
-\node  [coordinate]  (c2)  [above = 2em of etaB_2]  {};
-\node  [coordinate]  (c3)  [above = 2em of phi_11]  {};
-\node  [coordinate]  (c4)  [above = 2em of phi_12]  {};
-\node  [coordinate]  (c5)  [above = 2em of phi_21]  {};
-\node  [coordinate]  (c6)  [above = 2em of phi_22]  {};
-\node  [coordinate]  (c7)  [above = 2em of lnsigma2_1]  {};
-\node  [coordinate]  (c8)  [above = 2em of lnsigma2_2]  {};
-\node  [coordinate]  (c9)  [above = 2em of lnsigma_12]  {}; \draw  [path]  (c1)  to node  []  {}  (etaB_1);
-\draw  [path]  (c2)  to node  []  {}  (etaB_2);
-\draw  [path]  (c3)  to node  []  {}  (phi_11);
-\draw  [path]  (c4)  to node  []  {}  (phi_12);
-\draw  [path]  (c5)  to node  []  {}  (phi_21);
-\draw  [path]  (c6)  to node  []  {}  (phi_22);
-\draw  [path]  (c7)  to node  []  {}  (lnsigma2_1);
-\draw  [path]  (c8)  to node  []  {}  (lnsigma2_2);
-\draw  [path]  (c9)  to node  []  {}  (lnsigma_12); \draw  [thick]  (c1)  --  (c9);
-% caption
-  \node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};
+\node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};
 \end{tikzpicture}
