@@ -162,12 +162,12 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
     standata$D_perP = as.integer(infos$indicators$q)
 
     # alternative missing data indexing
-    n_miss = sum(is.na(data[,ts.ind]))           # overall number of NAs
-    n_miss_p = sapply(ts.ind, FUN = function(x){sum(is.na(data[,x]))})
+    n_miss = sum(data[,ts.ind] == -Inf)           # overall number of NAs
+    n_miss_p = sapply(ts.ind, FUN = function(x){sum(data[,x] == -Inf)})
     pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = T)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
-        pos_miss_p[i,1:n_miss_p[i]] = which(is.na(data[,ts.ind[i]]))
+        pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts.ind[i]] == -Inf)
       }
     }
     standata$n_miss <- n_miss

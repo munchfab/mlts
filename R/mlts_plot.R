@@ -29,7 +29,8 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                       facet.ncol = 1, dot.size = 1, dot.color = "black", dot.shape = 1,
                       err.bar.col = "black", err.bar.width = 0.3,
                       add.true = FALSE, true.col = "red", true.shape = 22, true.size = 1,
-                      hide.xaxis.text = T){
+                      hide.xaxis.text = T,
+                      par_labels = NULL, labels.as.expression = F){
 
   type <- match.arg(type)
   bpe <- match.arg(bpe)
@@ -54,6 +55,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     # order parameter type
     p.data$Param_type <- factor(p.data$Param_type, levels = c(
       "Fix effect", "Random effect SD", "RE correlation",
+      "Outcome prediction", "RE prediction",
       "Item intercepts", "Loading", "Measruement Error SD"
     ))
 
@@ -144,38 +146,100 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
 
   if(type == "re.cor"){ # random effect estimates
 
+    # create a mixture plot depicting the distribution of random effect estimates
+    # as histogram on the plot-grid diagnonal as well as scatterplots on the off-diagonal
+    # panels
 
-    ###### ADD LATER :::::::::::::::::
+    # evaluate model
+    infos <- VARmodelEval(fit$VARmodel)
 
-    # # get person par data
-    # data = fit$person.pars.summary
-    #
-    # # prepare empty data frame
-    # n_ids = max(fit$person.pars.summary$num_id)
-    # re.pars = unique(fit$person.pars.summary$Param)
-    # n_re.pars = length(re.pars)
-    #
-    #
-    #
-    # p.data = data.frame(
-    #   "ID" = rep(1:n_ids, times = n_ids*n_re.pars*n_re.pars),
-    #   "Param_x" = rep(unique(fit$person.pars.summary$Param), each = n_ids,
-    #                   times = n_re.pars),
-    #   "Param_y" = rep(unique(fit$person.pars.summary$Param), each = n_ids*n_re.pars),
-    #   "x" = NA,
-    #   "y" = NA
-    # )
-    #
-    # # add values
-    # for(i in 1:nrow(p.data)){
-    #   p.data$x[i] = data$mean[data$num_id==p.data$ID[i] & data$Param == p.data$Param_x[i]]
-    #   p.data$y[i] = data$mean[data$num_id==p.data$ID[i] & data$Param == p.data$Param_y[i]]
-    # }
-    #
-    # # plot
-    # ggplot(p.data, aes(x = x, y = y)) +
-    #   geom_point() +
-    #   facet_grid(Param_x ~ Param_y, scales = "free_x")
+    # get the data
+    if(bpe == "median"){
+      fit$person.pars.summary$bpe = fit$person.pars.summary$`50%`
+      ylab <- ifelse(!is.null(ylab), ylab, "Posterior Median (95% Credibility Interval)")
+    } else {
+      fit$person.pars.summary$bpe = fit$person.pars.summary$mean
+      ylab <- ifelse(!is.null(ylab), ylab, "Posterior Mean (95% Credibility Interval)")
+    }
+
+    # get the labels of included RE params
+    p.data = fit$person.pars.summary
+
+    if(!is.null(par_labels)){
+      p.data$Param = factor(p.data$Param, levels = par_labels,
+                            labels = names(par_labels))
+    } else {
+      p.data$Param = factor(p.data$Param,
+                            levels = infos$re_pars$Param,
+                            labels = infos$re_pars$Param)
+    }
+
+    re_pars = levels(p.data$Param)
+    n_re_pars = length(re_pars)
+    # loop plotting over all combinations of re_pars
+    re_par_combi = data.frame(
+      "RE1" = rep(re_pars, each = n_re_pars),
+      "Re2" = rep(re_pars, times = n_re_pars)
+    )
+    p_list = list()
+    sub = c()
+    for(i in 1:nrow(re_par_combi)){
+
+      sub = p.data[p.data$Param %in% unlist(re_par_combi[i,]),]
+
+      if(length(unique(sub$Param)) == 1){
+        sub$lab_x = re_par_combi[i,1]
+        sub$lab_y = re_par_combi[i,1]
+        p_list[[i]] <- ggplot(sub, aes(x = bpe)) +
+          geom_histogram(fill = "grey", color = "black") +
+          theme_classic() +
+          scale_x_continuous(n.breaks = 7) +
+          theme(strip.placement = "outside",
+                strip.background = element_blank(),
+                strip.text = element_text(face = 2),
+                axis.title = element_blank())
+
+        if(labels.as.expression == T){
+          p_list[[i]] <- p_list[[i]] +
+            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y",
+                       labeller = label_parsed)
+        } else {
+          p_list[[i]] <- p_list[[i]] +
+            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y")
+        }
+
+      } else {
+        df = data.frame(
+          y = sub$bpe[sub$Param == re_par_combi[i,1]],
+          x = sub$bpe[sub$Param == re_par_combi[i,2]],
+          lab_x = re_par_combi[i,2],
+          lab_y = re_par_combi[i,1]
+        )
+        p_list[[i]] <- ggplot(df, aes(x = x, y = y)) +
+          geom_point(color = dot.color, shape = dot.shape, fill = "grey") +
+          theme_classic() +
+          stat_smooth(method = "lm", se = F) +
+          scale_x_continuous(n.breaks = 7) +
+          scale_y_continuous(n.breaks = 7) +
+          theme(strip.placement = "outside",
+                strip.background = element_blank(),
+                strip.text = element_text(face = 2),
+                axis.title = element_blank()
+          )
+
+        if(labels.as.expression == T){
+          p_list[[i]] <- p_list[[i]] +
+            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y",
+                       labeller = label_parsed)
+        } else {
+          p_list[[i]] <- p_list[[i]] +
+            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y")
+        }
+      }
+    }
+
+    P = cowplot::plot_grid(plotlist = p_list, align = "hv")
+
   }
 
 
