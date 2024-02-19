@@ -21,7 +21,9 @@ mlts_plot(
   true.col = "red",
   true.shape = 22,
   true.size = 1,
-  hide.xaxis.text = T
+  hide.xaxis.text = T,
+  par_labels = NULL,
+  labels.as.expression = F
 )
 }
 \arguments{

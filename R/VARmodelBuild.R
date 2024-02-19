@@ -3,10 +3,42 @@
 #' @param q integer. The number of time-varying constructs.
 #' @param p integer. For multiple-indicator models, specify a vector of length
 #' `q` with the number of manifest indicators per construct.
+#' @param FiVARmodeledInnoVars logical. FiVARmodel all random effect variances (eVARmodelcept those
+#' of individual traits) to zero.
+#' @param FiVARmodeledCovs logical. Set all innovation covariances to a constant value.
+#' @param CovsZero logical. Set to TRUE to treat all innovations as independent.
+#' @param FEis0 character. A character vector to indeVARmodel which fiVARmodeled model parameters
+#' should be fiVARmodeled to zero (Note: this results in removing the random effect
+#' variance of the respective parameter).
+#' @param REis0 logical. Set to TRUE to treat all innovations as independent.
+#' @param btw.factor Logical. If `TRUE` (the default), a common between-level factor
+#' is modeled across all indicator variables. If `FALSE`, instead of a between-level
+#' factor, indicator mean levels will be included as individual (random) effects stemming
+#' from a joint multivariate normal distribution.
+#' @param btw.model A list to indicate for which manifest indicator variables a common
+#' between-level factor should be modeled (see Details for detailed instructions).
+#' At this point restricted to one factor per latent construct.
+#' @param RE.pred character vector or a named list. Include between-level covariate(s)
+#' as predictor(s) of all random effects in `VARmodel` by entering a vector of unique variable
+#' names. Alternatively, to include between-level covariates or differing sets of
+#' between-level covariates as predictors of specific random effects, a named
+#' list (using the `param`-labels in `VARmodel`) can be entered (see details).
+#' Note that if a named list is provided, all names that do not match random
+#' parameters in `VARmodel` will be ignored.
+#' @param out.pred character vector or a named list. Include between-level covariate(s)
+#' as predictor(s) of all random effects in `VARmodel` by entering a vector of unique variable
+#' names. Alternatively, to include between-level covariates or differing sets of
+#' between-level covariates as predictors of specific random effects, a named
+#' list (using the `param`-labels in `VARmodel`) can be entered (see details).
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3)){
+VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3),
+                          btw.factor = TRUE, btw.model = NULL,
+                          FixDynamics = F, FixInnoVars = F,
+                          FixInnoCovs = F, InnoCovsZero = F,
+                          FEis0 = NULL, REis0 = NULL,
+                          RE.pred = NULL, out.pred=NULL, out.pred.add.btw = NULL){
 
   if(length(maxLag) == 3){
     maxLag = 1
@@ -159,10 +191,33 @@ or set to 0 in a subsequent step, this warning can be ignored.")
   # ADD DEFAULT PRIORS ========================================================
   VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
 
+  # CONSTRAINTS ===============================================================
+  if(q > 1 & is.null(InnoCovsZero)){
+    InnoCovsZero = TRUE
+  }
+  if(!is.null(FixDynamics) | !is.null(FixInnoVars) |
+     !is.null(FixInnoCovs) | !is.null(FEis0) |
+     !is.null(REis0)) {
+    VARmodel = VARmodelConstraints(
+      VARmodel = VARmodel,
+      FixDynamics = FixDynamics, FixInnoVars = FixInnoVars,
+      InnoCovsZero = InnoCovsZero,
+      FixInnoCovs = FixInnoCovs, FEis0 = FEis0, REis0 = REis0)
+  }
+
   # MEASUREMENT MODEL =========================================================
   if(!is.null(p)){
-    VARmodel = VARmodelMeasurement(VARmodel = VARmodel, q = q, p = p)
+    VARmodel = VARmodelMeasurement(VARmodel = VARmodel, q = q, p = p,
+                                   btw.factor = btw.factor, btw.model = btw.model)
   }
+
+  # BETWEEN-MODEL =============================================================
+  if(!is.null(RE.pred) | !is.null(out.pred)){
+    VARmodel = VARmodelBetween(VARmodel = VARmodel,
+                               RE.pred =RE.pred, out.pred=out.pred,
+                               out.pred.add.btw = out.pred.add.btw)
+  }
+
 
   return(VARmodel)
 
