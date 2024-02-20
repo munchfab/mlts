@@ -366,50 +366,32 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
       \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{1,t}$};
 
-      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+      \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
       infos$maxLag, "}
-      \\node  [latent]  (y1wt-\\i)  ",
-      "[left = 5em of y1wt-\\lasti]  {$y_{1,t-\\i}^w$};
+      \\node  [latent]  (y1wt-\\j)  ",
+      "[left = 5em of y1wt-\\lastj]  {$y_{1,t-\\j}^w$};
 
       % draw paths
       \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);
       "
     )
     if (infos$p > 1) {
-      wm <- "
-      % draw within-level structural model
-      \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
-      \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
-      \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{{\\eta^w_{1}},t}$};
+      wm <- paste0(
+        "% draw within-level structural model
+        \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
+        \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
+        \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{{\\eta^w_{1}},t}$};
 
-      % draw paths
-      \\draw  [path]  (delta1t)  to node  []  {}  (eta1wt);
+        \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+        infos$maxLag, "}
+        \\node  [latent]  (eta1wt-\\j)  ",
+        "[left = 5em of eta1wt-\\lastj]  {$\\eta_{1,t-\\j}^w$};
+
+        % draw paths
+        \\draw  [path]  (delta1t)  to node  []  {}  (eta1wt);
       "
+      )
     }
-    # # draw paths conditional on isRandom
-    # phi <- paste0(
-    #   "\\draw  [path", ifelse(
-    #     model[
-    #       model$Param == "phi_11" & model$Type == "Fix effect", "isRandom"
-    #     ] == 1,
-    #     ", postaction = random]", "]"
-    #   ), ifelse(
-    #     # select start node conditional on infos$p
-    #     infos$p > 1, "  (eta1wt-1)", "  (y1wt-1)"
-    #   ), "  to node  []  {$\\phi_{11}$}  (", ifelse(
-    #     # select target node conditional on infos$p
-    #     infos$p > 1, "eta1wt", "y1wt"
-    #   ), ");"
-    # )
-    # ln.sigma2 <- paste0(
-    #   "\\draw  [var", ifelse(
-    #     model[
-    #       model$Param == "ln.sigma2_1" & model$Type == "Fix effect", "isRandom"
-    #     ] == 1,
-    #     ", postaction = random]", "]"
-    #   ),
-    #   "  (delta1t.120)  to node  []  {$\\pi_{1}$}  (delta1t.60);"
-    # )
   } else { # for q > 1
     wm <- paste0(
     "
@@ -421,15 +403,21 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
       infos$q, "}
-    \\node  [latent]  (y\\i wt-1)  [below = 2.5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};
+    \\node  [latent]  (y\\i wt-1)  [below = 5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};
+
+    \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+    infos$maxLag, "}
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+      infos$q, "}
+      \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [latent]  (y\\i wt)  [below = 2.5em of y\\lasti wt]  {$y_{\\i ,t}^w$};
+    \\node  [latent]  (y\\i wt)  [below = 5em of y\\lasti wt]  {$y_{\\i ,t}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [latent]  (delta\\i t)  [below = 2.5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
+    \\node  [latent]  (delta\\i t)  [below = 5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
 
     % draw paths from residuals to yiwt
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
@@ -446,20 +434,26 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
 
       % draw nodes
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-          infos$q, "}
-      \\node  [latent]  (eta\\i wt-1)  [below = 2.5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};
+        infos$q, "}
+      \\node  [latent]  (eta\\i wt-1)  [below = 5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};
+
+      \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+        infos$maxLag, "}
+      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+        infos$q, "}
+      \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};
 
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-          infos$q, "}
-      \\node  [latent]  (eta\\i wt)  [below = 2.5em of eta\\lasti wt]  {$\\eta_{\\i ,t}^w$};
+        infos$q, "}
+      \\node  [latent]  (eta\\i wt)  [below = 5em of eta\\lasti wt]  {$\\eta_{\\i ,t}^w$};
 
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
-          infos$q, "}
-      \\node  [latent]  (delta\\i t)  [below = 2.5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
+        infos$q, "}
+      \\node  [latent]  (delta\\i t)  [below = 5em of delta\\lasti t]  {$\\delta_{\\i ,t}$};
 
       % draw paths from residuals to etaiwt
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
-          infos$q, "}
+        infos$q, "}
       \\draw  [path]  (delta\\i t)  to node  []  {}  (eta\\i wt);
       ")
     }
@@ -478,6 +472,25 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   all_phis$to <- gsub(
     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\4wt", all_phis$Param
   )
+  # repeat AR(1) effects if maxLag > 1
+  if (infos$maxLag > 1) {
+    rep_phis_list <- list()
+    for (i in 1:(infos$maxLag - 1)) {
+      rep_phis_list[[i]] <- all_phis[grep("phi\\(1\\)", all_phis$Param), ]
+      rep_phis_list[[i]]$from <- gsub(
+        paste0("wt-\\d"),
+        paste0("wt-", i + 1),
+        rep_phis_list[[i]]$from, perl = TRUE
+      )
+      rep_phis_list[[i]]$to <- gsub(
+        paste0("wt"),
+        paste0("wt-", i),
+        rep_phis_list[[i]]$to, perl = TRUE
+      )
+    }
+    rep_phis <- do.call(rbind, rep_phis_list)
+    all_phis <- rbind(all_phis, rep_phis)
+  }
   # indicate if path has to be bend (for lagged AR effects)
   all_phis$lagged <- ifelse(
     as.numeric(
@@ -487,57 +500,108 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       gsub("(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\2", all_phis$Param)
     ) - 1, NA
   )
+  # indicate phi type
+  all_phis$phi_type <- ifelse(
+    grepl("(\\d+)\\1", all_phis$Param),
+    "ar", "cl"
+  )
+  # indicate which paths to draw lagged AR effects
+  # (only draw lagged AR effects for first and last time series)
+  all_phis$first <- ifelse(
+    as.numeric(gsub(".*?(\\d).*", "\\1", all_phis$from)) ==
+      min(as.numeric(gsub(".*?(\\d).*", "\\1", all_phis$from))),
+    1, 0
+  )
+  all_phis$last <- ifelse(
+    as.numeric(gsub(".*?(\\d).*", "\\1", all_phis$from)) ==
+      max(as.numeric(gsub(".*?(\\d).*", "\\1", all_phis$from))),
+    1, 0
+  )
+  # don't draw AR effects of lag > 1 for middle time series
+  all_phis$draw <- ifelse(
+    all_phis$phi_type == "ar" &
+      !is.na(all_phis$lagged) &
+      all_phis$first == 0 & all_phis$last == 0,
+    0, 1
+  )
+  # indicate which paths to label
+  all_phis$label <- ifelse(
+    is.na(all_phis$lagged), 1, ifelse(
+      !is.na(all_phis$lagged) & all_phis$phi_type == "ar", 1, 0
+    )
+  )
+  # overwrite names
+  all_phis$names <- ifelse(all_phis$label == 1, all_phis$names, "")
+  # delete paths that should not be drawn
+  all_phis <- all_phis[all_phis$draw == 1, ]
   # loop across all phis
   n_phi <- nrow(all_phis)
   phi_vec <- c()
   for (i in 1:n_phi) {
     phi_vec <- c(
       phi_vec, paste0(
-        "\\draw  [path", ifelse(
+        "\\draw  [path",
+        ifelse(
           # decorate with dot on path if parameter is random
-          all_phis[i, "isRandom"] == 1,
-          ", postaction = random]", "]"
-        ), "  (",
+          all_phis$isRandom[i] == 1 & all_phis$phi_type[i] == "ar",
+          ", postaction = random",
+          ifelse(
+            all_phis$isRandom[i] == 1 & all_phis$phi_type[i] == "cl",
+            ", postaction = random_cl", ""
+          )
+        ),
+        ifelse(
+          # set anchor explicitly for lagged AR paths of last time series
+          all_phis$phi_type[i] == "ar" &
+            !is.na(all_phis$lagged[i]) &
+            all_phis$last[i] == 1,
+          ", anchor = west", ""
+        ),
+        ifelse(
+          # set anchor explicitly for lagged AR paths of last time series
+          all_phis$phi_type[i] == "cl",
+          ", sloped, pos = .2", ""
+        ), "]  (",
         # select start node conditional on infos$p
         ifelse(infos$p > 1, "eta", "y"), all_phis$from[i],
         # bend path for lagged AR effects
         ifelse(
-          !is.na(all_phis$lagged[i]),
+          !is.na(all_phis$lagged[i]) &
+            all_phis$phi_type[i] == "ar" &
+            all_phis$first[i] == 1,
           paste0(
             ".north)  |-  +(0em, ",
             all_phis$lagged[i], "em) -|  node  []  {"
           ),
+          ifelse(
+            !is.na(all_phis$lagged[i]) &
+              all_phis$phi_type[i] == "ar" &
+              all_phis$last[i] == 1,
+            paste0(
+              ".south)  |-  +(0em, -",
+              all_phis$lagged[i], "em) -|  node  []  {"
+            ),
           ")  to node  []  {"
+          )
         ), all_phis$names[i], "}  (",
         # select target node conditional on infos$p
         ifelse(
           infos$p > 1, "eta", "y"
         ), all_phis$to[i],
         ifelse(
-          !is.na(all_phis$lagged[i]),
-          ".north);", ");"
+          !is.na(all_phis$lagged[i]) &
+            all_phis$phi_type[i] == "ar" &
+            all_phis$first[i] == 1,
+          ".north);",
+          ifelse(
+            !is.na(all_phis$lagged[i]) &
+              all_phis$phi_type[i] == "ar" &
+              all_phis$last[i] == 1,
+            ".south);", ");"
+          )
         )
       )
     )
-    # replicate AR1-effects if necessary
-    if (infos$maxLag > 1) {
-      if (is.na(all_phis$lagged[i])) {
-        for (j in 2:infos$maxLag) {
-          phi_vec <- c(
-            phi_vec, paste0(
-              gsub(
-                # match target node (not followed by lag digit)
-                paste0("wt(?!(?=-\\d))"), paste0("wt-", j - 1), perl = TRUE,
-                gsub(
-                  # match start node (followed by lag digit)
-                  paste0("wt-\\d"), paste0("wt-", j), phi_vec[i]
-                )
-              )
-            )
-          )
-        }
-      }
-    }
   }
   # paste phis in one string
   phi <- paste(phi_vec, collapse = "\n")
@@ -564,7 +628,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
   # n_psi <- nrow(all_psis)
   psi_vec <- c()
-  if (length(psi_vec) > 1) {
+  if (nrow(all_psis) >= 1) {
     if (infos$q == 1) {
       psi_vec <- paste0(
         "\\draw  [cov", ifelse(
@@ -613,76 +677,38 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   # paste within_model to markdown
   cat(within_model, file = "pathmodel.rmd", append = TRUE)
 
-  # old stuff
-  # # draw paths conditional on isRandom
-  # # and do that for every phi in the model
-  # for (i in 1:sqrt(infos$q)) {
-  #   # loop across phi subscripts
-  #   for (j in 1:sqrt(infos$q)){
-  #     # for autoregressive paths
-  #     if (i == j) {
-  #       phi_vec <- c(
-  #         phi_vec, paste0(
-  #           "\\draw  [path", ifelse(
-  #             # decorate with dot on path if parameter is random
-  #             all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
-  #             ", postaction = random]", "]"
-  #           ),
-  #           "  (", ifelse(
-  #             # select start node conditional on infos$p
-  #             infos$p > 1, "eta", "y"
-  #           ), i, "wt-1)  to node  []  {$\\phi_{", i, j, "}$}  (", ifelse(
-  #             # select target node conditional on infos$p
-  #             infos$p > 1, "eta", "y"
-  #           ), i, "wt);\n"
-  #         )
-  #       )
-  #     } else {
-  #       # for cross-lagged paths
-  #       phi_vec <- c(
-  #         phi_vec, paste0(
-  #           "\\draw  [path", ifelse(
-  #             # decorate with dot on path if parameter is random
-  #             all_phis[all_phis$Param == paste0("phi_", i, j), "isRandom"] == 1,
-  #             ", postaction = random_cl]", "]"
-  #           ),
-  #           "  (", ifelse(
-  #             # select start node conditional on infos$p
-  #             infos$p > 1, "eta", "y"
-  #           ), i, "wt-1)  to node  [pos = .2]  {$\\phi_{", i, j, "}$}  (", ifelse(
-  #             # select target node conditional on infos$p
-  #             infos$p > 1, "eta", "y"
-  #           ), j, "wt);\n"
-  #         )
-  #       )
-  #     }
-  #   }
-  # }
-
 
   # between-model #############################################################
 
   # between-model caption
-  bm_caption <- "% caption
-  \\node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};"
+  bm_caption <- paste0(
+    "% caption\n\\node  [above = 1em, align = center]  at  ",
+    "(current bounding box.north)  {Between-model.};"
+  )
 
+  # get random effects from within-model fixed effects
   all_bpars <- model[grepl("Fix", model$Type), ]
-  # the next line removes non-random effects completely
+  # the next line removes non-random effects completely, if desired
   # all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
 
-  # delete this if parameter names with underscore are implemented
-  # replaces dots with nothing
+  # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
-  names_bpars <- gsub(
+  all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
-    "()_(\\d+)", "\\1_{\\2}", gsub(
+    "(\\w+)_(\\d+)", "$\\\\\\1_{\\2}$", gsub(
       # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "log(\\\\pi_{\\2})", gsub(
+      "(lnsigma2|lnsigma)_(\\d+)", "log($\\\\pi_{\\2}$)", gsub(
         # replace uppercase B for between-level latent variables
-        "B", "^{b}", all_bpars$Param
+        "(\\w+)(B)_(\\d)", "$\\\\\\1^{b}_\\3$", gsub(
+          # replace underscore digit with latex subscript for phis
+          "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\3;\\2}$", all_bpars$Param
+        )
       )
     )
   )
+  # delete rounded brackets from parameters (not allowed in tikz)
+  # has to be done after all_bpars$names are generated!
+  all_bpars$Param <- gsub("\\(|\\)", "", all_bpars$Param)
   n_bpars <- nrow(all_bpars)
   bpars_vec <- c()
   for (i in 1:n_bpars) {
@@ -694,7 +720,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
             all_bpars[i, "isRandom"] == 0,
             ", color = gray]  (", "]  ("
           ),
-          all_bpars[i, "Param"], ")  {$\\", names_bpars[i], "$};"
+          all_bpars[i, "Param"], ")  {", all_bpars$names[i], "};"
         )
       )
     } else {
@@ -707,12 +733,99 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
           ),
           all_bpars[i, "Param"], ")  [right = 1em of ",
           all_bpars[i - 1, "Param"],
-          "]  {$\\", names_bpars[i], "$};"
+          "]  {", all_bpars$names[i], "};"
         )
       )
     }
   }
-  bm <- paste(bpars_vec, collapse = "\n")
+  bpars <- paste(bpars_vec, collapse = "\n")
+
+  # get random effect predictors and predicted outcomes if provided
+  if (nrow(infos$RE.PREDS) > 0 | nrow(infos$OUT) > 0) {
+    # for predicted random effects
+    if (length(infos$n_cov_vars) > 0) {
+      re_preds <- infos$RE.PREDS[, c(
+        "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
+        "re_as_dv", "re_preds", "re_no"
+      )]
+      # rename for easier binding later
+      names(re_preds)[8] <- "dv"
+      names(re_preds)[9] <- "pred"
+      names(re_preds)[10] <- "no"
+    } else {
+      # if not provided, create empty data frame for binding
+      re_preds <- data.frame(matrix(ncol = 10, nrow = 0))
+      colnames(re_preds) <- c(
+        "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
+        "re_as_dv", "re_preds", "re_no"
+      )
+    }
+    # for predicted outcomes
+    if (length(infos$n_out) > 0) {
+      out_preds <- infos$OUT[, c(
+        "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
+        "Var", "Pred", "out_var_no"
+      )]
+      # rename for easier binding later
+      names(out_preds)[8] <- "dv"
+      names(out_preds)[9] <- "pred"
+      names(out_preds)[10] <- "no"
+    } else {
+      # if not provided, create empty data frame for binding
+      out_preds <- data.frame(matrix(ncol = 10, nrow = 0))
+      colnames(out_preds) <- c(
+        "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
+        "re_as_dv", "re_preds", "re_no"
+      )
+    }
+
+    # bind together
+    all_preds <- rbind(re_preds, out_preds)
+    # replace dots with nothing
+    all_preds[, c("Param", "dv", "pred")] <- apply(
+      all_preds[, c("Param", "dv", "pred")], 2,
+      function(x) gsub("\\.|\\(|\\)", "", x)
+    )
+    # get additional nodes to draw
+    pred_nodes <- c(infos$n_cov_vars, infos$out_var)
+    # delete emtpy entries
+    pred_nodes <- pred_nodes[!is.na(pred_nodes)]
+    # replace special characters
+    pred_nodes <- gsub("\\.|\\(|\\)", "", pred_nodes)
+
+    # place coordinates below between-level parameters
+    pred_coords_vec <- c()
+    for (i in c(1, nrow(all_bpars))) {
+      pred_coords_vec <- c(
+        pred_coords_vec, paste0(
+          "\\node  [coordinate]  (cpred", i, ")  [below = 5em of ",
+          all_bpars$Param[i], "]  {};"
+        )
+      )
+    }
+    pred_coords <- paste(pred_coords_vec, collapse = "\n")
+
+    # place nodes under bpars
+    preds_vec <- c()
+    for (i in 1:length(pred_nodes)) {
+      preds_vec <- c(
+        preds_vec, paste0(
+          "\\node  [manifest]  (", pred_nodes[i], ")  at  ($(cpred1)!",
+          i, "/", length(pred_nodes) + 1, "!(cpred", nrow(all_bpars), ")$)",
+          "  {\\textit{", pred_nodes[i], "}};"
+        )
+      )
+    }
+    preds <- paste(preds_vec, collapse = "\n")
+
+  } else {
+    pred_coords <- c()
+    preds <- c()
+  }
+
+
+
+  bm <- paste(bpars, pred_coords, preds, sep = "\n")
 
   # draw between-model covariances
 
