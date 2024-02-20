@@ -403,15 +403,21 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
       infos$q, "}
-    \\node  [latent]  (y\\i wt-1)  [below = 5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};
+    \\node  [latent]  (y\\i wt-1)  [below = 5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};",
 
-    \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
-    infos$maxLag, "}
-      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
-      infos$q, "}
-      \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};
+    ifelse(
+      infos$maxLag != 1,
+      paste0(
+        "\\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+          infos$maxLag, "}
+        \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+          infos$q, "}
+        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};"
+      ),
+      paste0("")
+    ),
 
-    \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+    "\\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
     \\node  [latent]  (y\\i wt)  [below = 5em of y\\lasti wt]  {$y_{\\i ,t}^w$};
 
@@ -435,15 +441,21 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       % draw nodes
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
         infos$q, "}
-      \\node  [latent]  (eta\\i wt-1)  [below = 5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};
+      \\node  [latent]  (eta\\i wt-1)  [below = 5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};",
 
-      \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
-        infos$maxLag, "}
-      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
-        infos$q, "}
-      \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};
+      ifelse(
+        infos$maxLag != 1,
+        paste0(
+          "\\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+            infos$maxLag, "}
+          \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+            infos$q, "}
+          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};"
+        ),
+        paste0("")
+      ),
 
-      \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
+      "\\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
         infos$q, "}
       \\node  [latent]  (eta\\i wt)  [below = 5em of eta\\lasti wt]  {$\\eta_{\\i ,t}^w$};
 
