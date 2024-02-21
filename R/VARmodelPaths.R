@@ -755,7 +755,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   # get random effect predictors and predicted outcomes if provided
   if (nrow(infos$RE.PREDS) > 0 | nrow(infos$OUT) > 0) {
     # for predicted random effects
-    if (length(infos$n_cov_vars) > 0) {
+    if (nrow(infos$RE.PREDS) > 0) {
       re_preds <- infos$RE.PREDS[, c(
         "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
         "re_as_dv", "re_preds", "re_no"
@@ -773,7 +773,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
       )
     }
     # for predicted outcomes
-    if (length(infos$n_out) > 0) {
+    if (nrow(infos$OUT) > 0) {
       out_preds <- infos$OUT[, c(
         "Model", "Level", "Type", "Param", "isRandom", "Lag", "isAR",
         "Var", "Pred", "out_var_no"
@@ -810,7 +810,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     for (i in c(1, nrow(all_bpars))) {
       pred_coords_vec <- c(
         pred_coords_vec, paste0(
-          "\\node  [coordinate]  (cpred", i, ")  [below = 5em of ",
+          "\\node  [coordinate]  (cpred", i, ")  [below = 7.5em of ",
           all_bpars$Param[i], "]  {};"
         )
       )
@@ -830,14 +830,32 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
     }
     preds <- paste(preds_vec, collapse = "\n")
 
+    # draw paths
+    preds_paths_vec <- c()
+    n_preds <- nrow(all_preds)
+    for (i in 1:n_preds) {
+      preds_paths_vec <- c(
+        preds_paths_vec, paste0(
+          "\\draw  [path]  (", all_preds$pred[i], ")  to node  []  {}  (",
+          all_preds$dv[i], ");"
+          # ifelse(
+          #   # indicate path target anchor
+          #   grepl("Outcome", all_preds$Type[i]),
+          #   ".north);", ".south);"
+          # )
+        )
+      )
+    }
+    preds_paths <- paste(preds_paths_vec, collapse = "\n")
   } else {
     pred_coords <- c()
     preds <- c()
+    preds_paths <- c()
   }
 
 
 
-  bm <- paste(bpars, pred_coords, preds, sep = "\n")
+  bm <- paste(bpars, pred_coords, preds, preds_paths, sep = "\n")
 
   # draw between-model covariances
 

@@ -8,7 +8,9 @@ VARmodel <- VARmodelBuild(q = 2, p = c(2, 2))
 VARmodelPaths(VARmodel = VARmodel)
 
 
-VARmodel <-  VARmodelBuild(q = 2, RE.pred = c("x", "z"), out.pred = "y")
+
+devtools::load_all()
+VARmodel <-  VARmodelBuild(q = 2, RE.pred = c("x"))
 VARmodelPaths(VARmodel = VARmodel)
 
 
