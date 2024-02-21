@@ -45,10 +45,10 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
       sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = T)
     VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
     VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
-      sample(x = seq(0.2, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = T)
+      sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = T)
     VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
     VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
-      sample(x = seq(0.2, 0.3, by = 0.05), size = infos$n_sigmaBfree, replace = T)
+      sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = T)
 
     # FIX EFFECTS ========
     model.type = "Fix effect"
@@ -299,6 +299,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
       ind.lab = paste0("Y",q,".",p)
       # within
       loadW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading"][i]
+      loadW = ifelse(length(loadW) == 0, 1, loadW)
       sigmaW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD"][i]
       # between
       alpha = VARmodel$true.val[VARmodel$Param == paste0("alpha_",q,".",p)]

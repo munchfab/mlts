@@ -2,7 +2,7 @@
 data {
   int<lower=1> N; 	// number of observational units
   int<lower=1> D; 	// number of time-varying constructs
-  int<lower=1, upper=3> maxLag; // maximum lag 
+  int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	// observations in total: N * TP
   int<lower=1> n_pars;
   int<lower=D> n_random;   // number of random effects
@@ -66,11 +66,12 @@ data {
 
 }
 
+
 parameters {
   vector[n_random] b_free[N];            // person-specific parameter
   vector<lower=0>[n_random] sd_R;        // random effect SD
   vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
-  cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
+  cholesky_factor_corr[n_random] L;           // cholesky factor of random effects correlation matrix
   vector[n_miss] y_impute;               // vector to store imputed values
   row_vector[n_random] gammas;           // fixed effect (intercepts)
   vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
@@ -121,8 +122,8 @@ model {
   int pos = 1;       // initialize position indicator
   int p_miss = 1;    // running counter variable to index positions on y_impute
   int obs_id = 1;    // declare local variable to store variable number of obs per person
-  matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
   vector[N_obs] y_merge[D];
+  matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
 
   y_merge = y;      // add observations
   if(n_miss>0){
@@ -155,13 +156,16 @@ model {
     b_fix ~ normal(0,2);
   }
 
-
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
 
-    // individual parameters from multivariate normal distribution
-    b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
+    // individual parameters from (multivariate) normal distribution
+    if(n_random == 1){
+      b_free[pp,1] ~ normal(bmu[pp,1], sd_R[1]);
+    } else {
+      b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
+    }
 
     // local variable declaration: array of predicted values
     {
@@ -178,7 +182,7 @@ model {
       // build prediction matrix for specific dimensions
       {
       matrix[(obs_id-maxLag),N_pred[d]] b_mat; // adjust for non-fully crossed models
-      
+
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
           int lag_use = Lag_pred[d,nd];
           b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];

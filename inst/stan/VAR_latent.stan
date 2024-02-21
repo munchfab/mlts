@@ -2,8 +2,9 @@
 data {
   int<lower=1> N; 	        // number of observational units
   int<lower=1> D;           // number of latent constructs
-  int<lower=2> n_p; 	      // number of manifest indicators
+  int<lower=1> n_p; 	      // number of manifest indicators
   int D_perP[n_p];          // indicate dimension per indicator
+  int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
   int<lower=D> n_random;    // number of random effects
@@ -28,7 +29,8 @@ data {
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D];   // matrix to index predictors to use per dimension
+  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
+  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
   int Dpos2[D];
 
@@ -215,28 +217,35 @@ model {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
 
-    // individual parameters from multivariate normal distribution
-    b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
+    // individual parameters from (multivariate) normal distribution
+    if(n_random == 1){
+      b_free[pp,1] ~ normal(bmu[pp,1], sd_R[1]);
+    } else {
+      b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
+    }
 
     // dynamic process
     {
-    vector[obs_id-1] mus[D];
+    vector[obs_id-maxLag] mus[D];
     for(d in 1:D){ // start loop over dimensions
+
       // build prediction matrix for specific dimensions
-      matrix[(obs_id-1),N_pred[d]] b_mat;         // adjust for non-fully crossed models
-      for(nd in 1:N_pred[d]){                     // start loop over number of predictors in each dimension
-        b_mat[,nd] = etaW[D_pred[d, nd],(pos):(pos-2+obs_id)];
+      matrix[(obs_id-maxLag),N_pred[d]] b_mat;  // adjust for non-fully crossed models
+
+      for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
+        int lag_use = Lag_pred[d,nd];
+        b_mat[,nd] = etaW[D_pred[d, nd],(pos+maxLag-lag_use):(pos+-1+obs_id-lag_use)];
       }
 
       // use build predictor matrix to calculate latent time-series means
       mus[d,] = b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-      etaW[d,(pos+1):(pos-1+obs_id)] ~ normal(mus[d,], sd_noise[d,pp]);
-    }
+      etaW[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+      }
     }
 
     // expected indicator scores
     for(i in 1:n_p){
-      Ymus[i,pos:(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW[D_perP[i],pos:(pos-1+obs_id)];
+      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW[D_perP[i],pos:(pos-1+obs_id)];
     }
 
     pos = pos + obs_id;

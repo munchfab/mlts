@@ -213,7 +213,7 @@ VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = N
       "Type" = "Measurement Error SD",
       "Param"= c(paste0("sigmaW_",i,".",1:p[i])),
       "Param_Label" = c(""),
-      "Constraint" = ifelse(p[i] == 1, "= 0", "free")
+      "Constraint" = "free"
     )
     mm.pars[[i]] = plyr::rbind.fill(loadsW, errVarW)
   }

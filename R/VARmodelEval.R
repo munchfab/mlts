@@ -285,7 +285,11 @@ VARmodelEval <- function(VARmodel){
   prior_sd_R = VARmodel[VARmodel$Type=="Random effect SD", cols]
 
   # random effect correlations
-  prior_LKJ = unique(VARmodel$prior_location[VARmodel$Type=="RE correlation"])
+  if(n_random == 1){
+      prior_LKJ = 1
+    } else {
+      prior_LKJ = unique(VARmodel$prior_location[VARmodel$Type=="RE correlation"])
+    }
 
   # add fix effect prior of constant innovation variance (as SD)
   prior_sigma = matrix(ncol = 2, nrow = n_innos_fix)

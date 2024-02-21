@@ -50,6 +50,8 @@ replace_model_row <- function(VARmodel, row, replacement){
 
   if(row == 1){
     VARmodel = plyr::rbind.fill(replacement, VARmodel[2:nrow(VARmodel),])
+  } else if(row == nrow(VARmodel)){
+    VARmodel = plyr::rbind.fill(VARmodel[1:(nrow(VARmodel)-1),], replacement)
   } else {
     VARmodel = plyr::rbind.fill(
       VARmodel[1:(row-1),],

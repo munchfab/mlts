@@ -56,7 +56,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     p.data$Param_type <- factor(p.data$Param_type, levels = c(
       "Fix effect", "Random effect SD", "RE correlation",
       "Outcome prediction", "RE prediction",
-      "Item intercepts", "Loading", "Measruement Error SD"
+      "Item intercepts", "Loading", "Measurement Error SD"
     ))
 
 

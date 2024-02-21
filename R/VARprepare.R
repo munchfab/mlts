@@ -45,7 +45,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
-  is_random = infos$is_random # which parameters (in order of Fix effect parameters in VARmodel) to model as random effect
+  is_random = as.array(infos$is_random) # which parameters (in order of Fix effect parameters in VARmodel) to model as random effect
   is_fixed = infos$is_fixed   # a matrix of n_fixed x 1, indicating which parameter to model as constant
   re_pars = infos$re_pars     # subset of VARmodel of random effect parameters
 
@@ -159,11 +159,11 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   if(infos$isLatent == TRUE){
     standata$D = infos$q
     standata$n_p = nrow(infos$indicators)
-    standata$D_perP = as.integer(infos$indicators$q)
+    standata$D_perP = as.array(as.integer(infos$indicators$q))
 
     # alternative missing data indexing
     n_miss = sum(data[,ts.ind] == -Inf)           # overall number of NAs
-    n_miss_p = sapply(ts.ind, FUN = function(x){sum(data[,x] == -Inf)})
+    n_miss_p = as.array(sapply(ts.ind, FUN = function(x){sum(data[,x] == -Inf)}))
     pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = T)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
@@ -179,16 +179,16 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
     standata$n_alphafree <- infos$n_alphafree
     standata$n_sigmaBfree <- infos$n_sigmaBfree
     standata$n_sigmaWfree <- infos$n_sigmaWfree
-    standata$pos_loadBfree <- infos$pos_loadBfree
-    standata$pos_loadWfree <- infos$pos_loadWfree
-    standata$pos_alphafree <- infos$pos_alphafree
-    standata$pos_sigmaBfree <- infos$pos_sigmaBfree
-    standata$pos_sigmaWfree <- infos$pos_sigmaWfree
+    standata$pos_loadBfree <- as.array(infos$pos_loadBfree)
+    standata$pos_loadWfree <- as.array(infos$pos_loadWfree)
+    standata$pos_alphafree <- as.array(infos$pos_alphafree)
+    standata$pos_sigmaBfree <- as.array(infos$pos_sigmaBfree)
+    standata$pos_sigmaWfree <- as.array(infos$pos_sigmaWfree)
 
     standata$n_YB_free <- infos$n_YB_free
-    standata$YB_free_pos <- infos$YB_free_pos
-    standata$mu_etaB_pos <- infos$mu_etaB_pos
-    standata$mu_is_etaB <- infos$mu_is_etaB
+    standata$YB_free_pos <- as.array(infos$YB_free_pos)
+    standata$mu_etaB_pos <- as.array(infos$mu_etaB_pos)
+    standata$mu_is_etaB <- as.array(infos$mu_is_etaB)
   }
 
 

@@ -195,8 +195,8 @@ or set to 0 in a subsequent step, this warning can be ignored.")
   if(q > 1 & is.null(InnoCovsZero)){
     InnoCovsZero = TRUE
   }
-  if(!is.null(FixDynamics) | !is.null(FixInnoVars) |
-     !is.null(FixInnoCovs) | !is.null(FEis0) |
+  if(FixDynamics == TRUE | FixInnoVars == TRUE |
+     FixInnoCovs == TRUE | !is.null(FEis0) |
      !is.null(REis0)) {
     VARmodel = VARmodelConstraints(
       VARmodel = VARmodel,
