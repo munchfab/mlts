@@ -14,7 +14,7 @@
 VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
 
 
-  # extrat model infos
+  # extract model infos
   infos <- VARmodelEval(VARmodel)
 
   # extract model data frame
