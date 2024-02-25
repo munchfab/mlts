@@ -11,17 +11,24 @@ VARmodelParLabels <- function(VARmodel){
   # helper function to map names of parameters used in VARmodel with
   # parameter labels used in the stan models
   VARmodel$Param_stan = NA
+#  VARmodel$Param_expr = VARmodel$Param
   VARmodel$Par_no = 1: nrow(VARmodel)
 
   # first add infos to VARmodel to extract variable names
   ##### FIXED EFFECT INTERCEPTS ================================================
   FEints = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
   FEints$Param_stan = paste0("gammas[",1:nrow(FEints),"]")
+  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "sigma2_", replacement = "sigma^2_", fixed = T)
+  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "_", replacement = "[", fixed = T)
+  # FEints$Param_expr = paste0(FEints$Param_expr,"]")
+  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = ".", replacement = "~", fixed = T)
 
   ##### CONSTANT DYNAMIC PARAMETERS ============================================
   FEdyn = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==0 & VARmodel$Param_Label=="Dynamic",]
   if(nrow(FEdyn)>0){
   FEdyn$Param_stan = paste0("b_fix[",1:nrow(FEdyn),"]")
+  # FEdyn$Param_expr = gsub(FEdyn$Param_expr, pattern = "_", replacement = "[", fixed = T)
+  # FEdyn$Param_expr = paste0(FEdyn$Param_expr,"]")
   }
 
   ##### CONSTANT INNOVATION VARIANCES ==========================================
@@ -53,6 +60,13 @@ VARmodelParLabels <- function(VARmodel){
     REcors$Param_stan = paste0(REcors$Param_stan,"]")
   }
 
+  ###### INNOVATION COVARIANCE =================================================
+  Fix.Covs = VARmodel[startsWith(VARmodel$Param, prefix = "r.zeta"),]
+  if(nrow(Fix.Covs)>0){
+    Fix.Covs$Param_stan = paste0("bcorr_inn[",
+                                 substr(Fix.Covs$Param, start = 8, 8),",",
+                                 substr(Fix.Covs$Param, start = 9, 9),"]")
+    }
 
   ###### RE on BETWEEN-LEVEL COVARIATES ========================================
   REpred = VARmodel[VARmodel$Type == "RE prediction",]
@@ -94,27 +108,37 @@ VARmodelParLabels <- function(VARmodel){
     N_inds = nrow(infos$indicators)
     alphas = data.frame(
       "Param" = paste0("alpha_",infos$indicators$q, ".",infos$indicators$p),
-      "Param_stan" = paste0("alpha[",1:N_inds,"]"))
+      "Param_stan" = paste0("alpha[",1:N_inds,"]")#,
+#      "Param_expr" = paste0("alpha[",infos$indicators$q, ".",infos$indicators$p,"]")
+      )
     loadB = data.frame(
       "Param" = paste0("lambdaB_",infos$indicators$q, ".",infos$indicators$p),
-      "Param_stan" = paste0("loadB[",1:N_inds,"]"))
+      "Param_stan" = paste0("loadB[",1:N_inds,"]")#,
+    #  "Param_expr" = paste0("lambda^B[",infos$indicators$q, ".",infos$indicators$p,"]")
+      )
     loadW = data.frame(
       "Param" = paste0("lambdaW_",infos$indicators$q, ".",infos$indicators$p),
-      "Param_stan" = paste0("loadW[",1:N_inds,"]"))
+      "Param_stan" = paste0("loadW[",1:N_inds,"]")#,
+  #    "Param_expr" = paste0("lambda^W[",infos$indicators$q, ".",infos$indicators$p,"]")
+      )
     sigmaB = data.frame(
       "Param" = paste0("sigmaB_",infos$indicators$q, ".",infos$indicators$p),
-      "Param_stan" = paste0("sigmaB[",1:N_inds,"]"))
+      "Param_stan" = paste0("sigmaB[",1:N_inds,"]")#,
+    #  "Param_expr" = paste0("sigma^B[",infos$indicators$q, ".",infos$indicators$p, "]")
+      )
     sigmaW = data.frame(
       "Param" = paste0("sigmaW_",infos$indicators$q, ".",infos$indicators$p),
-      "Param_stan" = paste0("sigmaW[",1:N_inds,"]"))
+      "Param_stan" = paste0("sigmaW[",1:N_inds,"]")#,
+    #  "Param_expr" = paste0("sigma^W[",infos$indicators$q, ".",infos$indicators$p, "]")
+      )
     mm.pars = rbind(alphas, loadB, sigmaB, loadW, sigmaW)
   }
 
   #### COMBINE
-  par_tab = rbind(FEints, FEdyn, FEsigma, REsds, REcors, REpred, OUTpred)
-  par_tab = par_tab[, c("Param", "Param_stan")]
+  par_tab = rbind(FEints, FEdyn, Fix.Covs, FEsigma, REsds, REcors, REpred, OUTpred)
+
   if(infos$isLatent == T){
-    par_tab = rbind(par_tab, mm.pars)
+    par_tab = rbind(par_tab[,c("Param", "Param_stan")], mm.pars)
   }
 
   return(par_tab)
