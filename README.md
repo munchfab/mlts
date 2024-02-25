@@ -1,55 +1,52 @@
-
 # dsemr
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-
-
 ## Installation
 
 You can install the development version of dsemr from [GitHub](https://github.com/) with:
 
-``` r
+```r
 # install.packages("devtools")
 devtools::install_github("munchfab/dsemr")
 ```
 
 ## To Do
 
-* `ARprepare()` and `VARprepare()`
+* `ARprepare()` and `VARprepare()` 
   * finish data preprocessing for AR- and VAR-models
   * include `create_missings()` in data preparation function to allow for approximation of continuous time models
   * include tests for unit testing with `testthat()`
-* `mlts_plot()`
+* `mlts_plot()` 
   * include tests for unit testing with `testthat()`
-* `VARfit()`
+* `VARfit()` 
   * include tests for unit testing with `testthat()`
-* `VARmodelBetween()`
+* `VARmodelBetween()` 
   * include tests for unit testing with `testthat()`
-* `VARmodelBuild()`
+* `VARmodelBuild()` 
   * include tests for unit testing with `testthat()`
   * write Vignettes
-* `VARmodelChecks()`
+* `VARmodelChecks()` 
   * include more testing conditions where users could fail
   * include tests for unit testing with `testthat()`
-* `VARmodelConstraints()`
+* `VARmodelConstraints()` 
   * include tests for unit testing with `testthat()`
   * write Vignettes
-* `VARmodelformula()`
+* `VARmodelformula()` 
   * include tests for unit testing with `testthat()`
   * include in Vignettes
-* `VARmodelMeasurement()`
+* `VARmodelMeasurement()` 
   * include tests for unit testing with `testthat()`
   * write Vignettes
 * `VARmodelParLabels()`
-* `VARmodelPaths()`
+* `VARmodelPaths()` 
   * include tests for unit testing with `testthat()`
   * include in Vignettes
-* `VARmodelPriors()`
+* `VARmodelPriors()` 
   * include tests for unit testing with `testthat()`
   * write or include in Vignettes
-* `VARmodelSim()`:
+* `VARmodelSim()`: 
   * include tests for unit testing with `testthat()`
   * write Vignettes
 * Decide on package name and rename functions accordingly?

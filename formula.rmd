@@ -14,3 +14,81 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+\begin{center}
+Decomposition.
+\end{center}
+\[
+\begin{aligned} \begin{bmatrix}
+y_{1, t} \\
+y_{2, t} \\
+\end{bmatrix} &= \begin{bmatrix}
+\mu_{11} \\
+\mu_{12} \\
+\mu_{21} \\
+\mu_{22} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+y_{11, t}^w \\
+y_{12, t}^w \\
+y_{21, t}^w \\
+y_{22, t}^w \\
+\end{bmatrix} \\ \begin{bmatrix}
+y_{11, t}^w \\
+y_{12, t}^w \\
+y_{21, t}^w \\
+y_{22, t}^w \\
+\end{bmatrix} &= \begin{bmatrix}
+1 &
+0 \\
+\lambda_{12}^w &
+0 \\
+0 &
+1 \\
+0 &
+\lambda_{22}^w \\
+\end{bmatrix}
+\begin{bmatrix}
+\eta^w_{1, t} \\
+\eta^w_{2, t} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+\varepsilon_{11, t}^w \\
+\varepsilon_{12, t}^w \\
+\varepsilon_{21, t}^w \\
+\varepsilon_{22, t}^w \\
+\end{bmatrix} \\ \begin{bmatrix}
+\mu_{11} \\
+\mu_{12} \\
+\mu_{21} \\
+\mu_{22} \\
+\end{bmatrix} &= \begin{bmatrix}
+\alpha_{11}^b \\
+\alpha_{12}^b \\
+\alpha_{21}^b \\
+\alpha_{22}^b \\
+\end{bmatrix}
++
+\begin{bmatrix}
+1 &
+0 \\
+\lambda_{12}^b &
+0 \\
+0 &
+1 \\
+0 &
+\lambda_{22}^b \\
+\end{bmatrix}
+\begin{bmatrix}
+\eta^b_{1} \\
+\eta^b_{2} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+\varepsilon_{11}^b \\
+\varepsilon_{12}^b \\
+\varepsilon_{21}^b \\
+\varepsilon_{22}^b \\
+\end{bmatrix} \\ \end{aligned}
+\]
