@@ -174,7 +174,7 @@ VARmodelEval <- function(VARmodel){
   innos_fix_pos = cumsum(1 - innos_rand)
 
 
-  n_pars = sum(VARmodel$Type == "Fix effect")
+  n_pars = sum((VARmodel$Type == "Fix effect" & !startsWith(VARmodel$Param, "r.zeta")))
   n_random = sum(VARmodel$isRandom, na.rm = T)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
@@ -185,10 +185,10 @@ VARmodelEval <- function(VARmodel){
 
   # number of innovation covariances to include
   n_inno_covs = nrow(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),])
-  n_inno_cov_fix = n_inno_covs - sum(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),"isRandom"])
+  n_inno_cov_fix = sum((VARmodel$Type == "Fix effect" & startsWith(VARmodel$Param, "r.zeta")))
   inno_cov_pos = matrix(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"), "no"],
                         nrow = 1, ncol = n_inno_covs)
-  inno_cors = fix_pars[grepl(fix_pars$Param, pattern="r_zeta"),]
+  inno_cors = VARmodel[startsWith(VARmodel$Param, "r.zeta"),]
   n_inno_cors = nrow(inno_cors)
 
 

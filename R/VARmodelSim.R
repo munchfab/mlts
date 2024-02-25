@@ -239,9 +239,9 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
         for(xx in 1:q){
           for(yy in 1:q){
             if(xx < yy){
-              cor = VARmodel$true.val[VARmodel$Param == paste0("r_zeta_",xx,yy)]
+              cor = VARmodel$true.val[VARmodel$Param == paste0("r.zeta_",xx,yy)]
               cov = cor * sqrt(inno_var_mat[xx,xx]) * sqrt(inno_var_mat[yy,yy])
-              inno_var_mat[xx,yy] <- inno_var_mat[yy,xx] = cov
+              inno_var_mat[xx,yy] <- inno_var_mat[yy,xx] <- cov
             }
           }
         }

@@ -157,7 +157,7 @@ VARfit <- function(VARmodel,
       pars = c(pars, "b_free")
     }
 
-    if(standata$n_inno_covs == 0){
+    if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
       if(fit.model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifest,
@@ -171,7 +171,22 @@ VARfit <- function(VARmodel,
       } else {
         stanfit <- NULL
       }
-    } else {
+    } else if(standata$n_inno_cors > 0){
+      pars = c(pars,"bcorr_inn")
+      if(fit.model==T){
+        stanfit <- rstan::sampling(
+          stanmodels$VAR_manifestCovsFix,
+          data = standata,
+          pars = pars,
+          iter = iter,
+          cores = cores,
+          chains = chains,
+          ...
+        )
+      } else {
+        stanfit <- NULL
+      }
+    } else if(standata$n_inno_covs > 0){
       if(fit.model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifestCovsRand,
@@ -185,9 +200,8 @@ VARfit <- function(VARmodel,
       } else {
         stanfit <- NULL
       }
+
     }
-
-
   }
 
   ## Multiple-indicator Model ==================================================

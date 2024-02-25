@@ -57,8 +57,10 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
 
   # innovation covariances
   n_inno_covs = infos$n_inno_covs
+  n_inno_cors = infos$n_inno_cors
   n_inno_cov_fix = infos$n_inno_cov_fix
   inno_cov_pos = infos$inno_cov_pos
+
   # NEEDS TO BE UPDATED ----------------------------
   n_obs_cov = ifelse(n_inno_covs == 0, 0, N_obs - N)
   # -----------------------------------------
@@ -146,7 +148,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
     innos_rand, innos_pos, n_innos_fix,
     ## innovation covariances
     innos_fix_pos, n_obs_cov, n_obs_cov, inno_cov_pos,
-    n_inno_covs, n_inno_cov_fix,
+    n_inno_covs,n_inno_cors, n_inno_cov_fix,
 
     n_cov, n_cov_bs, n_cov_mat, W,
     n_out, n_out_bs, n_out_bs_max, n_out_bs_sum, n_out_b_pos, out, n_z, Z,

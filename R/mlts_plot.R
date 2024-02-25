@@ -190,22 +190,22 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
       if(length(unique(sub$Param)) == 1){
         sub$lab_x = re_par_combi[i,1]
         sub$lab_y = re_par_combi[i,1]
-        p_list[[i]] <- ggplot(sub, aes(x = bpe)) +
-          geom_histogram(fill = "grey", color = "black") +
-          theme_classic() +
-          scale_x_continuous(n.breaks = 7) +
-          theme(strip.placement = "outside",
-                strip.background = element_blank(),
-                strip.text = element_text(face = 2),
-                axis.title = element_blank())
+        p_list[[i]] <- ggplot2::ggplot(sub, ggplot2::aes(x = bpe)) +
+          ggplot2::geom_histogram(fill = "grey", color = "black") +
+          ggplot2::theme_classic() +
+          ggplot2::scale_x_continuous(n.breaks = 7) +
+          ggplot2::theme(strip.placement = "outside",
+                strip.background = ggplot2::element_blank(),
+                strip.text = ggplot2::element_text(face = 2),
+                axis.title = ggplot2::element_blank())
 
         if(labels.as.expression == T){
           p_list[[i]] <- p_list[[i]] +
-            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y",
-                       labeller = label_parsed)
+            ggplot2::facet_grid(cols = ggplot2::vars(lab_x), switch = "y",
+                       labeller = ggplot2::label_parsed)
         } else {
           p_list[[i]] <- p_list[[i]] +
-            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y")
+            ggplot2::facet_grid(cols = ggplot2::vars(lab_x), switch = "y")
         }
 
       } else {
@@ -215,26 +215,30 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
           lab_x = re_par_combi[i,2],
           lab_y = re_par_combi[i,1]
         )
-        p_list[[i]] <- ggplot(df, aes(x = x, y = y)) +
-          geom_point(color = dot.color, shape = dot.shape, fill = "grey") +
-          theme_classic() +
-          stat_smooth(method = "lm", se = F) +
-          scale_x_continuous(n.breaks = 7) +
-          scale_y_continuous(n.breaks = 7) +
-          theme(strip.placement = "outside",
-                strip.background = element_blank(),
-                strip.text = element_text(face = 2),
-                axis.title = element_blank()
+        p_list[[i]] <- ggplot2::ggplot(df, aes(x = x, y = y)) +
+          ggplot2::geom_point(color = dot.color, shape = dot.shape, fill = "grey") +
+          ggplot2::theme_classic() +
+          ggplot2::stat_smooth(method = "lm", se = F) +
+          ggplot2::scale_x_continuous(n.breaks = 7) +
+          ggplot2::scale_y_continuous(n.breaks = 7) +
+          ggplot2::theme(strip.placement = "outside",
+                strip.background = ggplot2::element_blank(),
+                strip.text = ggplot2::element_text(face = 2),
+                axis.title = ggplot2::element_blank()
           )
 
-        if(labels.as.expression == T){
-          p_list[[i]] <- p_list[[i]] +
-            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y",
-                       labeller = label_parsed)
-        } else {
-          p_list[[i]] <- p_list[[i]] +
-            facet_grid(cols = vars(lab_x), rows = vars(lab_y), switch = "y")
-        }
+  #       if(labels.as.expression == T){
+  #         p_list[[i]] <- p_list[[i]] +
+  #           ggplot2::facet_grid(#cols = ggplot2::vars(lab_x),
+  # #                              rows = ggplot2::vars(lab_y),
+  #                               switch = "y",
+  #                      labeller = ggplot2::label_parsed)
+  #       } else {
+  #         p_list[[i]] <- p_list[[i]] +
+  #           ggplot2::facet_grid(#cols = ggplot2::vars(lab_x),
+  #                             #  rows = ggplot2::vars(lab_y),
+  #                               switch = "y")
+  #       }
       }
     }
 

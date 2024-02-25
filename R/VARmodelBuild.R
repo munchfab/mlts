@@ -36,7 +36,7 @@
 VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3),
                           btw.factor = TRUE, btw.model = NULL,
                           FixDynamics = F, FixInnoVars = F,
-                          FixInnoCovs = F, InnoCovsZero = F,
+                          FixInnoCovs = F, InnoCovsZero = NULL,
                           FEis0 = NULL, REis0 = NULL,
                           RE.pred = NULL, out.pred=NULL, out.pred.add.btw = NULL){
 
@@ -87,12 +87,6 @@ VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3),
   # ---
 
   if(q > 1){
-
-    message("Note: When specifying a VAR(1) model with person-specific innovation
-covariances, a latent-variable approach will be used which affords introducing
-contraints on the loading parameters of the latent covariance factor(s).
-(see Hamaker et al., 2018). If innovation covariances are set as a constant
-or set to 0 in a subsequent step, this warning can be ignored.")
 
     pars = c(mus_pars, phi_pars, sigma_pars, cov_pars)
 
@@ -192,12 +186,23 @@ or set to 0 in a subsequent step, this warning can be ignored.")
   VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
 
   # CONSTRAINTS ===============================================================
+
   if(q > 1 & is.null(InnoCovsZero)){
     InnoCovsZero = TRUE
+  } else {
+    InnoCovsZero = FALSE
   }
+  if(InnoCovsZero == FALSE & q > 1 & FixInnoCovs == FALSE){
+message("Note: When specifying a VAR(1) model with person-specific innovation
+covariances, a latent-variable approach will be used which affords introducing
+contraints on the loading parameters of the latent covariance factor(s).
+(see Hamaker et al., 2018). If innovation covariances are set as a constant
+or set to 0 in a subsequent step, this warning can be ignored.")
+    }
+
   if(FixDynamics == TRUE | FixInnoVars == TRUE |
      FixInnoCovs == TRUE | !is.null(FEis0) |
-     !is.null(REis0)) {
+     !is.null(REis0) | InnoCovsZero == T) {
     VARmodel = VARmodelConstraints(
       VARmodel = VARmodel,
       FixDynamics = FixDynamics, FixInnoVars = FixInnoVars,

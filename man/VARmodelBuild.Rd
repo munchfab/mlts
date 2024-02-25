@@ -13,7 +13,7 @@ VARmodelBuild(
   FixDynamics = F,
   FixInnoVars = F,
   FixInnoCovs = F,
-  InnoCovsZero = F,
+  InnoCovsZero = NULL,
   FEis0 = NULL,
   REis0 = NULL,
   RE.pred = NULL,
