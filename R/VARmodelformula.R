@@ -81,7 +81,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     lam_w_list <- list()
     lam_b_list <- list()
     lam_w_mat <- matrix(0, ncol = infos$q, nrow = sum(infos$p)) # within-model loadings
-    lam_b_mat <- matrix(ncol = infos$q, nrow = sum(infos$p)) # between-model loadings
+    lam_b_mat <- matrix(0, ncol = infos$q, nrow = sum(infos$p)) # between-model loadings
     int_b_vec <- c() # between-model intercepts
     for (i in 1:infos$q) {
       lat_w_vec <- c(lat_w_vec, paste0("\\eta^w_{", i, ", t} \\\\"))
@@ -94,8 +94,16 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
         ts_w_vec <- c(ts_w_vec, paste0("y_{", i, j, ", t}^w \\\\"))
         ts_b_vec <- c(ts_b_vec, paste0("\\mu_{", i, j, "} \\\\"))
         eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", t}^w \\\\"))
-        eps_b_vec <- c(eps_b_vec, paste0("\\varepsilon_{", i, j, "}^b \\\\"))
-        int_b_vec <- c(int_b_vec, paste0("\\alpha_{", i, j, "}^b \\\\"))
+        eps_b_vec <- c(eps_b_vec, ifelse(
+          j == 1,
+          "0 \\\\", # first residual fixed to zero
+          paste0("\\varepsilon_{", i, j, "}^b \\\\")
+        ))
+        int_b_vec <- c(int_b_vec, ifelse(
+          j == 1,
+          "0 \\\\", # first indicator intercept fixed to zero
+          paste0("\\alpha_{", i, j, "}^b \\\\")
+        ))
         # within-model loading matrix
         if (
           infos$indicators[
@@ -145,6 +153,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     }
 
     # paste together
+    ts <- paste(ts_vec, collapse = "\n")
     ts_w <- paste(ts_w_vec, collapse = "\n")
     ts_b <- paste(ts_b_vec, collapse = "\n")
     lam_w <- paste(lam_w_vec, collapse = "\n")
@@ -178,6 +187,8 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
       sep = "\n"
     )
 
+    # error_fixed <- ",\\\\ \n & \\text{with}~\\varepsilon_{i1}^b = 0"
+
     # decomposition formula with within- and between-level measurement model
     dcf <- paste(
       begin_math,
@@ -207,7 +218,11 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   dvs_vec <- c()
   # left hand side
   for (i in 1:infos$q) {
-    dvs_vec <- c(dvs_vec, paste0("y_{", i, ", t}^w \\\\"))
+    dvs_vec <- c(dvs_vec, ifelse(
+      infos$isLatent == T,
+      paste0("\\eta_{", i, ", t}^w \\\\"),
+      paste0("y_{", i, ", t}^w \\\\")
+    ))
   }
   dvs <- paste(dvs_vec, collapse = "\n")
   wmf_lhs <- paste(begin_bmatrix, dvs, end_bmatrix, sep = "\n")
@@ -216,42 +231,77 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
   # store number of phi-parameters for loops
   all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
+  all_phis$names <- gsub(
+    # replace underscore digit with latex subscript
+    "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", all_phis$Param
+  )
+  # think about that if you have time to spare
+  # all_phis$mat_row <- as.numeric(
+  #   gsub(
+  #     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\3", all_phis$Param
+  #   )
+  # )
+  # all_phis$mat_col <- as.numeric(
+  #   gsub(
+  #     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\4", all_phis$Param
+  #   )
+  # ) ^ as.numeric(
+  #   gsub(
+  #     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\2", all_phis$Param
+  #   )
+  # )
+  # phi_mat <- matrix(0, ncol = infos$q * infos$maxLag, nrow = infos$q)
 
+  # loop across all phis
+  # n_phi <- nrow(all_phis)
   phi_mat_vec <- c()
-  # loop across phi subscripts
+  # this loop is wrinkeling my brain
   for (i in 1:infos$q) {
     for (j in 1:infos$q) {
-      # if phi_ij exists in model frame (i.e., is not fixed to zero), paste in matrix
-      if (any(all_phis$Param == paste0("phi_", i, j))) {
-        if (j == infos$q) {
-          phi_mat_vec <- c(phi_mat_vec, paste0("\\phi_{", i, j, "} \\\\ \n"))
-        } else if (i == VARmodel$q & j == VARmodel$q) {
-          # line before end of bmatrix must not be broken
-          phi_mat_vec <- c(phi_mat_vec, paste0("\\phi_{", i, j, "} \\\\"))
+      for (k in 1:infos$maxLag) {
+        # if phi(j)_ik exists in model frame (i.e., is not fixed to zero),
+        # paste in vector
+        if (any(all_phis$Param == paste0("phi(", k, ")_", i, j))) {
+          if (j == infos$q & k == infos$maxLag) {
+            # linebreak after last cell in row
+            phi_mat_vec <- c(
+              phi_mat_vec, paste0(
+                "\\phi_{", j, i, "(", k, ")", "} \\\\"
+              )
+            )
+          } else {
+            phi_mat_vec <- c(
+              phi_mat_vec, paste0(
+                "\\phi_{", j, i, "(", k, ")", "} & "
+              )
+            )
+          }
         } else {
-          phi_mat_vec <- c(phi_mat_vec, paste0("\\phi_{", i, j, "} & "))
-        }
-      } else {
-        # if phi_ij does not exist in model frame, paste empty cell
-        if (j == infos$q) {
-          phi_mat_vec <- c(phi_mat_vec, paste0("0 \n"))
-        } else if (i == infos$q & j == infos$q) {
-          # line before end of bmatrix must not be broken
-          phi_mat_vec <- c(phi_mat_vec, paste0("0 \\\\"))
-        } else {
-          phi_mat_vec <- c(phi_mat_vec, paste0("0 &"))
+          # if phi(j)_ik does not exist in model frame, paste empty cell
+          if (j == infos$q & k == infos$maxLag) {
+            # linebreak after last cell in row
+            phi_mat_vec <- c(
+              phi_mat_vec, "0 \\\\"
+            )
+          } else {
+            phi_mat_vec <- c(
+              phi_mat_vec, "0 & "
+            )
+          }
         }
       }
     }
   }
-  phi_mat <- paste(phi_mat_vec, collapse = "")
+  # paste together
+  phi_mat <- paste(phi_mat_vec, collapse = "\n")
 
   # initiate empty time series vector
   ts_vec <- c()
   # time series loop
   for (i in 1:infos$q) {
-    ts_vec <- c(ts_vec, paste0("y_{", i, ", t - 1}^w \\\\")
-    )
+    for (j in 1:infos$maxLag) {
+      ts_vec <- c(ts_vec, paste0("y_{", i, ", t - ", j, "}^w \\\\"))
+    }
   }
   ts <- paste(ts_vec, collapse = "\n")
 
@@ -356,7 +406,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
 
   # paste within_model to markdown
-  cat(between_model, file = "formula.rmd", append = TRUE)
+  # cat(between_model, file = "formula.rmd", append = TRUE)
 
   # render markdown input #####################################################
 

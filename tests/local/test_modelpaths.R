@@ -21,7 +21,15 @@ VARmodelformula(VARmodel = VARmodel)
 
 
 devtools::load_all()
+VARmodel <-  VARmodelBuild(q = 2, maxLag = 2)
+VARmodelPaths(VARmodel = VARmodel)
+VARmodelformula(VARmodel = VARmodel)
 
+# extract model infos
+infos <- VARmodelEval(VARmodel)
+
+# extract model data frame
+model <- VARmodel
 
 
 
