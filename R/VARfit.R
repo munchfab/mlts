@@ -59,8 +59,8 @@ VARfit <- function(VARmodel,
 
   # check if data is class "VARsimData"
   if(data.simulated == T){
-    message("Simulated data provided: True scores used in the simulation will
-            added to the returned object.")
+    message("Simulated data provided:",
+    "\n True scores used in the simulation will added to the returned object.")
 
     par_labels <- merge(x = par_labels, data$VARmodel[,c("Param", "true.val")],
                        by = "Param", sort = F)
@@ -220,7 +220,7 @@ VARfit <- function(VARmodel,
       pars = c(pars, "b_free")
     }
 
-    if(standata$n_inno_covs == 0){
+    if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
       if(fit.model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_latent,
@@ -234,20 +234,21 @@ VARfit <- function(VARmodel,
       } else {
         stanfit <- NULL
       }
-#    } else {
-      # if(fit.model==T){
-      #   stanfit <- rstan::sampling(
-      #     stanmodels$VAR_manifestCovsRand,
-      #     data = standata,
-      #     pars = pars,
-      #     iter = iter,
-      #     cores = cores,
-      #     chains = chains,
-      #     ...
-      #   )
-  #    } else {
-#        stanfit <- NULL
-#      }
+    } else if(standata$n_inno_cors > 0){
+        pars = c(pars,"bcorr_inn")
+        if(fit.model==T){
+          stanfit <- rstan::sampling(
+            stanmodels$VAR_latentCovsFix,
+            data = standata,
+            pars = pars,
+            iter = iter,
+            cores = cores,
+            chains = chains,
+            ...
+          )
+        } else {
+          stanfit <- NULL
+        }
     }
 
   }

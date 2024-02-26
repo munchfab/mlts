@@ -90,6 +90,7 @@ parameters {
   vector<lower=0>[n_random] sd_R;        // random effect SD
   vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
   cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
+  cholesky_factor_corr[D] L_inno;        // cholesky factor of prediction errors
   vector[n_miss] y_impute;               // vector to store imputed values
   row_vector[n_random] gammas;           // fixed effect (intercepts)
   vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
@@ -111,7 +112,7 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector<lower = 0>[N] sd_noise[D];
+  vector<lower = 0>[D] sd_noise[N];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -143,12 +144,11 @@ transformed parameters {
   // transformation of log-innovation variances if modeled as person-specific
   for(i in 1:D){
     if(innos_rand[i] == 0){
-      sd_noise[i,] = rep_vector(sigma[innos_fix_pos[i]],N);
+      sd_noise[,i] = to_array_1d(rep_vector(sigma[innos_fix_pos[i]],N));
     } else {
-      sd_noise[i,] = sqrt(exp(b[,innos_pos[i]]));
+      sd_noise[,i] = to_array_1d(sqrt(exp(b[,innos_pos[i]])));
     }
   }
-
 
   // replace values for parameters to estimate
   loadB[pos_loadBfree] = loadB_free;
@@ -163,6 +163,7 @@ model {
   int p_miss = 1;    // running counter variable to index positions on y_impute
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
+  matrix[D, D] SIGMA_inno = diag_pre_multiply(sd_noise[1,], L_inno);
   vector[N_obs] y_merge[n_p];
   vector[N_obs] Ymus[n_p];
   vector[N] YB[n_p];
@@ -179,6 +180,7 @@ model {
   gammas ~ normal(prior_gamma[,1],prior_gamma[,2]);
   sd_R ~ cauchy(prior_sd_R[,1], prior_sd_R[,2]);
   L ~ lkj_corr_cholesky(prior_LKJ);
+  L_inno ~ lkj_corr_cholesky(1);
 
   if(n_innos_fix>0){
     sigma ~ cauchy(prior_sigma[,1], prior_sigma[,2]);
@@ -216,6 +218,7 @@ model {
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
+    vector[D] etaW_use[obs_id - maxLag];
 
     // individual parameters from (multivariate) normal distribution
     if(n_random == 1){
@@ -225,8 +228,7 @@ model {
     }
 
     // dynamic process
-//    {
-    vector[obs_id-maxLag] mus[D];
+    vector[D] mus[obs_id-maxLag];
     for(d in 1:D){ // start loop over dimensions
 
       // build prediction matrix for specific dimensions
@@ -238,10 +240,15 @@ model {
       }
 
       // use build predictor matrix to calculate latent time-series means
-      mus[d,] = b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-      etaW[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+      mus[,d] = to_array_1d(b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]));
+      etaW_use[,d] = to_array_1d(segment(etaW[d,], (pos+maxLag), (obs_id-maxLag)));
       }
- //   }
+    // sampling statement
+    if(n_innos_fix == D){
+      etaW_use ~ multi_normal_cholesky(mus, SIGMA_inno);
+    } else {
+      etaW_use ~ multi_normal_cholesky(mus, diag_pre_multiply(sd_noise[pp,], L_inno));
+      }
 
     // expected indicator scores
     for(i in 1:n_p){
@@ -273,8 +280,7 @@ model {
 
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
-//  matrix[n_random,n_random] bcov; // random coefficients covariance matrix
-  // create random coefficient matrices
+  matrix[D,D] bcorr_inn; // random coefficients correlation matrix
   bcorr = multiply_lower_tri_self_transpose(L);
-//  bcov = quad_form_diag(bcorr, sd_R);
+  bcorr_inn = multiply_lower_tri_self_transpose(L_inno);
 }

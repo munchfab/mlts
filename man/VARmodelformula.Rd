@@ -9,9 +9,11 @@ VARmodelformula(VARmodel, data = NULL, labels = NULL)
 \arguments{
 \item{VARmodel}{The VARmodel object.}
 
-\item{data}{An optional \code{data.frame} including the variables to be used in the formula.}
+\item{data}{An optional \code{data.frame} including the variables to be used
+in the formula.}
 
-\item{labels}{An optional character string inluding the names to be used in the path diagram.}
+\item{labels}{An optional character string including the names to be used
+in the formula.}
 }
 \value{
 An Rmarkdown file that is automatically rendered to a pdf document.

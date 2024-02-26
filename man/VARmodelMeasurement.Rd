@@ -47,6 +47,6 @@ VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 VARmodel <- VARmodelMeasurement(
               VARmodel, q = 1, p = 3,
               btw.model = list(""))
-Which models a common latent factor on the between-level for the first three
-indicators and a random indicator mean for the fourth indicator.
+# Which models a common latent factor on the between-level for the first three
+# indicators and a random indicator mean for the fourth indicator.
 }
