@@ -1,15 +1,15 @@
-# dsemr
+# mlts
 
 <!-- badges: start -->
 <!-- badges: end -->
 
 ## Installation
 
-You can install the development version of dsemr from [GitHub](https://github.com/) with:
+You can install the development version of mlts from [GitHub](https://github.com/) with:
 
 ```r
 # install.packages("devtools")
-devtools::install_github("munchfab/dsemr")
+devtools::install_github("munchfab/mlts")
 ```
 
 ## To Do

@@ -26,7 +26,7 @@ VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
   }
   rmarkdown::draft(file = "pathmodel.rmd",
                    template = "pathmodel",
-                   package = "dsemr",
+                   package = "mlts",
                    edit = FALSE)
 
   # latex figure begin and end

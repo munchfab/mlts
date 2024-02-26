@@ -7,6 +7,6 @@
 #' @import methods
 #' @importFrom rstan sampling
 #' @import Rcpp
-#' @useDynLib dsemr, .registration = TRUE
+#' @useDynLib mlts, .registration = TRUE
 ## usethis namespace: end
 NULL

@@ -24,7 +24,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   }
   rmarkdown::draft(file = "formula.rmd",
                    template = "formula",
-                   package = "dsemr",
+                   package = "mlts",
                    edit = FALSE)
 
   # latex center begin and end

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(dsemr)
+library(mlts)
 
-test_check("dsemr")
+test_check("mlts")
