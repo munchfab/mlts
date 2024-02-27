@@ -15,7 +15,7 @@ devtools::install_github("munchfab/mlts")
 ## To Do
 
 * `ARprepare()` and `VARprepare()` 
-  [x] finish data preprocessing for AR- and VAR-models
+  * [x] finish data preprocessing for AR- and VAR-models
   * include `create_missings()` in data preparation function to allow for approximation of continuous time models
   * include tests for unit testing with `testthat()`
 * `mlts_plot()` 
