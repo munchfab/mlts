@@ -31,8 +31,8 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   begin_center <- "\\begin{center}"
   end_center <- "\\end{center}"
   # latex math begin and end
-  begin_math <- "\\[\n\\begin{aligned}"
-  end_math <- "\\end{aligned}\n\\]"
+  begin_math <- "\\[\n\\begin{gathered}"
+  end_math <- "\\end{gathered}\n\\]\n\\vspace{1em}\n"
   # latex bmatrix begin and end
   begin_bmatrix <- "\\begin{bmatrix}"
   end_bmatrix <- "\\end{bmatrix}"
@@ -67,7 +67,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     )
 
     # decomposition formula
-    dcf <- paste(begin_math, dcf_lhs, "&=", dcf_rhs, end_math)
+    dcf <- paste(begin_math, dcf_lhs, "=", dcf_rhs, end_math)
 
   } else {
     # for latent time-series constructs
@@ -187,14 +187,12 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
       sep = "\n"
     )
 
-    # error_fixed <- ",\\\\ \n & \\text{with}~\\varepsilon_{i1}^b = 0"
-
     # decomposition formula with within- and between-level measurement model
     dcf <- paste(
       begin_math,
-      dcf_lhs, "&=", dcf_rhs, "\\\\",
-      dcf_lhs_w, "&=", dcf_rhs_w, "\\\\",
-      dcf_lhs_b, "&=", dcf_rhs_b, "\\\\",
+      dcf_lhs, "=", dcf_rhs, "\\\\",
+      dcf_lhs_w, "=", dcf_rhs_w, "\\\\",
+      dcf_lhs_b, "=", dcf_rhs_b, "\\\\",
       end_math
     )
   }
@@ -235,12 +233,15 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     # replace underscore digit with latex subscript
     "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", all_phis$Param
   )
-  # think about that if you have time to spare
+
   # all_phis$mat_row <- as.numeric(
   #   gsub(
   #     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\3", all_phis$Param
   #   )
   # )
+  # think about this if you have time to spare
+  # how can matrix column be calculated from capture group
+  # \\2 and \\3 alone?
   # all_phis$mat_col <- as.numeric(
   #   gsub(
   #     "(\\w+)\\((\\d)\\)_(\\d)(\\d)", "\\4", all_phis$Param
@@ -300,7 +301,12 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   # time series loop
   for (i in 1:infos$q) {
     for (j in 1:infos$maxLag) {
-      ts_vec <- c(ts_vec, paste0("y_{", i, ", t - ", j, "}^w \\\\"))
+      ts_vec <- c(
+        ts_vec, paste0(
+          ifelse(infos$isLatent == T, "\\eta_{", "y_{"),
+          i, ", t - ", j, "}^w \\\\"
+        )
+      )
     }
   }
   ts <- paste(ts_vec, collapse = "\n")
@@ -309,7 +315,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   innos_vec <- c()
   # innovations loop
   for (i in 1:infos$q) {
-    innos_vec <- c(innos_vec, paste0("\\zeta_{y,", i, ", t} \\\\"))
+    innos_vec <- c(innos_vec, paste0("\\zeta_{", i, ", t} \\\\"))
   }
   innos <- paste(innos_vec, collapse = "\n")
 
@@ -321,11 +327,11 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
     collapse = "\n"
   )
 
-  inno_dist <- ",\\\\ \n & \\text{with}~
+  inno_dist <- ",\\\\ \n\\text{with}~
   \\zeta_{y, i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi})"
 
   # within-model formula
-  wmf <- paste(begin_math, wmf_lhs, "&=", wmf_rhs, inno_dist, end_math)
+  wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, inno_dist, end_math)
 
   # with caption
   within_model <- paste(begin_center, wmf_caption, end_center, wmf)
@@ -341,30 +347,41 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   bmf_caption <- "Between-model."
 
   all_bpars <- model[grepl("Fix", model$Type), ]
-  # delete this if parameter names with underscore are implemented
-  # replaces dots with nothing
+  # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
-  names_bpars <- gsub(
+  all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
-    "()_(\\d+)", "\\1_{\\2}", gsub(
+    "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
       # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "log(\\\\pi_{\\2})", all_bpars$Param
+      "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+        # replace uppercase B for between-level latent variables
+        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+          # replace underscore digit with latex subscript for phis
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", all_bpars$Param
+        )
+      )
     )
   )
-  # one version unit-specific
-  names_bpars_i <- gsub(
+  # add one unit-specific names version (add i subscript)
+  all_bpars$names2 <- gsub(
     # replace underscore digit with latex subscript
-    "()_(\\d+)", "\\1_{\\2,i}", gsub(
+    "(\\w+)_(\\d+)", "\\\\\\1_{\\2,i}", gsub(
       # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "log(\\\\pi_{\\2,i})", all_bpars$Param
+      "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2,i})", gsub(
+        # replace uppercase B for between-level latent variables
+        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+          # replace underscore digit with latex subscript for phis
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2,i}", all_bpars$Param
+        )
+      )
     )
   )
-
+  # number of bpars
   n_bpars <- nrow(all_bpars)
   # left-hand side
   bpars_vec <- c()
   for (i in 1:n_bpars) {
-    bpars_vec <- c(bpars_vec, paste0("\\", names_bpars_i[i], "\\\\"))
+    bpars_vec <- c(bpars_vec, paste0(all_bpars$names2[i], "\\\\"))
   }
   bpars <- paste(bpars_vec, collapse = "\n")
   # create between model left hand side
@@ -373,7 +390,7 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   # right-hand side fixed effects
   fixef_vec <- c()
   for (i in 1:n_bpars) {
-    fixef_vec <- c(fixef_vec, paste0("\\gamma_{\\", names_bpars[i], "}\\\\"))
+    fixef_vec <- c(fixef_vec, paste0("\\gamma_{0,", all_bpars$names[i], "}\\\\"))
   }
   fixef <- paste(fixef_vec, collapse = "\n")
 
@@ -381,32 +398,187 @@ VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
   ranef_vec <- c()
   for (i in 1:n_bpars) {
     if (all_bpars$isRandom[i] == 1) {
-      ranef_vec <- c(ranef_vec, paste0("\\upsilon_{\\", names_bpars[i], ",i}\\\\"))
+      ranef_vec <- c(ranef_vec, paste0("\\upsilon_{", all_bpars$names[i], ",i}\\\\"))
     } else {
       ranef_vec <- c(ranef_vec, paste0("0\\\\"))
     }
   }
   ranef <- paste(ranef_vec, collapse = "\n")
 
+  # for predicted random effects
+  if (nrow(infos$RE.PREDS) > 0) {
+    # create vector of predictors
+    re_pred_vars_vec <- c()
+    n_re_preds <- length(infos$n_cov_vars)
+    for (i in 1:n_re_preds) {
+      re_pred_vars_vec <- c(re_pred_vars_vec, paste0(infos$n_cov_vars[i], "\\\\"))
+    }
+    re_pred_vars <- paste(re_pred_vars_vec, collapse = "\n")
+
+    # create coefficient matrix
+    re_preds <- infos$RE.PREDS[, c(
+      "re_as_dv", "re_preds", "pred_no"
+    )]
+    # rename for easier binding later
+    names(re_preds)[1] <- "dv"
+    names(re_preds)[2] <- "pred"
+    # rename parameters in dv column
+    re_preds$dv <- gsub("\\.", "", re_preds$dv)
+    re_preds$names <- gsub(
+      # replace underscore digit with latex subscript
+      "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
+        # replace lnsigma with log(pi)
+        "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+          # replace uppercase B for between-level latent variables
+          "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+            # replace underscore digit with latex subscript for phis
+            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", re_preds$dv
+          )
+        )
+      )
+    )
+    # pivot to wide to create predictor matrix
+    re_preds_wide <- reshape(
+      data = re_preds,
+      idvar = "dv",
+      direction = "wide",
+      timevar = "pred_no",
+      v.names = c("names", "pred")
+    )
+    # create coefficient matrix and vector
+    re_coefs_mat <- matrix(0, nrow = n_bpars, ncol = n_re_preds)
+    re_coefs_vec <- c()
+    for (i in 1:n_bpars) {
+      for (j in 1:n_re_preds) {
+        re_coefs_mat[i, j] <- ifelse(
+          !is.na(re_preds_wide[i, paste0("names.", j)]),
+          paste0(
+            "\\gamma_{", j, ",", re_preds_wide[i, paste0("names.", j)], "}"
+          ),
+          # paste a 0 if parameter is fixed to 0
+          "0"
+        )
+      }
+      re_coefs_vec[i] <- paste(re_coefs_mat[i, ], collapse = " & ")
+    }
+    # paste together
+    re_coefs <- paste(re_coefs_vec, collapse = "\\\\\n")
+
+    # paste in tex
+    re_predictors <- paste(
+      begin_bmatrix, re_coefs, end_bmatrix,
+      begin_bmatrix, re_pred_vars, end_bmatrix,
+      "+",
+      collapse = "\n"
+    )
+  }
+
+  # for predicted outcomes
+  if (nrow(infos$OUT) > 0) {
+    # create vector of outcomes and residuals
+    out_vars_vec <- c()
+    out_res_vec <- c()
+    n_out <- infos$n_out
+    for (i in 1:n_out) {
+      out_vars_vec <- c(out_vars_vec, paste0(infos$out_var[i], "\\\\"))
+      out_res_vec <- c(out_res_vec, paste0("\\varepsilon_{", infos$out_var[i], "}\\\\"))
+    }
+    out_vars <- paste(out_vars_vec, collapse = "\n")
+    out_res <- paste(out_res_vec, collapse = "\n")
+
+    # create coefficient matrix
+    out <- infos$OUT[, c(
+      "Var", "Pred", "out_var_no"
+    )]
+    # rename for easier binding later
+    names(out)[1] <- "dv"
+    names(out)[2] <- "pred"
+    # rename parameters in dv column
+    out$pred <- gsub("\\.", "", out$pred)
+    out$names <- gsub(
+      # replace underscore digit with latex subscript
+      "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
+        # replace lnsigma with log(pi)
+        "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+          # replace uppercase B for between-level latent variables
+          "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+            # replace underscore digit with latex subscript for phis
+            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", out$pred
+          )
+        )
+      )
+    )
+    # pivot to wide to create predictor matrix
+    out_wide <- reshape(
+      data = out,
+      idvar = "pred",
+      direction = "wide",
+      timevar = "out_var_no",
+      v.names = c("names", "dv")
+    )
+
+    # create vector of predictors (= random effects)
+    out_preds <- paste(unique(out$names), collapse = "\\\\\n")
+    n_out_preds <- nrow(out_wide)
+
+    # create coefficient matrix and vector
+    out_coefs_mat <- matrix(0, nrow = n_out, ncol = n_out_preds)
+    out_coefs_vec <- c()
+    for (i in 1:n_out) {
+      for (j in 1:n_out_preds) {
+        out_coefs_mat[i, j] <- ifelse(
+          !is.na(out_wide[j, paste0("dv.", i)]),
+          paste0(
+            "\\gamma_{", j, ",", out_wide[j, paste0("dv.", i)], "}"
+          ),
+          # paste a 0 if parameter is fixed to 0
+          "0"
+        )
+      }
+      out_coefs_vec[i] <- paste(out_coefs_mat[i, ], collapse = " & ")
+    }
+
+    # paste together
+    out_coefs <- paste(out_coefs_vec, collapse = "\\\\\n")
+
+    # paste in tex
+    out_predictors <- paste(
+      begin_bmatrix, out_vars, end_bmatrix, "=",
+      begin_bmatrix, out_coefs, end_bmatrix,
+      begin_bmatrix, out_preds, end_bmatrix, "+",
+      begin_bmatrix, out_res, end_bmatrix,
+      collapse = "\n"
+    )
+  }
+
   # create right hand side formula
   bmf_rhs <- paste(
-    begin_bmatrix, fixef, end_bmatrix, "+",
+    begin_bmatrix, fixef, end_bmatrix, "+\n",
+    # paste predictors here if provided
+    if (nrow(infos$RE.PREDS) > 0) {paste(re_predictors)},
     begin_bmatrix, ranef, end_bmatrix,
     collapse = "\n"
   )
 
-  ranef_dist <- ",\\\\ \n & \\text{with}~
+  ranef_dist <- ",\\\\ \n\\text{with}~
   \\upsilon_{i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Omega})"
 
   # between-model formula
-  bmf <- paste(begin_math, bmf_lhs, "&=", bmf_rhs, ranef_dist, end_math)
+  bmf <- paste(
+    begin_math,
+    bmf_lhs, "=", bmf_rhs,
+    ranef_dist,
+    # paste outcome prediction here if provided
+    if (nrow(infos$OUT) > 0) {paste("\\\\\n", out_predictors)},
+    end_math
+  )
 
   # with caption
   between_model <- paste(begin_center, bmf_caption, end_center, bmf)
 
 
   # paste within_model to markdown
-  # cat(between_model, file = "formula.rmd", append = TRUE)
+  cat(between_model, file = "formula.rmd", append = TRUE)
 
   # render markdown input #####################################################
 
