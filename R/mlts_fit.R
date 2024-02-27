@@ -24,7 +24,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARfit <- function(VARmodel,
+mlts_fit <- function(VARmodel,
                    data =NULL,
                    id,
                    ts.ind,
