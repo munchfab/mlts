@@ -20,15 +20,17 @@ mlts_model_constraint(
 \item{FixDynamics}{logical. Fix all random effect variances (except those
 of individual traits) to zero.}
 
+\item{FixInnoVars}{logical. Set all innovation variances to a constant value.}
+
+\item{FixInnoCovs}{logical. Set all innovation covariances to a constant value.}
+
+\item{InnoCovsZero}{logical. Set to TRUE to treat all innovations as independent.}
+
 \item{FEis0}{character. A character vector to indeVARmodel which fiVARmodeled model parameters
 should be fiVARmodeled to zero (Note: this results in removing the random effect
 variance of the respective parameter).}
 
 \item{REis0}{logical. Set to TRUE to treat all innovations as independent.}
-
-\item{FiVARmodeledCovs}{logical. Set all innovation covariances to a constant value.}
-
-\item{CovsZero}{logical. Set to TRUE to treat all innovations as independent.}
 }
 \value{
 An object of class \code{data.frame}.

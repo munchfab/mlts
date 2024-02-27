@@ -13,6 +13,7 @@
 #' names. Alternatively, to include between-level covariates or differing sets of
 #' between-level covariates as predictors of specific random effects, a named
 #' list (using the `param`-labels in `VARmodel`) can be entered (see details).
+#' @param out.pred.add.btw tba
 #' @return An object of class `data.frame`.
 #' @export
 #'
@@ -69,7 +70,7 @@ mlts_model_betw <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
     )
 
     # add priors
-    RE.PRED = VARmodelPriors(RE.PRED, default = T)
+    RE.PRED = mlts_model_priors(RE.PRED, default = T)
 
     # add to VARmodel
     VARmodel = plyr::rbind.fill(VARmodel, RE.PRED)
@@ -131,7 +132,7 @@ mlts_model_betw <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
       startsWith(OUT.PRED$Param, "alpha_"),"intercept",OUT.PRED$Param_Label)
 
     # add priors
-    OUT.PRED = VARmodelPriors(OUT.PRED, default = T)
+    OUT.PRED = mlts_model_priors(OUT.PRED, default = T)
 
     # add to VARmodel
     VARmodel = plyr::rbind.fill(VARmodel, OUT.PRED)

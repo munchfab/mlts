@@ -2,3 +2,4 @@
 ^\.Rproj\.user$
 rcppExports.cpp
 stanExports_*
+^LICENSE\.md$

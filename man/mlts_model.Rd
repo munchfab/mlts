@@ -27,6 +27,8 @@ mlts_model(
 \item{p}{integer. For multiple-indicator models, specify a vector of length
 \code{q} with the number of manifest indicators per construct.}
 
+\item{maxLag}{integer.}
+
 \item{btw.factor}{Logical. If \code{TRUE} (the default), a common between-level factor
 is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
 factor, indicator mean levels will be included as individual (random) effects stemming
@@ -35,6 +37,16 @@ from a joint multivariate normal distribution.}
 \item{btw.model}{A list to indicate for which manifest indicator variables a common
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
+
+\item{FixDynamics}{logical. FiVARmodel all random effect variances (eVARmodelcept those
+of individual traits) to zero.}
+
+\item{FixInnoVars}{logical. FiVARmodel all random effect variances (eVARmodelcept those
+of individual traits) to zero.}
+
+\item{FixInnoCovs}{logical. Set all innovation covariances to a constant value.}
+
+\item{InnoCovsZero}{logical. Set to TRUE to treat all innovations as independent.}
 
 \item{FEis0}{character. A character vector to indeVARmodel which fiVARmodeled model parameters
 should be fiVARmodeled to zero (Note: this results in removing the random effect
@@ -56,12 +68,7 @@ names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
 list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).}
 
-\item{FiVARmodeledInnoVars}{logical. FiVARmodel all random effect variances (eVARmodelcept those
-of individual traits) to zero.}
-
-\item{FiVARmodeledCovs}{logical. Set all innovation covariances to a constant value.}
-
-\item{CovsZero}{logical. Set to TRUE to treat all innovations as independent.}
+\item{out.pred.add.btw}{tba}
 }
 \value{
 An object of class \code{data.frame}.

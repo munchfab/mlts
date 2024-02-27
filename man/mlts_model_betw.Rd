@@ -27,6 +27,8 @@ as predictor(s) of all random effects in \code{VARmodel} by entering a vector of
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
 list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).}
+
+\item{out.pred.add.btw}{tba}
 }
 \value{
 An object of class \code{data.frame}.

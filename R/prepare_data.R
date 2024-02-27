@@ -14,10 +14,13 @@
 #' @param days Optional. If a running beep identifier is provided via the `beep` argument and
 #' observations are nested within days (or similar grouping unit), the variable
 #' in `data` that contains the day identifier can be added to correct for overnight lags (see Details).
-#' @param n_overnight.NAs Optional. The number of `NA` rows to add after the last observation of each day (if `day` is provided).
+#' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last observation of each day (if `day` is provided).
 #' @param na.rm logical. As default option missing values remain in the data and
 #' will be imputed during model estimation. Set to `TRUE` to remove all rows with
 #' missing values in variables given in `ts.ind`.
+#' @param outcomes character.
+#' @param covariates character.
+#' @param outcome.pred.btw character.
 #'
 #' @return A `list` that can be passed to `stan()`.
 #' @export

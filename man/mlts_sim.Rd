@@ -19,6 +19,16 @@ mlts_sim(
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}
+
+\item{N}{integer. Number of observational units.}
+
+\item{TP}{integer. Number of measurements per observational unit.}
+
+\item{burn.in}{integer.}
+
+\item{seed}{integer.}
+
+\item{btw.var.sds}{integer.}
 }
 \value{
 An object of class \code{data.frame}.

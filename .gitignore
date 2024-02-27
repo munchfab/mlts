@@ -7,3 +7,9 @@
 *.cpp
 *.h
 *.o
+formula.aux
+formula.pdf
+formula.rmd
+pathmodel.aux
+pathmodel.pdf
+pathmodel.rmd

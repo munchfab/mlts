@@ -76,7 +76,7 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
   btw.pars = list() # declare a list object to store results
   for(i in 1:q){
     N_inds = p[i]
-    N_inds_means = N_inds - length(na.omit((btw.model[[i]])))
+    N_inds_means = N_inds - length(stats::na.omit(btw.model[[i]]))
     inds_means = which(!(1:p[i] %in% btw.model[[i]]))
     N_etaB_inds = N_inds - N_inds_means
     etaB_inds = which((1:p[i] %in% btw.model[[i]]))

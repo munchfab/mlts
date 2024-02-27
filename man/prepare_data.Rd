@@ -41,11 +41,17 @@ beep from 1 to TP for each person.}
 observations are nested within days (or similar grouping unit), the variable
 in \code{data} that contains the day identifier can be added to correct for overnight lags (see Details).}
 
+\item{n_overnight_NAs}{Optional. The number of \code{NA} rows to add after the last observation of each day (if \code{day} is provided).}
+
 \item{na.rm}{logical. As default option missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
 missing values in variables given in \code{ts.ind}.}
 
-\item{n_overnight.NAs}{Optional. The number of \code{NA} rows to add after the last observation of each day (if \code{day} is provided).}
+\item{outcomes}{character.}
+
+\item{covariates}{character.}
+
+\item{outcome.pred.btw}{character.}
 }
 \value{
 A \code{list} that can be passed to \code{stan()}.

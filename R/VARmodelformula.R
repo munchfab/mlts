@@ -10,10 +10,11 @@
 #' @export
 #'
 #' @examples
+#' 1+1
 VARmodelformula <- function(VARmodel, data = NULL, labels = NULL) {
 
   # extract model infos
-  infos <- VARmodelEval(VARmodel)
+  infos <- mlts_model_eval(VARmodel)
 
   # extract model data frame
   model <- VARmodel

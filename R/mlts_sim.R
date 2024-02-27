@@ -3,7 +3,11 @@
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
-#'
+#' @param N integer. Number of observational units.
+#' @param TP integer. Number of measurements per observational unit.
+#' @param burn.in integer.
+#' @param seed integer.
+#' @param btw.var.sds integer.
 #' @return An object of class `data.frame`.
 #' @export
 #'
@@ -142,7 +146,7 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
   if(infos$n_cov>1){
     for(i in 2:infos$n_cov){
       cov_name[i-1] = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
-      W[1:N,i] = rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
+      W[1:N,i] = stats::rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
     }
   }
   colnames(W) <- c("Intercept", cov_name)
@@ -315,11 +319,11 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
         if(sigmaW == 0){
           YW = loadW * etaW
         } else {
-          YW = loadW * etaW + rnorm(n = TP, mean = 0, sd = sigmaW)
+          YW = loadW * etaW + stats::rnorm(n = TP, mean = 0, sd = sigmaW)
         }
 
         # create BETWEEN-PART:
-        YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, rnorm(n = 1, mean = 0, sd = sigmaB))
+        YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, stats::rnorm(n = 1, mean = 0, sd = sigmaB))
 
         # indicator
         within[within$ID==j,ind.lab] = YB + YW
@@ -335,8 +339,8 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
       btw.Z[,1:infos$n_random] = btw_random
       for(i in 1:infos$n_z){
         Z_name = infos$n_z_vars[i]
-        Z_pos = unique(na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
-        btw.Z[1:N,Z_pos] = rnorm(n = N, mean = 0,
+        Z_pos = unique(stats::na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
+        btw.Z[1:N,Z_pos] = stats::rnorm(n = N, mean = 0,
                                  sd = btw.var.sds[which(names(btw.var.sds) == Z_name)])
         #    colnames(btw.Z)[i] = Z_name
       }
@@ -350,9 +354,9 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
       # create outcome values
       out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
       if(nrow(out_use)>1){
-        outs[,i] = alpha + btw.Z[,out_use$Pred_no]%*%out_use$true.val + rnorm(n = N, mean = 0, sd = sigma)
+        outs[,i] = alpha + btw.Z[,out_use$Pred_no]%*%out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
       } else {
-        outs[,i] = alpha + btw.Z[,out_use$Pred_no]*out_use$true.val + rnorm(n = N, mean = 0, sd = sigma)
+        outs[,i] = alpha + btw.Z[,out_use$Pred_no]*out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
       }
     }
 

@@ -4,12 +4,18 @@
 \alias{mlts_model_check}
 \title{Title}
 \usage{
-mlts_model_check(VARmodel, data, ts.ind, covariates)
+mlts_model_check(VARmodel, data, ts.ind, covariates, outcomes)
 }
 \arguments{
 \item{VARmodel}{data.frame. Output of VARmodel-Functions.}
 
 \item{data}{data.frame. Data input.}
+
+\item{ts.ind}{tba}
+
+\item{covariates}{tba}
+
+\item{outcomes}{tba.}
 }
 \value{
 An object of class \code{data.frame}.

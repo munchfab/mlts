@@ -30,6 +30,3 @@ A \code{data.frame} with missings imputed for use in \code{dsem()}.
 \description{
 Create missings for DSEM data
 }
-\examples{
-Tbd
-}

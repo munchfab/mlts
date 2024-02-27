@@ -19,6 +19,18 @@ VARprepare(
 \item{VARmodel}{data.frame. Output of VARmodel-Functions.}
 
 \item{data}{data.frame. Data input.}
+
+\item{ts.ind}{tba.}
+
+\item{covariates}{tba.}
+
+\item{outcomes}{tba.}
+
+\item{outcome.pred.btw}{tba.}
+
+\item{center.covs}{tba.}
+
+\item{std.outcome}{tba.}
 }
 \value{
 An object of class \code{data.frame}.

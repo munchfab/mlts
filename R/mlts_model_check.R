@@ -2,10 +2,13 @@
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param data data.frame. Data input.
+#' @param ts.ind tba
+#' @param covariates tba
+#' @param outcomes tba.
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_model_check <- function(VARmodel, data, ts.ind, covariates){
+mlts_model_check <- function(VARmodel, data, ts.ind, covariates, outcomes){
 
   # a helper function to run a series of user input checks and print detailed warnings
   ## check if variable names are entered correctly

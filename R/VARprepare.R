@@ -2,6 +2,12 @@
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param data data.frame. Data input.
+#' @param ts.ind tba.
+#' @param covariates tba.
+#' @param outcomes tba.
+#' @param outcome.pred.btw tba.
+#' @param center.covs tba.
+#' @param std.outcome tba.
 #'
 #' @return An object of class `data.frame`.
 #' @export
@@ -40,7 +46,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   # ----
 
   # model specific information: ------------------------------------------------
-  infos = VARmodelEval(VARmodel)
+  infos = mlts_model_eval(VARmodel)
 
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects

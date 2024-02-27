@@ -3,10 +3,13 @@
 #' @param q integer. The number of time-varying constructs.
 #' @param p integer. For multiple-indicator models, specify a vector of length
 #' `q` with the number of manifest indicators per construct.
-#' @param FiVARmodeledInnoVars logical. FiVARmodel all random effect variances (eVARmodelcept those
+#' @param maxLag integer.
+#' @param FixInnoVars logical. FiVARmodel all random effect variances (eVARmodelcept those
 #' of individual traits) to zero.
-#' @param FiVARmodeledCovs logical. Set all innovation covariances to a constant value.
-#' @param CovsZero logical. Set to TRUE to treat all innovations as independent.
+#' @param FixDynamics logical. FiVARmodel all random effect variances (eVARmodelcept those
+#' of individual traits) to zero.
+#' @param FixInnoCovs logical. Set all innovation covariances to a constant value.
+#' @param InnoCovsZero logical. Set to TRUE to treat all innovations as independent.
 #' @param FEis0 character. A character vector to indeVARmodel which fiVARmodeled model parameters
 #' should be fiVARmodeled to zero (Note: this results in removing the random effect
 #' variance of the respective parameter).
@@ -30,6 +33,7 @@
 #' names. Alternatively, to include between-level covariates or differing sets of
 #' between-level covariates as predictors of specific random effects, a named
 #' list (using the `param`-labels in `VARmodel`) can be entered (see details).
+#' @param out.pred.add.btw tba
 #' @return An object of class `data.frame`.
 #' @export
 #'

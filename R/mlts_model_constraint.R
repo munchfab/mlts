@@ -3,8 +3,9 @@
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param FixDynamics logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
-#' @param FiVARmodeledCovs logical. Set all innovation covariances to a constant value.
-#' @param CovsZero logical. Set to TRUE to treat all innovations as independent.
+#' @param FixInnoVars logical. Set all innovation variances to a constant value.
+#' @param FixInnoCovs logical. Set all innovation covariances to a constant value.
+#' @param InnoCovsZero logical. Set to TRUE to treat all innovations as independent.
 #' @param FEis0 character. A character vector to indeVARmodel which fiVARmodeled model parameters
 #' should be fiVARmodeled to zero (Note: this results in removing the random effect
 #' variance of the respective parameter).
@@ -109,7 +110,7 @@ mlts_model_constraint <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
   VARmodel = update_model_REcors(VARmodel)
 
   # update priors =============================================================
-  VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
+  VARmodel = mlts_model_priors(VARmodel = VARmodel, default = T)
 
 
   return(VARmodel)

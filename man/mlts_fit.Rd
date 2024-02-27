@@ -36,6 +36,8 @@ mlts_fit(
 \item{data}{An object of class data.frame (or one that can be coerced to that
 class) containing data of all variables used in the model.}
 
+\item{id}{tba.}
+
 \item{ts.ind}{data.frame. Data input.}
 
 \item{covariates}{data.frame. Data input.}
@@ -47,6 +49,18 @@ class) containing data of all variables used in the model.}
 \item{center.covs}{data.frame. Data input.}
 
 \item{std.outcome}{data.frame. Data input.}
+
+\item{time}{tba.}
+
+\item{tinterval}{tba.}
+
+\item{beep}{tba.}
+
+\item{days}{tba.}
+
+\item{n_overnight_NAs}{tba.}
+
+\item{na.rm}{tba.}
 
 \item{iter}{A positive integer specifying the number of iterations for each
 chain (including 50\% used as warmup). The default is 500.}
