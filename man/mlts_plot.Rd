@@ -54,6 +54,24 @@ the mean of the posterior distribution as point estimates.}
 \item{dot.color}{Character vector, indicating the color of the point estimates.}
 
 \item{dot.shape}{Numeric, shape of the dots that indicate the point estimates.}
+
+\item{err.bar.col}{integer.}
+
+\item{err.bar.width}{integer.}
+
+\item{add.true}{integer.}
+
+\item{true.col}{integer.}
+
+\item{true.shape}{integer.}
+
+\item{true.size}{integer.}
+
+\item{hide.xaxis.text}{logical.}
+
+\item{par_labels}{integer.}
+
+\item{labels.as.expression}{logical.}
 }
 \value{
 Returns a \code{ggplot}-object .

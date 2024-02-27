@@ -21,3 +21,6 @@ An Rmarkdown file that is automatically rendered to a pdf document.
 \description{
 Create TeX Model Formula from VARmodel object
 }
+\examples{
+1+1
+}

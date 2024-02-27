@@ -18,7 +18,15 @@
 #' @param dot.size Numeric, size of the dots that indicate the point estimates.
 #' @param dot.color Character vector, indicating the color of the point estimates.
 #' @param dot.shape Numeric, shape of the dots that indicate the point estimates.
-#'
+#' @param err.bar.col integer.
+#' @param err.bar.width integer.
+#' @param add.true integer.
+#' @param true.col integer.
+#' @param true.shape integer.
+#' @param true.size integer.
+#' @param hide.xaxis.text logical.
+#' @param par_labels integer.
+#' @param labels.as.expression logical.
 #' @return Returns a `ggplot`-object .
 #'
 #' @export
@@ -96,7 +104,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     }
 
     # evaluate model
-    infos <- VARmodelEval(fit$VARmodel)
+    infos <- mlts_model_eval(fit$VARmodel)
 
     # extract data used for plotting
     p.data <- fit$person.pars.summary
@@ -151,7 +159,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     # panels
 
     # evaluate model
-    infos <- VARmodelEval(fit$VARmodel)
+    infos <- mlts_model_eval(fit$VARmodel)
 
     # get the data
     if(bpe == "median"){

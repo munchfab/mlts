@@ -11,11 +11,12 @@
 #' @export
 #'
 #' @examples
+#' 1 + 1
 VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
 
 
   # extract model infos
-  infos <- VARmodelEval(VARmodel)
+  infos <- mlts_model_eval(VARmodel)
 
   # extract model data frame
   model <- VARmodel

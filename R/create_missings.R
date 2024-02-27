@@ -13,7 +13,6 @@
 #' @param clean Remove helper columns .
 #' @return A `data.frame` with missings imputed for use in `dsem()`.
 #'
-#' @examples Tbd
 #' @export
 create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
 

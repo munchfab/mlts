@@ -3,12 +3,19 @@
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
 #' @param data An object of class data.frame (or one that can be coerced to that
 #' class) containing data of all variables used in the model.
+#' @param id tba.
 #' @param ts.ind data.frame. Data input.
 #' @param covariates data.frame. Data input.
 #' @param outcomes data.frame. Data input.
 #' @param outcome.pred.btw data.frame. Data input.
 #' @param center.covs data.frame. Data input.
 #' @param std.outcome data.frame. Data input.
+#' @param time tba.
+#' @param tinterval tba.
+#' @param beep tba.
+#' @param days tba.
+#' @param n_overnight_NAs tba.
+#' @param na.rm tba.
 #' @param iter A positive integer specifying the number of iterations for each
 #' chain (including 50% used as warmup). The default is 500.
 #' @param chains A positive integer specifying the number of Markov chains. The default is 2.
@@ -50,9 +57,9 @@ mlts_fit <- function(VARmodel,
 ){
 
   # eval the model
-  infos <- VARmodelEval(VARmodel)
+  infos <- mlts_model_eval(VARmodel)
   # Get the parameter table
-  par_labels <- VARmodelParLabels(VARmodel)
+  par_labels <- mlts_param_labels(VARmodel)
 
   # simulated data used
   data.simulated = ifelse(class(data)[1] == "VARsimData", TRUE, FALSE)

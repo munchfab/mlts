@@ -32,7 +32,7 @@ update_model_REcors <- function(VARmodel) {
       "Param_Label" = "RE Cor",
       "isRandom" = 0
     )
-    VARmodel <- plyr::rbind.fill(VARmodel, VARmodelPriors(REcors, default = T))
+    VARmodel <- plyr::rbind.fill(VARmodel, mlts_model_priors(REcors, default = T))
   } else if (n_rand == 1) {
     VARmodel <- VARmodel[VARmodel$Type != "RE Cor", ]
   }
