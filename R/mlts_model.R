@@ -33,7 +33,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3),
+mlts_model <- function(q, p = NULL, maxLag = c(1,2,3),
                           btw.factor = TRUE, btw.model = NULL,
                           FixDynamics = F, FixInnoVars = F,
                           FixInnoCovs = F, InnoCovsZero = NULL,
@@ -183,7 +183,7 @@ VARmodelBuild <- function(q, p = NULL, maxLag = c(1,2,3),
   }
 
   # ADD DEFAULT PRIORS ========================================================
-  VARmodel = VARmodelPriors(VARmodel = VARmodel, default = T)
+  VARmodel = mlts_model_priors(VARmodel = VARmodel, default = T)
 
   # CONSTRAINTS ===============================================================
 
@@ -203,7 +203,7 @@ or set to 0 in a subsequent step, this warning can be ignored.")
   if(FixDynamics == TRUE | FixInnoVars == TRUE |
      FixInnoCovs == TRUE | !is.null(FEis0) |
      !is.null(REis0) | InnoCovsZero == T) {
-    VARmodel = VARmodelConstraints(
+    VARmodel = mlts_model_constraint(
       VARmodel = VARmodel,
       FixDynamics = FixDynamics, FixInnoVars = FixInnoVars,
       InnoCovsZero = InnoCovsZero,
@@ -212,13 +212,14 @@ or set to 0 in a subsequent step, this warning can be ignored.")
 
   # MEASUREMENT MODEL =========================================================
   if(!is.null(p)){
-    VARmodel = VARmodelMeasurement(VARmodel = VARmodel, q = q, p = p,
-                                   btw.factor = btw.factor, btw.model = btw.model)
+    VARmodel = mlts_model_measurement(
+      VARmodel = VARmodel, q = q, p = p,
+      btw.factor = btw.factor, btw.model = btw.model)
   }
 
   # BETWEEN-MODEL =============================================================
   if(!is.null(RE.pred) | !is.null(out.pred)){
-    VARmodel = VARmodelBetween(VARmodel = VARmodel,
+    VARmodel = mlts_model_betw(VARmodel = VARmodel,
                                RE.pred =RE.pred, out.pred=out.pred,
                                out.pred.add.btw = out.pred.add.btw)
   }

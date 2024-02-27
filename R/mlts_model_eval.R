@@ -5,7 +5,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelEval <- function(VARmodel){
+mlts_model_eval <- function(VARmodel){
 
   # read features of specified VARmodel
 

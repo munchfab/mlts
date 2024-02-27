@@ -16,7 +16,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelBetween <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add.btw = NULL){
+mlts_model_betw <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add.btw = NULL){
 
 
 

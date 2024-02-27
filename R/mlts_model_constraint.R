@@ -1,7 +1,7 @@
 #' Title
 #'
 #' @param VARmodel data.frame. Output of VARmodel-Functions.
-#' @param FiVARmodeledInnoVars logical. FiVARmodel all random effect variances (eVARmodelcept those
+#' @param FixDynamics logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
 #' @param FiVARmodeledCovs logical. Set all innovation covariances to a constant value.
 #' @param CovsZero logical. Set to TRUE to treat all innovations as independent.
@@ -13,7 +13,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelConstraints <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
+mlts_model_constraint <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
                                 FixInnoCovs = F, InnoCovsZero = F,
                                 FEis0 = NULL, REis0 = NULL
 ){

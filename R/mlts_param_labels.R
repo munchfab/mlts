@@ -3,10 +3,10 @@
 #' @param VARmodel data frame.
 #' @export
 #'
-VARmodelParLabels <- function(VARmodel){
+mlts_param_labels <- function(VARmodel){
 
   # eval model
-  infos = VARmodelEval(VARmodel)
+  infos = mlts_model_eval(VARmodel)
 
   # helper function to map names of parameters used in VARmodel with
   # parameter labels used in the stan models

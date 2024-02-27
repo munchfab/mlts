@@ -7,7 +7,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelPriors <- function(VARmodel, default = F){
+mlts_model_priors <- function(VARmodel, default = F){
 
   if(default == T){
 

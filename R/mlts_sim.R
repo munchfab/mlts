@@ -7,7 +7,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
+mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
                         btw.var.sds = NULL){
 
   if(!is.null(seed)){
@@ -24,7 +24,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
 
 
   # use helper function to read out information on model
-  infos = VARmodelEval(VARmodel)
+  infos = mlts_model_eval(VARmodel)
 
 
   # use some default settings for parameter values
@@ -125,7 +125,7 @@ VARmodelSim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL
   }
 
   # run again after adding true parameter values
-  infos = VARmodelEval(VARmodel)
+  infos = mlts_model_eval(VARmodel)
 
 
   # start generating between-level model =======================================

@@ -34,7 +34,7 @@
 #' # indicators and a random indicator mean for the fourth indicator.
 #' @export
 #'
-VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL){
+mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL){
 
   if(length(p) == 1){
     p = rep(p, times = q)
@@ -136,8 +136,8 @@ VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = N
       rand = mus.rand
     }
     # replacement
-    fix = VARmodelPriors(fix, default = T)    # add default priors
-    rand = VARmodelPriors(rand, default = T)
+    fix = mlts_model_priors(fix, default = T)    # add default priors
+    rand = mlts_model_priors(rand, default = T)
 
     row_to_repl = which(VARmodel$Param == paste0("mu_",i) & VARmodel$Type == "Fix effect")
     VARmodel = replace_model_row(VARmodel, row_to_repl, fix)
@@ -224,7 +224,7 @@ VARmodelMeasurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = N
   mm.pars = dplyr::arrange(mm.pars, Level, Type, Param)
 
   ## add default priors
-  mm.pars = VARmodelPriors(VARmodel = mm.pars, default = T)
+  mm.pars = mlts_model_priors(VARmodel = mm.pars, default = T)
 
 
   # add to structural part

@@ -5,7 +5,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARmodelchecks <- function(VARmodel, data, ts.ind, covariates){
+mlts_model_check <- function(VARmodel, data, ts.ind, covariates){
 
   # a helper function to run a series of user input checks and print detailed warnings
   ## check if variable names are entered correctly
