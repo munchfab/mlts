@@ -35,16 +35,16 @@ Update a \code{VARmodel}-object.
 }
 \examples{
 # build a manifest two-level AR(1) model
-VARmodel <- VARmodelBuild(q = 1)
+VARmodel <- mlts_model(q = 1)
 
 # add measurement model using three indicators
-VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 
 # only indicator-specific (random) intercepts are modeled
-VARmodel <- VARmodelMeasurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
 
 # A more fine-grained between-level measurement model can be specified via:
-VARmodel <- VARmodelMeasurement(
+VARmodel <- mlts_model_measurement(
               VARmodel, q = 1, p = 3,
               btw.model = list(""))
 # Which models a common latent factor on the between-level for the first three
