@@ -12,7 +12,7 @@
 #'
 #' @examples
 #' 1 + 1
-VARmodelPaths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
+mlts_model_paths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
 
 
   # extract model infos
