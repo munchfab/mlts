@@ -2,8 +2,7 @@
 # title: "Template Title"
 # author: "Your Name"
 # date: "The Date"
-output: pdf_document:
-	keep_tex: true
+output: pdf_document
 documentclass: standalone
 classoption:
   tikz=true
@@ -23,3 +22,258 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+\begin{tikzpicture}[
+    auto, > = latex, align=center,
+  	latent/.style = {
+  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+  	},
+  	manifest/.style = {
+  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+  	},
+  	intercept/.style = {
+  	  regular polygon,regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = \Radius
+  	},
+  	mean/.style = {
+  	  regular polygon, regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = 8mm
+  	},
+  	path/.style = {
+  	  arrows = ->, thick, > = {stealth[]}
+  	},
+  	error/.style = {
+  	  circle, draw = none, fill = none, thick,
+  	  inner sep = 0pt, minimum size = 5mm
+  	},
+  	var/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+  	},
+  	cov/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 300
+  	},
+  	% style to add a circle in the middle of a path
+    random/.style = {
+      postaction = {
+        decorate, decoration = {
+          markings,
+          mark = at position .5 with {
+            \draw[fill = black] circle[radius = 2pt];
+          }
+        }
+      }
+    },
+    random_cl/.style = {
+      postaction = {decorate, decoration = {
+        markings,
+        mark = at position .2 with {
+          \draw[fill = black] circle[radius = 2pt];}
+        }
+      }
+    },
+  	]
+\node  [manifest]  (y11t)  {$y_{11,t}$};
+\node  [manifest]  (y21t)  [right = 1.5em of y11t]  {$y_{21,t}$};
+\node  [manifest]  (y22t)  [right = 1.5em of y21t]  {$y_{22,t}$};
+\node  [manifest]  (y23t)  [right = 1.5em of y22t]  {$y_{23,t}$};
+\node  [coordinate]  (c1)  at (y11t)  {};
+\node  [coordinate]  (c2)  at ($(y21t) !0.5! (y23t)$)  {};
+\node  [latent]  (etaw1t)  [above = 4em of c1]  {$\eta^w_{1,t}$};
+\node  [latent]  (etaw2t)  [above = 4em of c2]  {$\eta^w_{2,t}$};
+\node  [latent]  (etab1)  [below = 4em of c1]  {$\eta^b_{1}$};
+\node  [latent]  (etab2)  [below = 4em of c2]  {$\eta^b_{2}$};
+\draw  [path]  (etaw1t)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y11t.north);
+\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y21t.north);
+\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{22}$}  (y22t.north);
+\draw  [path]  (etaw2t)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^w_{23}$}  (y23t.north);
+\draw  [path]  (etab1)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y11t.south);
+\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$1$}  (y21t.south);
+\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{22}$}  (y22t.south);
+\draw  [path]  (etab2)  to node  [fill = white, anchor = center]  {\scriptsize$\lambda^b_{23}$}  (y23t.south);
+\node  [error]  (eps21wt)  [above left = .75em of y21t]  {};
+\node  [error]  (eps22wt)  [above left = .75em of y22t]  {};
+\node  [error]  (eps23wt)  [above left = .75em of y23t]  {};
+\draw  [path]  (eps21wt)  to node  []  {}  (y21t.north west);
+\node  [error]  (eps21b)  [below left = .75em of y21t]  {};
+\node  [error]  (eps22b)  [below left = .75em of y22t]  {};
+\node  [error]  (eps23b)  [below left = .75em of y23t]  {};
+\draw  [path]  (eps21b)  to node  []  {}  (y21t.south west);
+% caption
+\node  [above = 1em, align = center]  at  (current bounding box.north)  {Decomposition.};
+\end{tikzpicture}
+\begin{tikzpicture}[
+    auto, > = latex, align=center,
+  	latent/.style = {
+  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+  	},
+  	manifest/.style = {
+  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+  	},
+  	intercept/.style = {
+  	  regular polygon,regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = \Radius
+  	},
+  	mean/.style = {
+  	  regular polygon, regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = 8mm
+  	},
+  	path/.style = {
+  	  arrows = ->, thick, > = {stealth[]}
+  	},
+  	error/.style = {
+  	  circle, draw = none, fill = none, thick,
+  	  inner sep = 0pt, minimum size = 5mm
+  	},
+  	var/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+  	},
+  	cov/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 300
+  	},
+  	% style to add a circle in the middle of a path
+    random/.style = {
+      postaction = {
+        decorate, decoration = {
+          markings,
+          mark = at position .5 with {
+            \draw[fill = black] circle[radius = 2pt];
+          }
+        }
+      }
+    },
+    random_cl/.style = {
+      postaction = {decorate, decoration = {
+        markings,
+        mark = at position .2 with {
+          \draw[fill = black] circle[radius = 2pt];}
+        }
+      }
+    },
+  	]
+
+      % draw within-level structural model
+      \node  [latent]  (eta1wt-1)  {$\eta_{1,t-1}^w$};
+      \node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\eta_{1,t}^w$};
+      \node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\delta_{1,t}$};
+
+      % draw nodes
+      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+      \node  [latent]  (eta\i wt-1)  [below = 5em of eta\lasti wt-1]  {$\eta_{\i ,t-1}^w$};\foreach \j [remember = \j as \lastj (initially 1)] in {2, ..., 2}
+          \foreach \i [remember = \i as \lasti (initially 1)] in {1, ..., 2}
+          \node  [latent]  (eta\i wt-\j)  [left = 5em of eta\i wt-\lastj]  {$\eta_{\i ,t-\j}^w$};\foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+      \node  [latent]  (eta\i wt)  [below = 5em of eta\lasti wt]  {$\eta_{\i ,t}^w$};
+
+      \foreach \i [remember = \i as \lasti (initially 1)] in {2, ..., 2}
+      \node  [latent]  (delta\i t)  [below = 5em of delta\lasti t]  {$\delta_{\i ,t}$};
+
+      % draw paths from residuals to etaiwt
+      \foreach \i [remember = \i as \lasti (initially 1)] in {1, ...,2}
+      \draw  [path]  (delta\i t)  to node  []  {}  (eta\i wt);
+      
+\draw  [path, postaction = random]  (eta1wt-1)  to node  []  {$\phi_{11;(1)}$}  (eta1wt);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta1wt-1)  to node  []  {$\phi_{12;(1)}$}  (eta2wt);
+\draw  [path, postaction = random]  (eta1wt-2.north)  |-  +(0em, 1em) -|  node  []  {$\phi_{11;(2)}$}  (eta1wt.north);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta1wt-2)  to node  []  {}  (eta2wt);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta2wt-1)  to node  []  {$\phi_{21;(1)}$}  (eta1wt);
+\draw  [path, postaction = random]  (eta2wt-1)  to node  []  {$\phi_{22;(1)}$}  (eta2wt);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta2wt-2)  to node  []  {}  (eta1wt);
+\draw  [path, postaction = random, anchor = west]  (eta2wt-2.south)  |-  +(0em, -1em) -|  node  []  {$\phi_{22;(2)}$}  (eta2wt.south);
+\draw  [path, postaction = random]  (eta1wt-2)  to node  []  {$\phi_{11;(1)}$}  (eta1wt-1);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta1wt-2)  to node  []  {$\phi_{12;(1)}$}  (eta2wt-1);
+\draw  [path, postaction = random_cl, sloped, pos = .2]  (eta2wt-2)  to node  []  {$\phi_{21;(1)}$}  (eta1wt-1);
+\draw  [path, postaction = random]  (eta2wt-2)  to node  []  {$\phi_{22;(1)}$}  (eta2wt-1);
+\draw  [var, postaction = random]  (delta1t.120)  to node  []  {$\pi_{1}$}  (delta1t.60);
+\draw  [var, postaction = random]  (delta2t.120)  to node  []  {$\pi_{2}$}  (delta2t.60);
+
+% caption
+\node  [above = 1em, align = center]  at  (current bounding box.north)  {Within-model.};
+\end{tikzpicture}
+\begin{tikzpicture}[
+    auto, > = latex, align=center,
+  	latent/.style = {
+  	  circle, draw, thick, inner sep = 2pt, minimum width = \Radius
+  	},
+  	manifest/.style = {
+  	  rectangle, draw, thick, inner sep = 0pt, minimum size = \Radius/2
+  	},
+  	intercept/.style = {
+  	  regular polygon,regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = \Radius
+  	},
+  	mean/.style = {
+  	  regular polygon, regular polygon sides = 3, draw, thick,
+  	  inner sep = 0pt, minimum size = 8mm
+  	},
+  	path/.style = {
+  	  arrows = ->, thick, > = {stealth[]}
+  	},
+  	error/.style = {
+  	  circle, draw = none, fill = none, thick,
+  	  inner sep = 0pt, minimum size = 5mm
+  	},
+  	var/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 270, looseness = 2
+  	},
+  	cov/.style = {
+  	  <->, thick, > = {stealth[]}, bend right = 300
+  	},
+  	% style to add a circle in the middle of a path
+    random/.style = {
+      postaction = {
+        decorate, decoration = {
+          markings,
+          mark = at position .5 with {
+            \draw[fill = black] circle[radius = 2pt];
+          }
+        }
+      }
+    },
+    random_cl/.style = {
+      postaction = {decorate, decoration = {
+        markings,
+        mark = at position .2 with {
+          \draw[fill = black] circle[radius = 2pt];}
+        }
+      }
+    },
+  	]
+\node  [latent]  (etaB_1)  {$\eta^{b}_1$};
+\node  [latent]  (etaB_2)  [right = 1em of etaB_1]  {$\eta^{b}_2$};
+\node  [latent]  (phi1_11)  [right = 1em of etaB_2]  {$\phi_{11;(1)}$};
+\node  [latent]  (phi1_12)  [right = 1em of phi1_11]  {$\phi_{12;(1)}$};
+\node  [latent]  (phi2_11)  [right = 1em of phi1_12]  {$\phi_{11;(2)}$};
+\node  [latent]  (phi2_12)  [right = 1em of phi2_11]  {$\phi_{12;(2)}$};
+\node  [latent]  (phi1_21)  [right = 1em of phi2_12]  {$\phi_{21;(1)}$};
+\node  [latent]  (phi1_22)  [right = 1em of phi1_21]  {$\phi_{22;(1)}$};
+\node  [latent]  (phi2_21)  [right = 1em of phi1_22]  {$\phi_{21;(2)}$};
+\node  [latent]  (phi2_22)  [right = 1em of phi2_21]  {$\phi_{22;(2)}$};
+\node  [latent]  (lnsigma2_1)  [right = 1em of phi2_22]  {log($\pi_{1}$)};
+\node  [latent]  (lnsigma2_2)  [right = 1em of lnsigma2_1]  {log($\pi_{2}$)};
+
+
+
+\node  [coordinate]  (c1)  [above = 2em of etaB_1]  {};
+\node  [coordinate]  (c2)  [above = 2em of etaB_2]  {};
+\node  [coordinate]  (c3)  [above = 2em of phi1_11]  {};
+\node  [coordinate]  (c4)  [above = 2em of phi1_12]  {};
+\node  [coordinate]  (c5)  [above = 2em of phi2_11]  {};
+\node  [coordinate]  (c6)  [above = 2em of phi2_12]  {};
+\node  [coordinate]  (c7)  [above = 2em of phi1_21]  {};
+\node  [coordinate]  (c8)  [above = 2em of phi1_22]  {};
+\node  [coordinate]  (c9)  [above = 2em of phi2_21]  {};
+\node  [coordinate]  (c10)  [above = 2em of phi2_22]  {};
+\node  [coordinate]  (c11)  [above = 2em of lnsigma2_1]  {};
+\node  [coordinate]  (c12)  [above = 2em of lnsigma2_2]  {}; \draw  [path]  (c1)  to node  []  {}  (etaB_1);
+\draw  [path]  (c2)  to node  []  {}  (etaB_2);
+\draw  [path]  (c3)  to node  []  {}  (phi1_11);
+\draw  [path]  (c4)  to node  []  {}  (phi1_12);
+\draw  [path]  (c5)  to node  []  {}  (phi2_11);
+\draw  [path]  (c6)  to node  []  {}  (phi2_12);
+\draw  [path]  (c7)  to node  []  {}  (phi1_21);
+\draw  [path]  (c8)  to node  []  {}  (phi1_22);
+\draw  [path]  (c9)  to node  []  {}  (phi2_21);
+\draw  [path]  (c10)  to node  []  {}  (phi2_22);
+\draw  [path]  (c11)  to node  []  {}  (lnsigma2_1);
+\draw  [path]  (c12)  to node  []  {}  (lnsigma2_2); \draw  [thick]  (c1)  --  (c12);
+% caption
+\node  [above = 1em, align = center]  at  (current bounding box.north)  {Between-model.};
+\end{tikzpicture}

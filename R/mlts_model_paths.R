@@ -265,6 +265,13 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
           "\\node  [latent]  (etab", i, ")  [below = 4em of c", i,
           "]  {$\\eta^b_{", i, "}$};"
         ))
+        # if one construct only has 1 indicator, place coordinate at indicator node
+        if (infos$p[i] == 1) {
+          coord_vec <- c(coord_vec, paste0(
+            "\\node  [coordinate]  (c", i,
+            ")  at (y", i, "1t)  {};"
+          ))
+        }
         for (j in 1:infos$p[i]) {
           if (i == 1 & j == 1) {
             # first indicator variable
@@ -272,26 +279,52 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
               "\\node  [manifest]  (y", i, j, "t)  {$y_{", i, j, ",t}$};"
             ))
             # first error (labeled)
-            epswt_vec <- c(epswt_vec, paste0(
-              "\\node  [error]  (eps", i, j, "wt)  [above left = 1em of y",
-              i, j, "t]  {\\scriptsize$\\varepsilon^w_{", i, j, ",t}$};"
-            ))
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, j, "b)  [below left = 1em of y",
-              i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, "}$};"
-            ))
+            if (infos$p[i] == 1) {
+              epswt_vec <- epswt_vec
+              epsb_vec <- epsb_vec
+              epswt_paths_vec <- epswt_paths_vec
+              epsb_paths_vec <- epsb_paths_vec
+            } else {
+              epswt_vec <- c(epswt_vec, paste0(
+                "\\node  [error]  (eps", i, j, "wt)  [above left = 1em of y",
+                i, j, "t]  {\\scriptsize$\\varepsilon^w_{", i, j, ",t}$};"
+              ))
+              epsb_vec <- c(epsb_vec, paste0(
+                "\\node  [error]  (eps", i, j, "b)  [below left = 1em of y",
+                i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, "}$};"
+              ))
+              epswt_paths_vec <- c(epswt_paths_vec, paste0(
+                "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
+              ))
+              epsb_paths_vec <- c(epsb_paths_vec, paste0(
+                "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south west);"
+              ))
+            }
           } else if (i > 1 & j == 1) {
             # first indicator variable of next construct
             ind_vec <- c(ind_vec, paste0(
               "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
               i - 1, infos$p[i - 1], "t]  {$y_{", i, j, ",t}$};"
             ))
-            epswt_vec <- c(epswt_vec, paste0(
-              "\\node  [error]  (eps", i, j, "wt)  [above left = .75em of y", i, j, "t]  {};"
-            ))
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, j, "b)  [below left = .75em of y", i, j, "t]  {};"
-            ))
+            if (infos$p[i] == 1) {
+              epswt_vec <- epswt_vec
+              epsb_vec <- epsb_vec
+              epswt_paths_vec <- epswt_paths_vec
+              epsb_paths_vec <- epsb_paths_vec
+            } else {
+              epswt_vec <- c(epswt_vec, paste0(
+                "\\node  [error]  (eps", i, j, "wt)  [above left = .75em of y", i, j, "t]  {};"
+              ))
+              epsb_vec <- c(epsb_vec, paste0(
+                "\\node  [error]  (eps", i, j, "b)  [below left = .75em of y", i, j, "t]  {};"
+              ))
+              epswt_paths_vec <- c(epswt_paths_vec, paste0(
+                "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
+              ))
+              epsb_paths_vec <- c(epsb_paths_vec, paste0(
+                "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south west);"
+              ))
+            }
           } else {
             # all other indicators
             ind_vec <- c(ind_vec, paste0(
@@ -332,12 +365,12 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
               "$1$}", paste0("$\\lambda^b_{", i, j, "}$}")
             ), "  (y", i, j, "t.south);"
           ))
-          epswt_paths_vec <- c(epswt_paths_vec, paste0(
-            "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
-          ))
-          epsb_paths_vec <- c(epsb_paths_vec, paste0(
-            "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south west);"
-          ))
+          # epswt_paths_vec <- c(epswt_paths_vec, paste0(
+          #   "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
+          # ))
+          # epsb_paths_vec <- c(epsb_paths_vec, paste0(
+          #   "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south west);"
+          # ))
         }
       }
       # paste together
@@ -387,30 +420,44 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
       "% draw within-level structural model
       \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
       \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
-      \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{1,t}$};
+      \\node  [latent]  (delta1t)  [right = 2.5em of y1wt]  {$\\delta_{1,t}$};",
 
-      \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
-      infos$maxLag, "}
-      \\node  [latent]  (y1wt-\\j)  ",
-      "[left = 5em of y1wt-\\lastj]  {$y_{1,t-\\j}^w$};
+      ifelse(
+        infos$maxLag != 1,
+        paste0(
+          "\\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+          infos$maxLag, "}
+        \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+          infos$q, "}
+        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};"
+        ),
+        paste0("")
+      ),
 
-      % draw paths
+      "% draw paths
       \\draw  [path]  (delta1t)  to node  []  {}  (y1wt);
-      "
+    "
     )
     if (infos$p > 1) {
       wm <- paste0(
         "% draw within-level structural model
         \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
         \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
-        \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{{\\eta^w_{1}},t}$};
+        \\node  [latent]  (delta1t)  [right = 2.5em of eta1wt]  {$\\delta_{{\\eta^w_{1}},t}$};",
 
-        \\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
-        infos$maxLag, "}
-        \\node  [latent]  (eta1wt-\\j)  ",
-        "[left = 5em of eta1wt-\\lastj]  {$\\eta_{1,t-\\j}^w$};
+        ifelse(
+        infos$maxLag != 1,
+          paste0(
+            "\\foreach \\j [remember = \\j as \\lastj (initially 1)] in {2, ..., ",
+            infos$maxLag, "}
+          \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
+            infos$q, "}
+          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};"
+          ),
+          paste0("")
+        ),
 
-        % draw paths
+        "% draw paths
         \\draw  [path]  (delta1t)  to node  []  {}  (eta1wt);
       "
       )
@@ -597,8 +644,8 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
           all_phis$phi_type[i] == "cl",
           ", sloped, pos = .2", ""
         ), "]  (",
-        # select start node conditional on infos$p
-        ifelse(infos$p > 1, "eta", "y"), all_phis$from[i],
+        # select start node conditional on isLatent
+        ifelse(infos$isLatent == TRUE, "eta", "y"), all_phis$from[i],
         # bend path for lagged AR effects
         ifelse(
           !is.na(all_phis$lagged[i]) &
@@ -619,9 +666,9 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
           ")  to node  []  {"
           )
         ), all_phis$names[i], "}  (",
-        # select target node conditional on infos$p
+        # select target node conditional on isLatent
         ifelse(
-          infos$p > 1, "eta", "y"
+          infos$isLatent == TRUE, "eta", "y"
         ), all_phis$to[i],
         ifelse(
           !is.na(all_phis$lagged[i]) &
