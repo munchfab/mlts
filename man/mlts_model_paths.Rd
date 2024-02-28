@@ -2,28 +2,48 @@
 % Please edit documentation in R/mlts_model_paths.R
 \name{mlts_model_paths}
 \alias{mlts_model_paths}
-\title{Create Path Diagrams from VARmodel object}
+\title{Create Path Diagrams from mlts model object}
 \usage{
-mlts_model_paths(VARmodel, data = NULL, labels = NULL, add.png = FALSE)
+mlts_model_paths(
+  model,
+  ts = NULL,
+  covariates = NULL,
+  outcomes = NULL,
+  add_png = FALSE,
+  keep_tex = FALSE
+)
 }
 \arguments{
-\item{VARmodel}{The VARmodel object.}
+\item{model}{A model built with \code{\link[mlts]{mlts_model}}.}
 
-\item{data}{An optional \code{data.frame} including the variables to be used in
-the path diagram.}
+\item{ts}{To be included in future releases.
+An optional character vector containing the names of the time-series
+variables or indicators.}
 
-\item{labels}{An optional character string inluding the names to be used in
-the path diagram.}
+\item{covariates}{To be included in future releases.
+An optional character vector containing the names of the between-level
+covariates.}
 
-\item{add.png}{Logical. Set to \code{TRUE} to transform created PDF as .png files
+\item{outcomes}{To be included in future releases.
+An optional character vector containing the names of the between-level
+outcomes.}
+
+\item{add_png}{Logical. Set to \code{TRUE} to transform created PDF to .png file
 using \code{pdftools::pdf_convert}.}
+
+\item{keep_tex}{Logical. Should the TeX file be kept (additional to the
+Rmd file)? Defaults to \code{FALSE}.}
 }
 \value{
-An Rmarkdown file that is automatically rendered to a pdf document.
+An RMarkdown file that is automatically rendered to a pdf document.
 }
 \description{
-Create Path Diagrams from VARmodel object
+Create Path Diagrams from mlts model object
 }
 \examples{
-1 + 1
+# build a simple VAR mlts model with two time-series variables
+model <- mlts_model(q = 2)
+
+# create a pathmodel from the specified model
+mlts_model_paths(model = model)
 }

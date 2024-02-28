@@ -1,25 +1,38 @@
-#' Create Path Diagrams from VARmodel object
+#' Create Path Diagrams from mlts model object
 #'
-#' @param VARmodel The VARmodel object.
-#' @param data An optional `data.frame` including the variables to be used in
-#' the path diagram.
-#' @param labels An optional character string inluding the names to be used in
-#' the path diagram.
-#' @param add.png Logical. Set to `TRUE` to transform created PDF as .png files
-#'  using `pdftools::pdf_convert`.
-#' @return An Rmarkdown file that is automatically rendered to a pdf document.
+#' @param model A model built with \code{\link[mlts]{mlts_model}}.
+#' @param ts To be included in future releases.
+#' An optional character vector containing the names of the time-series
+#' variables or indicators.
+#' @param covariates To be included in future releases.
+#' An optional character vector containing the names of the between-level
+#' covariates.
+#' @param outcomes To be included in future releases.
+#' An optional character vector containing the names of the between-level
+#' outcomes.
+#' @param add_png Logical. Set to `TRUE` to transform created PDF to .png file
+#' using `pdftools::pdf_convert`.
+#' @param keep_tex Logical. Should the TeX file be kept (additional to the
+#' Rmd file)? Defaults to `FALSE`.
+#' @return An RMarkdown file that is automatically rendered to a pdf document.
 #' @export
 #'
 #' @examples
-#' 1 + 1
-mlts_model_paths <- function(VARmodel, data = NULL, labels = NULL, add.png = FALSE) {
+#' # build a simple VAR mlts model with two time-series variables
+#' model <- mlts_model(q = 2)
+#'
+#' # create a pathmodel from the specified model
+#' mlts_model_paths(model = model)
+mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
+                             outcomes = NULL,
+                             add_png = FALSE, keep_tex = FALSE) {
 
 
   # extract model infos
-  infos <- mlts_model_eval(VARmodel)
+  infos <- mlts_model_eval(model)
 
   # extract model data frame
-  model <- VARmodel
+  model <- model
 
   # create empty markdown file, delete if already existing
   if (file.exists("pathmodel.rmd")) {
@@ -29,6 +42,15 @@ mlts_model_paths <- function(VARmodel, data = NULL, labels = NULL, add.png = FAL
                    template = "pathmodel",
                    package = "mlts",
                    edit = FALSE)
+
+  # add keep_tex to YAML frontmatter if desired
+  if (keep_tex == TRUE) {
+    yaml_keep_tex <- gsub(
+      "output: pdf_document", "output: pdf_document:\n\tkeep_tex: true",
+      readLines("pathmodel.rmd")
+    )
+    writeLines(yaml_keep_tex, "pathmodel.rmd")
+  }
 
   # latex figure begin and end
   begin_figure <- "\n\\begin{figure}\n\\centering"
@@ -927,7 +949,7 @@ mlts_model_paths <- function(VARmodel, data = NULL, labels = NULL, add.png = FAL
   )
 
   # optional: store PDF pages as separate pngs ################################
-  if (add.png == T) {
+  if (add_png == T) {
     pdftools::pdf_convert(
       pdf = "pathmodel.pdf",
       format = "png",

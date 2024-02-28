@@ -2,25 +2,44 @@
 % Please edit documentation in R/mlts_model_formula.R
 \name{mlts_model_formula}
 \alias{mlts_model_formula}
-\title{Create TeX Model Formula from VARmodel object}
+\title{Create TeX Model Formula from mlts model object}
 \usage{
-mlts_model_formula(VARmodel, data = NULL, labels = NULL)
+mlts_model_formula(
+  model,
+  ts = NULL,
+  covariates = NULL,
+  outcomes = NULL,
+  keep_tex = FALSE
+)
 }
 \arguments{
-\item{VARmodel}{The VARmodel object.}
+\item{model}{A model built with \code{\link[mlts]{mlts_model}}.}
 
-\item{data}{An optional \code{data.frame} including the variables to be used
-in the formula.}
+\item{ts}{To be included in future releases.
+An optional character vector containing the names of the time-series
+variables or indicators.}
 
-\item{labels}{An optional character string including the names to be used
-in the formula.}
+\item{covariates}{To be included in future releases.
+An optional character vector containing the names of the between-level
+covariates.}
+
+\item{outcomes}{To be included in future releases.
+An optional character vector containing the names of the between-level
+outcomes.}
+
+\item{keep_tex}{Logical. Should the TeX file be kept (additional to the
+Rmd file)? Defaults to \code{FALSE}.}
 }
 \value{
-An Rmarkdown file that is automatically rendered to a pdf document.
+An RMarkdown file that is automatically rendered to a pdf document.
 }
 \description{
-Create TeX Model Formula from VARmodel object
+Create TeX Model Formula from mlts model object
 }
 \examples{
-1+1
+# build a simple VAR mlts model with two time-series variables
+model <- mlts_model(q = 2)
+
+# create formula from the specified model
+mlts_model_formula(model = model)
 }

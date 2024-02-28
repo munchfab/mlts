@@ -1,8 +1,8 @@
 test_that("mlts_model returns correct number of parameters", {
   # test number of returned model parameters for up to 10 constructs
   for (i in 1:10) {
-    test_model <- suppressMessages(mlts_model(q = i))
-    n_within_pars <- 2*i + i^2 + (i * (i - 1)) / 2
+    test_model <- mlts_model(q = i)
+    n_within_pars <- 2*i + i^2
     n_between_pars <- n_within_pars + (n_within_pars * (n_within_pars - 1)) / 2
     # number of within parameters
     expect_equal(
