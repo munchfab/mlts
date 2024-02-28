@@ -129,7 +129,7 @@ prepare_data <- function(data, id, ts.ind, time = NULL, tinterval, beep = NULL, 
 
         # create time grid according to continuous time variable
         data = create_missings(data = data, delta = tinterval, id = id,
-                                    time = "beep_new", btw_vars = btw_vars)
+                                    time = "beep_new", btw_vars = btw.vars)
         data = cbind("order" = 1:nrow(data),data)
 
         # ADD LATER ==============================================================

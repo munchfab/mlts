@@ -4,9 +4,9 @@
 \name{mlts-package}
 \alias{mlts}
 \alias{mlts-package}
-\title{mlts: Dynamic Structural Equation Models with R and Stan}
+\title{mlts: Multilevel Latent Time Series Models with R and Stan}
 \description{
-A package for fitting popular Dynamic Structural Equation Models (DSEM) with R and Stan.
+A package for fitting multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
 }
 \seealso{
 Useful links:
