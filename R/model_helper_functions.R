@@ -33,6 +33,8 @@ update_model_REcors <- function(VARmodel) {
       "isRandom" = 0
     )
     VARmodel <- plyr::rbind.fill(VARmodel, mlts_model_priors(REcors, default = T))
+    # consider dplyr because plyr is deprecated
+    # VARmodel <- dplyr::bind_rows(VARmodel, mlts_model_priors(REcors, default = T))
   } else if (n_rand == 1) {
     VARmodel <- VARmodel[VARmodel$Type != "RE Cor", ]
   }
@@ -48,14 +50,24 @@ replace_model_row <- function(VARmodel, row, replacement) {
 
   if (row == 1) {
     VARmodel <- plyr::rbind.fill(replacement, VARmodel[2:nrow(VARmodel), ])
+    # consider dplyr because plyr is deprecated
+    # VARmodel <- dplyr::bind_rows(replacement, VARmodel[2:nrow(VARmodel), ])
   } else if (row == nrow(VARmodel)) {
     VARmodel <- plyr::rbind.fill(VARmodel[1:(nrow(VARmodel) - 1), ], replacement)
+    # consider dplyr because plyr is deprecated
+    # VARmodel <- dplyr::bind_rows(VARmodel[1:(nrow(VARmodel) - 1), ], replacement)
   } else {
     VARmodel <- plyr::rbind.fill(
       VARmodel[1:(row - 1), ],
       replacement,
       VARmodel[(row + 1):nrow(VARmodel), ]
     )
+    # consider dplyr because plyr is deprecated
+    # VARmodel <- dplyr::bind_rows(
+    #   VARmodel[1:(row - 1), ],
+    #   replacement,
+    #   VARmodel[(row + 1):nrow(VARmodel), ]
+    # )
   }
 
   return(VARmodel)

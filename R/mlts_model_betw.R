@@ -74,6 +74,8 @@ mlts_model_betw <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
 
     # add to VARmodel
     VARmodel = plyr::rbind.fill(VARmodel, RE.PRED)
+    # consider dplyr because plyr is deprecated
+    # dplyr::bind_rows(VARmodel, RE.PRED)
   }
 
   # outcome prediction models
@@ -136,6 +138,8 @@ mlts_model_betw <- function(VARmodel,RE.pred = NULL, out.pred=NULL, out.pred.add
 
     # add to VARmodel
     VARmodel = plyr::rbind.fill(VARmodel, OUT.PRED)
+    # consider dplyr because plyr is deprecated
+    # dplyr::bind_rows(VARmodel, OUT.PRED)
   }
 
   ###### Should we update the label of random effects SDs if

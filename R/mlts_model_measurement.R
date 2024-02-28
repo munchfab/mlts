@@ -188,6 +188,8 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
   }
   # combine
   between = as.data.frame(data.table::rbindlist(btw.pars))
+  # consider base R to reduce package dependencies
+  # between <- do.call("rbind", btw.pars)
 
 
 
@@ -216,12 +218,20 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
       "Constraint" = "free"
     )
     mm.pars[[i]] = plyr::rbind.fill(loadsW, errVarW)
+    # consider dplyr because plyr is deprecated
+    # VARmodel = dplyr::bind_rows(loadsW, errVarW)
   }
 
   # combine
   within = as.data.frame(data.table::rbindlist(mm.pars))
+  # consider base R to reduce package dependencies
+  # within <- do.call("rbind", mm.pars)
   mm.pars = rbind(between, within)
   mm.pars = dplyr::arrange(mm.pars, Level, Type, Param)
+  # consider base R to reduce package dependencies
+  # mm.pars2 = mm.pars[
+  #   order(mm.pars$Level, mm.pars$Type, mm.pars$Param),
+  # ]
 
   ## add default priors
   mm.pars = mlts_model_priors(VARmodel = mm.pars, default = T)
@@ -229,12 +239,13 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
 
   # add to structural part
   VARmodel = plyr::rbind.fill(VARmodel, mm.pars)
+  # consider dplyr because plyr is deprecated
+  # VARmodel = dplyr::bind_rows(VARmodel, mm.pars)
 
 
 
   return(VARmodel)
 
 }
-
 
 
