@@ -8,13 +8,15 @@
 #' unit (as character).
 #' @param time The variable in `data` that contains the (continuous) time (as
 #' string).
-#' @param btw.vars The names of between-level variables in the data to be
+#' @param btw_vars The names of between-level variables in the data to be
 #' added in newly created rows with NAs.
-#' @param clean Remove helper columns .
-#' @return A `data.frame` with missings imputed for use in `dsem()`.
+#' @param clean Logical. Remove helper columns. Defaults to `TRUE`.
+#'
+#' @return A `data.frame` with missings imputed for use in `prepare_data()`.
 #'
 #' @export
-create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
+create_missings <- function(data, delta, id, time,
+                            btw_vars = NULL, clean = TRUE) {
 
   # create empty list for imputed data frames
   imp_list <- list()
@@ -22,12 +24,11 @@ create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
   data$num_id <- as.numeric(as.factor(data[, id]))
 
   # remove between-level variables to add them later again
-  btw.vars = c(id, btw.vars)
-  btw.data <- data[,c("num_id", btw.vars)] %>%
-      dplyr::distinct()
-  data[,btw.vars] <- NULL
+  btw_vars <- c(id, btw_vars)
+  btw_data <- unique(data[, c("num_id", btw_vars)])
+  data[, btw_vars] <- NULL
 
-  # loop over obersavtions in data set
+  # loop over observations in data set
   for (i in 1:length(unique(data$num_id))) {
     # store continuous time variable for id == i and have it start with 0
     diff_cont_time <- data[data$num_id == i, time] -
@@ -88,27 +89,38 @@ create_missings <- function(data, delta, id, time, btw.vars, clean = T) {
     imp_list[[i]] <- merge(new, temp, by = "int_time", all = TRUE)
   }
   # reduce to data frame
-  imp_data <- purrr::reduce(imp_list, rbind)
+  imp_data <- do.call("rbind", imp_list)
   # join with existing data set
-  dsem_data <- dplyr::full_join(
-    imp_data, data,
-    by = c("num_id", time)
-  )
-  # fill original IDs up
-  sem_data <- dplyr::group_by(.data = dsem_data, num_id)
+  # with base R, somewhat slower than with dplyr
+  new_data <- merge(x = imp_data, y = data, by = c("num_id", time), all = T)
+  # sort by num_id and int_time
+  new_data <- new_data[order(new_data$num_id, new_data$int_time), ]
   # add between-level variables again
-  dsem_data <- merge(x = dsem_data, y = btw.data, by = c("num_id"), all.x = T, sort = F)
+  new_data <- merge(
+    x = new_data, y = btw_data, by = c("num_id"), all.x = T, sort = F
+  )
 
-  dsem_data <- tidyr::fill(dsem_data, id, .direction = "downup")
-  dsem_data <- dplyr::ungroup(dsem_data)
+
+  # dplyr version
+  # dsem_data <- dplyr::full_join(
+  #   imp_data, data,
+  #   by = c("num_id", time)
+  # )
+
+  # fill original IDs up
+  # dsem_data <- dplyr::group_by(.data = dsem_data, num_id)
+  # dsem_data <- tidyr::fill(dsem_data, id, .direction = "downup")
+  # dsem_data <- dplyr::ungroup(dsem_data)
 
 
-  if(clean == T) {
-    dsem_data <- dsem_data %>%
-      dplyr::select(!c(diff_cont_time, diff_int_time, overlap, nonoverlap,
-                int_time_shifted, shifts))
+  if (clean == TRUE) {
+    # remove helper columns
+    helpers <- c(
+      "diff_cont_time", "diff_int_time", "overlap", "nonoverlap",
+      "int_time_shifted", "shifts"
+    )
+    new_data <- new_data[, !colnames(new_data) %in% helpers]
   }
 
-
-  return(dsem_data)
+  return(new_data)
 }
