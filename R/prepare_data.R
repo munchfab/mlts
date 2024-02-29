@@ -26,7 +26,7 @@
 #' @return A `list` that can be passed to `stan()`.
 #' @export
 #'
-#' @examples TBA
+#' @examples 1 + 1
 prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days = NULL,
                          n_overnight_NAs, na.rm = FALSE, outcomes = NULL,
                          covariates = NULL, outcome_pred_btw = NULL){
@@ -96,7 +96,7 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
 
   } else if(is.character(time) & is.numeric(tinterval)){
       # create time grid according to continuous time variable
-      data = create_missings(data = data, delta = tinterval, id = id,
+      data = create_missings(data = data, tinterval = tinterval, id = id,
                       time = "time", btw_vars = btw.vars)
       data = cbind("order" = 1:nrow(data), data)
 
@@ -129,7 +129,7 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
         data$beep_new = new_beep
 
         # create time grid according to continuous time variable
-        data = create_missings(data = data, delta = tinterval, id = id,
+        data = create_missings(data = data, tinterval = tinterval, id = id,
                                     time = "beep_new", btw_vars = btw.vars)
         data = cbind("order" = 1:nrow(data),data)
 

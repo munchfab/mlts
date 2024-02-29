@@ -61,5 +61,5 @@ A \code{list} that can be passed to \code{stan()}.
 Prepare data for Stan
 }
 \examples{
-TBA
+1 + 1
 }

@@ -32,9 +32,7 @@ update_model_REcors <- function(model) {
       "Param_Label" = "RE Cor",
       "isRandom" = 0
     )
-    model <- plyr::rbind.fill(model, mlts_model_priors(REcors, default = T))
-    # consider dplyr because plyr is deprecated
-    # model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = T))
+    model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = T))
   } else if (n_rand == 1) {
     model <- model[model$Type != "RE Cor", ]
   }
@@ -49,25 +47,15 @@ replace_model_row <- function(model, row, replacement) {
   # one (or multiple) row(s) while keeping the original order
 
   if (row == 1) {
-    model <- plyr::rbind.fill(replacement, model[2:nrow(model), ])
-    # consider dplyr because plyr is deprecated
-    # model <- dplyr::bind_rows(replacement, model[2:nrow(model), ])
+    model <- dplyr::bind_rows(replacement, model[2:nrow(model), ])
   } else if (row == nrow(model)) {
-    model <- plyr::rbind.fill(model[1:(nrow(model) - 1), ], replacement)
-    # consider dplyr because plyr is deprecated
-    # model <- dplyr::bind_rows(model[1:(nrow(model) - 1), ], replacement)
+    model <- dplyr::bind_rows(model[1:(nrow(model) - 1), ], replacement)
   } else {
-    model <- plyr::rbind.fill(
+    model <- dplyr::bind_rows(
       model[1:(row - 1), ],
       replacement,
       model[(row + 1):nrow(model), ]
     )
-    # consider dplyr because plyr is deprecated
-    # model <- dplyr::bind_rows(
-    #   model[1:(row - 1), ],
-    #   replacement,
-    #   model[(row + 1):nrow(model), ]
-    # )
   }
 
   return(model)

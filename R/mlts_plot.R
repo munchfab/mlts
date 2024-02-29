@@ -31,7 +31,7 @@
 #'
 #' @export
 #'
-#' @examples TBA
+#' @examples 1 + 1
 mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
                       sort_est = NULL, xlab = NULL, ylab = NULL,
                       facet_ncol = 1, dot_size = 1, dot_color = "black", dot_shape = 1,
@@ -127,7 +127,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
 
     # build general plot
     aes = ggplot2::aes
-    P <- ggplot2::ggplot(data = p.data, ggplot::aes(x = .data$ID, y = .data$mean)) +
+    P <- ggplot2::ggplot(data = p.data, ggplot2::aes(x = .data$ID, y = .data$mean)) +
            ggplot2::geom_point() +
            ggplot2::geom_errorbar(aes(ymin = .data$`2.5%`, ymax = .data$`97.5%`),
                                   color = errorbar_color,

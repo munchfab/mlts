@@ -80,5 +80,5 @@ Returns a \code{ggplot}-object .
 Plot results of mlts
 }
 \examples{
-TBA
+1 + 1
 }

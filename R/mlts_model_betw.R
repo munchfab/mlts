@@ -73,9 +73,7 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
     RE.PRED = mlts_model_priors(RE.PRED, default = T)
 
     # add to model
-    model = plyr::rbind.fill(model, RE.PRED)
-    # consider dplyr because plyr is deprecated
-    # dplyr::bind_rows(model, RE.PRED)
+    model = dplyr::bind_rows(model, RE.PRED)
   }
 
   # outcome prediction models
@@ -137,13 +135,8 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
     OUT.PRED = mlts_model_priors(OUT.PRED, default = T)
 
     # add to model
-    model = plyr::rbind.fill(model, OUT.PRED)
-    # consider dplyr because plyr is deprecated
-    # dplyr::bind_rows(model, OUT.PRED)
+    model = dplyr::bind_rows(model, OUT.PRED)
   }
-
-  ###### Should we update the label of random effects SDs if
-  ###### RE predictors are provided?
 
   return(model)
 }
