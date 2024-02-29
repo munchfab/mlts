@@ -139,9 +139,9 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
     fix = mlts_model_priors(fix, default = T)    # add default priors
     rand = mlts_model_priors(rand, default = T)
 
-    row_to_repl = which(model$Param == paste0("mu_",i) & model$Type == "Fix effect")
+    row_to_repl = which(model$Param %in% c(paste0("mu_",i), paste0("etaB_",i)) & model$Type == "Fix effect")
     model = replace_model_row(model, row_to_repl, fix)
-    row_to_repl = which(model$Param == paste0("sigma_mu_",i) & model$Type == "Random effect SD")
+    row_to_repl = which(model$Param %in% c(paste0("sigma_mu_",i),paste0("sigma_etaB_",i)) & model$Type == "Random effect SD")
     model = replace_model_row(model, row_to_repl, rand)
 
     # update the random effect correlations
