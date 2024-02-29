@@ -1,19 +1,19 @@
 #' Title
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
+#' @param model data.frame. Output of model-Functions.
 #' @param data data.frame. Data input.
 #' @param ts.ind tba.
 #' @param covariates tba.
 #' @param outcomes tba.
-#' @param outcome.pred.btw tba.
-#' @param center.covs tba.
-#' @param std.outcome tba.
+#' @param outcome_pred_btw tba.
+#' @param center_covs tba.
+#' @param std_outcome tba.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NULL,
-                       outcome.pred.btw = NULL, center.covs = T, std.outcome = T
+VARprepare <- function(model, data, ts.ind, covariates = NULL, outcomes = NULL,
+                       outcome_pred_btw = NULL, center_covs = T, std_outcome = T
 ){
 
 
@@ -46,14 +46,14 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
   # ----
 
   # model specific information: ------------------------------------------------
-  infos = mlts_model_eval(VARmodel)
+  infos = mlts_model_eval(model)
 
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
-  is_random = as.array(infos$is_random) # which parameters (in order of Fix effect parameters in VARmodel) to model as random effect
+  is_random = as.array(infos$is_random) # which parameters (in order of Fix effect parameters in model) to model as random effect
   is_fixed = infos$is_fixed   # a matrix of n_fixed x 1, indicating which parameter to model as constant
-  re_pars = infos$re_pars     # subset of VARmodel of random effect parameters
+  re_pars = infos$re_pars     # subset of model of random effect parameters
 
   # innovations
   innos_rand = as.array(infos$innos_rand) # Are innovation variance(s) random?
@@ -92,7 +92,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
       for(p in 1:N){
         W[p,i] = unique(data[data$num_id == p, names(covariates)[cov.use]])
       }
-      if(center.covs==T){
+      if(center_covs==T){
         W[,i] = W[,i] - mean(W[,i])
       }
     }
@@ -119,7 +119,7 @@ VARprepare <- function(VARmodel, data, ts.ind, covariates = NULL, outcomes = NUL
 
   n_z_vars = infos$n_z_vars
   n_z_vars_data = unlist(lapply(n_z_vars, function(x){
-    names(outcome.pred.btw)[which(outcome.pred.btw == x)]
+    names(outcome_pred_btw)[which(outcome_pred_btw == x)]
   }))
   n_z = infos$n_z
   Z = matrix(NA, nrow = N, ncol = n_z)

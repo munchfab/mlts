@@ -1,8 +1,8 @@
-#' Create missings for DSEM data
+#' Create Missings for Approximation of Continuous Time Dynamic Models
 #'
 #' @param data An object of class `data.frame` (or one that can be coerced
 #' to that class) containing data of all variables used in the model.
-#' @param delta The step interval for approximation for a continuous time DSEM.
+#' @param tinterval The step interval for approximation for a continuous time DSEM.
 #' The smaller the step interval, the better the approximation.
 #' @param id The variable in `data` that identifies the person or observational
 #' unit (as character).
@@ -15,7 +15,7 @@
 #' @return A `data.frame` with missings imputed for use in `prepare_data()`.
 #'
 #' @export
-create_missings <- function(data, delta, id, time,
+create_missings <- function(data, tinterval, id, time,
                             btw_vars = NULL, clean = TRUE) {
 
   # create empty list for imputed data frames
@@ -36,9 +36,9 @@ create_missings <- function(data, delta, id, time,
     # rescale to integer time variable as in Asparouhov et al. (2018)
     int_time <- ifelse(
       # if it rounds to 0 (for first occasion), make it 1 for first measurement
-      ceiling(diff_cont_time / delta) == 0, 1,
+      ceiling(diff_cont_time / tinterval) == 0, 1,
       # otherwise just round up
-      ceiling(diff_cont_time / delta)
+      ceiling(diff_cont_time / tinterval)
     )
     temp <- data.frame(diff_cont_time, int_time)
     # calculate difference between integer time values, starting with 0

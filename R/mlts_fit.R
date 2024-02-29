@@ -1,45 +1,54 @@
-#' Title
+#' Fit Bayesian Multilevel Manifest or Latent Time-Series Models
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}} and related functions.
 #' @param data An object of class data.frame (or one that can be coerced to that
 #' class) containing data of all variables used in the model.
-#' @param id tba.
-#' @param ts.ind data.frame. Data input.
-#' @param covariates data.frame. Data input.
-#' @param outcomes data.frame. Data input.
-#' @param outcome.pred.btw data.frame. Data input.
-#' @param center.covs data.frame. Data input.
-#' @param std.outcome data.frame. Data input.
+#' @param id Character. The variable in `data` that identifies the person or observational
+#' unit.
+#' @param ts Character. The variable(s) in `data` that
+#' contain the time-series construct. If multiple variables are provided in a
+#' character vector, a vector autoregressive model is fit.
+#' @param covariates Character. The covariate(s) in `data` used for prediction of
+#' random effects.
+#' @param outcomes Character. The outcome(s) in `data` that should be
+#' predicted by random effects.
+#' @param outcome_pred_btw Character.
+#' @param center_covs Logical. Should covariates be centered before inclusion
+#' in the model? Defaults to `TRUE`.
+#' @param std_outcome Logical. Should outcomes be standardized before inclusion
+#' in the model? Defaults to `TRUE`.
 #' @param time tba.
-#' @param tinterval tba.
+#' @param tinterval The step interval for approximation for a continuous time
+#' dynamic model. The smaller the step interval, the better the approximation.
 #' @param beep tba.
 #' @param days tba.
 #' @param n_overnight_NAs tba.
 #' @param na.rm tba.
 #' @param iter A positive integer specifying the number of iterations for each
 #' chain (including 50% used as warmup). The default is 500.
-#' @param chains A positive integer specifying the number of Markov chains. The default is 2.
-#' @param cores The number of cores to use when executing the Markov chains in parallel. The default is 2 (see \code{\link[rstan]{stan}}).
-#' @param monitor.person.pars data.frame. Data input.
-#' @param std.outcome data.frame. Data input.
-#' @param printMessage logical. Print messages based on defined inputs (default = TRUE).
-#' @param printWarning logical. Print messages based on defined inputs (default = TRUE).
-#' @param fit.model logical. Set to FALSE to avoid fitting the model which may be
+#' @param chains A positive integer specifying the number of Markov chains.
+#' The default is 2.
+#' @param cores The number of cores to use when executing the Markov chains in parallel.
+#' The default is 2 (see \code{\link[rstan]{stan}}).
+#' @param monitor_person_pars data.frame. Data input.
+#' @param print_message logical. Print messages based on defined inputs (default = TRUE).
+#' @param print_warning logical. Print messages based on defined inputs (default = TRUE).
+#' @param fit_model logical. Set to FALSE to avoid fitting the model which may be
 #' helpful to inspect prepared data used for model estimation (default = T).
 #' @param ... Additional arguments passed to \code{\link[rstan]{sampling}}.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_fit <- function(VARmodel,
+mlts_fit <- function(model,
                    data =NULL,
                    id,
-                   ts.ind,
+                   ts,
                    covariates = NULL,
                    outcomes = NULL,
-                   outcome.pred.btw = NULL,
-                   center.covs = T,
-                   std.outcome = T,
+                   outcome_pred_btw = NULL,
+                   center_covs = T,
+                   std_outcome = T,
                    time = NULL,
                    tinterval,
                    beep = NULL,
@@ -49,27 +58,27 @@ mlts_fit <- function(VARmodel,
                    iter = 500,
                    chains = 2,
                    cores = 2,
-                   monitor.person.pars = F,
-                   fit.model = T,
-                   printMessage = T,
-                   printWarning = T,
+                   monitor_person_pars = F,
+                   fit_model = T,
+                   print_message = T,
+                   print_warning = T,
                    ...
 ){
 
   # eval the model
-  infos <- mlts_model_eval(VARmodel)
+  infos <- mlts_model_eval(model)
   # Get the parameter table
-  par_labels <- mlts_param_labels(VARmodel)
+  par_labels <- mlts_param_labels(model)
 
   # simulated data used
-  data.simulated = ifelse(class(data)[1] == "VARsimData", TRUE, FALSE)
+  data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
   # check if data is class "VARsimData"
   if(data.simulated == T){
     message("Simulated data provided:",
-    "\n True scores used in the simulation will added to the returned object.")
+    "\nTrue scores used in the simulation will be added to the returned object.")
 
-    par_labels <- merge(x = par_labels, data$VARmodel[,c("Param", "true.val")],
+    par_labels <- merge(x = par_labels, data$model[,c("Param", "true.val")],
                        by = "Param", sort = F)
 
     # store true values of indivdual parameters
@@ -85,13 +94,13 @@ mlts_fit <- function(VARmodel,
 
   # Some initial checks:
   # avoiding specification of "covariates"- and "outcomes"-arguments,
-  # if variable names in the VARmodel-object match the variables names in data
+  # if variable names in the model-object match the variables names in data
   if(is.null(covariates) & infos$n_cov>1){
     # check
     if(sum(!(infos$n_cov_vars %in% colnames(data)))>0){
       # not all variables found in the data
       stop("Not all between-level variables used as predictors of random effects
-      in the VARmodel can be found in the data. You may need to rename the variable(s) in
+      in the model can be found in the data. You may need to rename the variable(s) in
       the data or provide the name(s) via the `covariates` argument.")
 
     } else {
@@ -105,7 +114,7 @@ mlts_fit <- function(VARmodel,
     # check
     if(sum(!(infos$out_var %in% colnames(data)))>0){
       # not all variables found in the data
-      stop("Not all between-level outcome variables specified in the VARmodel
+      stop("Not all between-level outcome variables specified in the model
       can be found in the data. You may need to rename the variable(s) in
       the data or provide the name(s) via the `outcomes` argument.")
 
@@ -116,34 +125,34 @@ mlts_fit <- function(VARmodel,
     }
   }
 
-  if(is.null(outcome.pred.btw) & infos$n_z>0){
+  if(is.null(outcome_pred_btw) & infos$n_z>0){
     # check
     if(sum(!(infos$n_z_vars %in% colnames(data)))>0){
       # not all variables found in the data
       stop("Not all additional between-level variables used in the outcome prediction
-      model as specified in the VARmodel can be found in the data. You may need to rename the variable(s) in
-      the data or provide the name(s) via the `outcome.pred.btw` argument.")
+      model as specified in the model can be found in the data. You may need to rename the variable(s) in
+      the data or provide the name(s) via the `outcome_pred_btw` argument.")
 
     } else {
       # create the necessary input to the outcomes-argument
-      outcome.pred.btw <- infos$n_z_vars
-      names(outcome.pred.btw) <- infos$n_z_vars
+      outcome_pred_btw <- infos$n_z_vars
+      names(outcome_pred_btw) <- infos$n_z_vars
     }
   }
 
   # PREPARE DATA =========================================================
-  data = prepare_data(data, id = id, ts.ind = ts.ind, time = time,
+  data = prepare_data(data, id = id, ts = ts, time = time,
                       tinterval = tinterval, beep = beep,
                       days = days, n_overnight_NAs = n_overnight_NAs,
                       na.rm = na.rm, covariates = covariates,
                       outcomes = outcomes,
-                      outcome.pred.btw = outcome.pred.btw)
+                      outcome_pred_btw = outcome_pred_btw)
 
   # ======================================================================
 
-  # depending on VARmodel evaluate model type
+  # depending on model evaluate model type
   ## check if a measurement model is included
-  isLatent <- ifelse(sum(VARmodel$Model == "Measurement")>0,TRUE,FALSE)
+  isLatent <- ifelse(sum(model$Model == "Measurement")>0,TRUE,FALSE)
 
 
   # BY MODEL TYPE ========================================================
@@ -152,20 +161,20 @@ mlts_fit <- function(VARmodel,
   ## Single-indicator VAR(1) model
   if(isLatent == F){
     # data preprocessing
-    standata <- VARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
+    standata <- VARprepare(model = model, data = data, ts = ts,
                           covariates = covariates, outcomes = outcomes,
-                          outcome.pred.btw = outcome.pred.btw,
-                          center.covs = center.covs, std.outcome = std.outcome)
+                          outcome_pred_btw = outcome_pred_btw,
+                          center_covs = center_covs, std_outcome = std_outcome)
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
-    if(monitor.person.pars == T){
+    if(monitor_person_pars == T){
       pars = c(pars, "b_free")
     }
 
     if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
-      if(fit.model==T){
+      if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifest,
           data = standata,
@@ -180,7 +189,7 @@ mlts_fit <- function(VARmodel,
       }
     } else if(standata$n_inno_cors > 0){
       pars = c(pars,"bcorr_inn")
-      if(fit.model==T){
+      if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifestCovsFix,
           data = standata,
@@ -194,7 +203,7 @@ mlts_fit <- function(VARmodel,
         stanfit <- NULL
       }
     } else if(standata$n_inno_covs > 0){
-      if(fit.model==T){
+      if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifestCovsRand,
           data = standata,
@@ -214,21 +223,21 @@ mlts_fit <- function(VARmodel,
   ## Multiple-indicator Model ==================================================
   if(isLatent == T){
     # data preprocessing
-    standata <- VARprepare(VARmodel = VARmodel, data = data, ts.ind = ts.ind,
+    standata <- VARprepare(model = model, data = data, ts = ts,
                            covariates = covariates, outcomes = outcomes,
-                           outcome.pred.btw = outcome.pred.btw,
-                           center.covs = center.covs, std.outcome = std.outcome)
+                           outcome_pred_btw = outcome_pred_btw,
+                           center_covs = center_covs, std_outcome = std_outcome)
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out",
               "alpha", "loadB", "sigmaB", "loadW", "sigmaW")
-    if(monitor.person.pars == T){
+    if(monitor_person_pars == T){
       pars = c(pars, "b_free")
     }
 
     if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
-      if(fit.model==T){
+      if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_latent,
           data = standata,
@@ -243,7 +252,7 @@ mlts_fit <- function(VARmodel,
       }
     } else if(standata$n_inno_cors > 0){
         pars = c(pars,"bcorr_inn")
-        if(fit.model==T){
+        if(fit_model==T){
           stanfit <- rstan::sampling(
             stanmodels$VAR_latentCovsFix,
             data = standata,
@@ -264,7 +273,7 @@ mlts_fit <- function(VARmodel,
   # ============================================================================
 
 
-  if(fit.model == T){
+  if(fit_model == T){
     # add posteriors with adapted names
     posteriors <- rstan::extract(stanfit, inc_warmup = F, permuted = F,
                              pars = par_labels$Param_stan)
@@ -278,12 +287,12 @@ mlts_fit <- function(VARmodel,
              "Rhat", "Bulk_ESS", "Tail_ESS")
     sums <- round(sums[1:dim(sums)[1], cols],3)
 
-    # add VARmodel parameter labels
+    # add model parameter labels
     sums$Param_stan = row.names(sums)
     pop.sums <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
 
     # create individual parameter summary table
-    if(monitor.person.pars == TRUE){
+    if(monitor_person_pars == TRUE){
       sums.i = sums[startsWith(sums$Param_stan, "b_free"),1:ncol(sums)]
 
       # extract infos
@@ -332,7 +341,7 @@ mlts_fit <- function(VARmodel,
 
   # combine preprocessed data and fitted stan object in a list object
   VARresult <- list(
-    "VARmodel" = VARmodel,
+    "model" = model,
     "data" = data,
     "standata" = standata,
     "stanfit" = stanfit,

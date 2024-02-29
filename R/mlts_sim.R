@@ -1,6 +1,6 @@
 #' Title
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
+#' @param model data.frame. Output of model-Functions.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
 #' @param N integer. Number of observational units.
@@ -11,7 +11,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
+mlts_sim <- function(model, default = F, N, TP, burn.in = 500, seed = NULL,
                         btw.var.sds = NULL){
 
   if(!is.null(seed)){
@@ -21,45 +21,45 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
   ### start with a check that sds are entered for all between variables
 
 
-  # simulate data based on VARmodel
+  # simulate data based on model
 
   ### write separate function for specification of true parameter values
   ### for now use fixed values
 
 
   # use helper function to read out information on model
-  infos = mlts_model_eval(VARmodel)
+  infos = mlts_model_eval(model)
 
 
   # use some default settings for parameter values
   if(default==T){
-    VARmodel$true.val = NA
+    model$true.val = NA
 
     # MEASUREMENT MODEL PARAMETERS =============================================
     n_p = sum(infos$p)
-    model = "Measurement"
-    VARmodel$true.val[VARmodel$Model == model & VARmodel$Type == "Item intercepts" & VARmodel$Constraint == "= 0"] = 0
-    VARmodel$true.val[VARmodel$Model == model & VARmodel$Type == "Item intercepts" & VARmodel$Constraint == "free"] =
+    Model = "Measurement"
+    model$true.val[model$Model == Model & model$Type == "Item intercepts" & model$Constraint == "= 0"] = 0
+    model$true.val[model$Model == Model & model$Type == "Item intercepts" & model$Constraint == "free"] =
       sample(x = seq(0.5, 2, by = 0.5), size = infos$n_alphafree, replace = T)
-    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading" & VARmodel$Constraint == "= 1"] = 1
-    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading" & VARmodel$Constraint == "free"] =
+    model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
+    model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "free"] =
       sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadWfree, replace = T)
-    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Loading" & VARmodel$Constraint == "= 1"] = 1
-    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Loading" & VARmodel$Constraint == "free"] =
+    model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
+    model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "free"] =
       sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = T)
-    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
-    VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
+    model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
+    model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = T)
-    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "= 0"] = 0
-    VARmodel$true.val[VARmodel$Level == "Between" & VARmodel$Type == "Measurement Error SD" & VARmodel$Constraint == "free"] =
+    model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
+    model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = T)
 
     # FIX EFFECTS ========
     model.type = "Fix effect"
     ## Mus
-    VARmodel$true.val[VARmodel$Type==model.type & startsWith(VARmodel$Param_Label, "Trait")] = 1
+    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = 1
     ## Phis
-    # VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = sample(
+    # model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = sample(
     #   c(round(seq(from = -0.3, to = 0.3, by = 0.05),2)), replace = T,
     #   size = nrow(infos$fix_pars_dyn))
     # dynamic parameters separately for each lag
@@ -78,64 +78,64 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
         }
       }
     }
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = round(phis$true.val,3)
+    model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = round(phis$true.val,3)
 
 
     ## log innovation variances
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Variance"] = -0.4
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.4
     ## Fixed innovation variance
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Innovation Variance"] = 0.75
+    model$true.val[model$Type==model.type & model$Param_Label=="Innovation Variance"] = 0.75
 
     ###### NEEDS UPDATING ----
     ## Log innovation covariance
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Covariance"] = -1
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Innovation correlation"] = -0.15
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = -1
+    model$true.val[model$Type==model.type & model$Param_Label=="Innovation correlation"] = -0.15
     ###### ----
 
 
     # RANDOM EFFECT SDs ==========
     model.type = "Random effect SD"
     ## Mus
-    VARmodel$true.val[VARmodel$Type==model.type & startsWith(VARmodel$Param_Label, "Trait")] = 1
+    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = 1
     ## Phis
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Dynamic"] = 0.15
+    model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
     ## log innovation variances
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Variance"] = 0.2
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = 0.2
     ## log innovation covaraince(s)
-    VARmodel$true.val[VARmodel$Type==model.type & VARmodel$Param_Label=="Log Innovation Covariance"] = 0.15
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = 0.15
 
 
     # RANDOM EFFECT CORRELATIONS ============
     ## set all to zero for now
     model.type = "RE correlation"
-    VARmodel$true.val[VARmodel$Type == model.type] = sample(
+    model$true.val[model$Type == model.type] = sample(
       c(round(seq(from = -0.2, to = 0.2, by = 0.025),3)), replace = T,
-      size = sum(VARmodel$Type == model.type))
+      size = sum(model$Type == model.type))
 
     # RE as OUTCOME =========================
     model.type = "RE prediction"
-    VARmodel$true.val[VARmodel$Type == model.type] = sample(
+    model$true.val[model$Type == model.type] = sample(
       c(round(seq(from = -0.2, to = 0.2, by = 0.05),3)), replace = T,
-      size = sum(VARmodel$Type == model.type))
+      size = sum(model$Type == model.type))
 
     # OUTCOME PREDICTION ===================
     model.type = "Outcome prediction"
-    VARmodel$true.val[VARmodel$Type == model.type] = sample(
+    model$true.val[model$Type == model.type] = sample(
       c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = T,
-      size = sum(VARmodel$Type == model.type))
-    VARmodel$true.val[VARmodel$Type == model.type & VARmodel$Param_Label == "intercept"] = 0
-    VARmodel$true.val[VARmodel$Type == model.type & VARmodel$Param_Label == "Residual SD"] = 0.5
+      size = sum(model$Type == model.type))
+    model$true.val[model$Type == model.type & model$Param_Label == "intercept"] = 0
+    model$true.val[model$Type == model.type & model$Param_Label == "Residual SD"] = 0.5
 
   }
 
   # run again after adding true parameter values
-  infos = mlts_model_eval(VARmodel)
+  infos = mlts_model_eval(model)
 
 
   # start generating between-level model =======================================
 
   # FIXED EFFECTS
-  gammas = VARmodel$true.val[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1]
+  gammas = model$true.val[model$Type=="Fix effect" & model$isRandom==1]
 
   # BETWEEN-LEVEL
   # sample covariates and get expected values of individual parameters
@@ -162,7 +162,7 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
   }
 
   # variance covariance matrix of random effects
-  cov_mat = diag(VARmodel$true.val[VARmodel$Type=="Random effect SD"]^2)
+  cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
 
   # calculate covariances from correlations
   n_random = infos$n_random
@@ -170,7 +170,7 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
   for(i in 1:n_random){
     for(j in 1:n_random){
       if(i < j){
-        r = VARmodel$true.val[VARmodel$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
+        r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
         cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
       }
     }
@@ -194,11 +194,11 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
   btw = matrix(NA, nrow = N, infos$n_pars)
   btw[,infos$is_random] = btw_random               # first add random pars
   if(infos$n_fixed>0){
-    btw[,infos$is_fixed[1,]] = rep(VARmodel$true.val[VARmodel$Type=="Fix effect"][infos$is_fixed[1,]], each=N)
+    btw[,infos$is_fixed[1,]] = rep(model$true.val[model$Type=="Fix effect"][infos$is_fixed[1,]], each=N)
   }
   if(infos$n_innos_fix>0){
     for(i in infos$innos_fix_pos)
-      btw[,infos$innos_pos[i]] = rep(VARmodel$true.val[VARmodel$Type=="Fix effect" & VARmodel$Param_Label == "Innovation Variance"][i],times=N)
+      btw[,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fix effect" & model$Param_Label == "Innovation Variance"][i],times=N)
   }
 
   #### WITHIN-LEVEL PROCESS ====================================================
@@ -243,7 +243,7 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
         for(xx in 1:q){
           for(yy in 1:q){
             if(xx < yy){
-              cor = VARmodel$true.val[VARmodel$Param == paste0("r.zeta_",xx,yy)]
+              cor = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
               cov = cor * sqrt(inno_var_mat[xx,xx]) * sqrt(inno_var_mat[yy,yy])
               inno_var_mat[xx,yy] <- inno_var_mat[yy,xx] <- cov
             }
@@ -302,15 +302,15 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
       p = as.integer(infos$indicators$p[i])
       ind.lab = paste0("Y",q,".",p)
       # within
-      loadW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Loading"][i]
+      loadW = model$true.val[model$Level == "Within" & model$Type == "Loading"][i]
       loadW = ifelse(length(loadW) == 0, 1, loadW)
-      sigmaW = VARmodel$true.val[VARmodel$Level == "Within" & VARmodel$Type == "Measurement Error SD"][i]
+      sigmaW = model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD"][i]
       # between
-      alpha = VARmodel$true.val[VARmodel$Param == paste0("alpha_",q,".",p)]
+      alpha = model$true.val[model$Param == paste0("alpha_",q,".",p)]
       alpha = ifelse(length(alpha) == 0, 0, alpha)
-      loadB = VARmodel$true.val[VARmodel$Param == paste0("lambdaB_",q,".",p)]
+      loadB = model$true.val[model$Param == paste0("lambdaB_",q,".",p)]
       loadB = ifelse(length(loadB) == 0, 1, loadB)
-      sigmaB = VARmodel$true.val[VARmodel$Param == paste0("sigmaB_",q,".",p)]
+      sigmaB = model$true.val[model$Param == paste0("sigmaB_",q,".",p)]
       sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
 
       for(j in 1:N){
@@ -349,8 +349,8 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
     }
 
     for(i in 1:infos$n_out){
-      alpha = VARmodel$true.val[grepl(VARmodel$Param, pattern = paste0("alpha_",infos$out_var[i]))]
-      sigma = VARmodel$true.val[grepl(VARmodel$Param, pattern = paste0("sigma_",infos$out_var[i]))]
+      alpha = model$true.val[grepl(model$Param, pattern = paste0("alpha_",infos$out_var[i]))]
+      sigma = model$true.val[grepl(model$Param, pattern = paste0("sigma_",infos$out_var[i]))]
       # create outcome values
       out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
       if(nrow(out_use)>1){
@@ -387,13 +387,13 @@ mlts_sim <- function(VARmodel, default = F, N, TP, burn.in = 500, seed = NULL,
 
   # return list
   VARsimData = list(
-    VARmodel = VARmodel,
+    model = model,
     data = data,
     RE.pars = btw_random
   )
 
   # add class
-  class(VARsimData) <- "VARsimData"
+  class(VARsimData) <- "mlts_simdata"
 
 
   return(VARsimData)
