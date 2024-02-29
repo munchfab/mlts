@@ -1,0 +1,33 @@
+---
+title: "A Simple Example: Multilevel Manifest AR(1) Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{manifest_ar_example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mlts)
+```
+
+One of the simplest models we can fit with `mlts` is a first order autoregressive model with only one observed variable. We start by specifying the model with `mlts_model()`. The argument `q` controls the number of time-series constructs. For this simple model, the following call is sufficient:
+
+```{r}
+ar1_model <- mlts_model(q = 1)
+```
+
+We can check the parameters present in the model by just calling the object:
+
+```{r}
+ar1_model
+```
+
+When `mlts_model()` sets up this model, all model parameters are free (i.e., not constrained) by default. In the AR(1) model, there are three fixed effects: the grand mean (`mu_1`) of the outcome, the autoregressive effect (`phi(1)_11`), and the innovation variance (`ln.sigma2_1`).
