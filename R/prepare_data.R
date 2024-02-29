@@ -2,14 +2,15 @@
 #'
 #' @param data An object of class `data.frame` (or one that can be coerced
 #' to that class) in long format.
-#' @param id character. The variable in `data` that identifies the person or
-#' observational unit.
-#' @param ts.ind character. The variable(s) in `data` that contain(s) the time series data.
-#' @param time character. The variable in `data` that contains the (continuous) time (as
-#' string).
-#' @param tinterval The step interval for approximation for a continuous time DSEM.
-#' The smaller the step interval, the better the approximation.
-#' @param beep character. The variable in `data` that contains the running
+#' @param id Character. The variable in `data` that identifies the person or observational
+#' unit.
+#' @param ts Character. The variable(s) in `data` that
+#' contain the time-series construct. If multiple variables are provided in a
+#' character vector, a vector autoregressive model is fit.
+#' @param time Character. The variable in `data` that contains the (continuous) time.
+#' @param tinterval The step interval for approximation for a continuous time
+#' dynamic model. The smaller the step interval, the better the approximation.
+#' @param beep Character. The variable in `data` that contains the running
 #' beep from 1 to TP for each person.
 #' @param days Optional. If a running beep identifier is provided via the `beep` argument and
 #' observations are nested within days (or similar grouping unit), the variable
@@ -17,18 +18,18 @@
 #' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last observation of each day (if `day` is provided).
 #' @param na.rm logical. As default option missing values remain in the data and
 #' will be imputed during model estimation. Set to `TRUE` to remove all rows with
-#' missing values in variables given in `ts.ind`.
+#' missing values in variables given in `ts`.
 #' @param outcomes character.
 #' @param covariates character.
-#' @param outcome.pred.btw character.
+#' @param outcome_pred_btw character.
 #'
 #' @return A `list` that can be passed to `stan()`.
 #' @export
 #'
 #' @examples TBA
-prepare_data <- function(data, id, ts.ind, time = NULL, tinterval, beep = NULL, days = NULL,
+prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days = NULL,
                          n_overnight_NAs, na.rm = FALSE, outcomes = NULL,
-                         covariates = NULL, outcome.pred.btw = NULL){
+                         covariates = NULL, outcome_pred_btw = NULL){
 
 
   # create a subset of the data with fixed variable names
@@ -52,14 +53,14 @@ prepare_data <- function(data, id, ts.ind, time = NULL, tinterval, beep = NULL, 
   }
 
   # store between person variables
-  btw.vars = c(names(outcomes), names(covariates), names(outcome.pred.btw))
+  btw.vars = c(names(outcomes), names(covariates), names(outcome_pred_btw))
 
   # general step: add variable to detect observations with NAs
   # remove rows containing missing values
-  if(length(ts.ind) == 1){
-    data$miss.NA = is.na(data[,ts.ind])
+  if(length(ts) == 1){
+    data$miss.NA = is.na(data[,ts])
   } else {
-    data$miss.NA = rowSums(is.na(data[,ts.ind])) > 0
+    data$miss.NA = rowSums(is.na(data[,ts])) > 0
   }
 
   # General first step: ======================================================

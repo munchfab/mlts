@@ -5,32 +5,32 @@
 \title{Title}
 \usage{
 VARprepare(
-  VARmodel,
+  model,
   data,
-  ts.ind,
+  ts,
   covariates = NULL,
   outcomes = NULL,
-  outcome.pred.btw = NULL,
-  center.covs = T,
-  std.outcome = T
+  outcome_pred_btw = NULL,
+  center_covs = T,
+  std_outcome = T
 )
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
 \item{data}{data.frame. Data input.}
 
-\item{ts.ind}{tba.}
+\item{ts}{tba.}
 
 \item{covariates}{tba.}
 
 \item{outcomes}{tba.}
 
-\item{outcome.pred.btw}{tba.}
+\item{outcome_pred_btw}{tba.}
 
-\item{center.covs}{tba.}
+\item{center_covs}{tba.}
 
-\item{std.outcome}{tba.}
+\item{std_outcome}{tba.}
 }
 \value{
 An object of class \code{data.frame}.

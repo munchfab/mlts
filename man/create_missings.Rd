@@ -2,15 +2,15 @@
 % Please edit documentation in R/create_missings.R
 \name{create_missings}
 \alias{create_missings}
-\title{Create missings for DSEM data}
+\title{Create Missings for Approximation of Continuous Time Dynamic Models}
 \usage{
-create_missings(data, delta, id, time, btw_vars = NULL, clean = TRUE)
+create_missings(data, tinterval, id, time, btw_vars = NULL, clean = TRUE)
 }
 \arguments{
 \item{data}{An object of class \code{data.frame} (or one that can be coerced
 to that class) containing data of all variables used in the model.}
 
-\item{delta}{The step interval for approximation for a continuous time DSEM.
+\item{tinterval}{The step interval for approximation for a continuous time DSEM.
 The smaller the step interval, the better the approximation.}
 
 \item{id}{The variable in \code{data} that identifies the person or observational
@@ -28,5 +28,5 @@ added in newly created rows with NAs.}
 A \code{data.frame} with missings imputed for use in \code{prepare_data()}.
 }
 \description{
-Create missings for DSEM data
+Create Missings for Approximation of Continuous Time Dynamic Models
 }

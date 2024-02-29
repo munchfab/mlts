@@ -7,68 +7,69 @@
 mlts_model(
   q,
   p = NULL,
-  maxLag = c(1, 2, 3),
-  btw.factor = TRUE,
-  btw.model = NULL,
-  FixDynamics = F,
-  FixInnoVars = F,
-  FixInnoCovs = F,
-  InnoCovsZero = NULL,
-  FEis0 = NULL,
-  REis0 = NULL,
-  RE.pred = NULL,
-  out.pred = NULL,
-  out.pred.add.btw = NULL
+  max_lag = c(1, 2, 3),
+  btw_factor = TRUE,
+  btw_model = NULL,
+  fix_dynamics = F,
+  fix_inno_vars = F,
+  fix_inno_covs = F,
+  inno_covs_zero = NULL,
+  fixef_zero = NULL,
+  ranef_zero = NULL,
+  ranef_pred = NULL,
+  out_pred = NULL,
+  out_pred_add_btw = NULL
 )
 }
 \arguments{
-\item{q}{integer. The number of time-varying constructs.}
+\item{q}{Integer. The number of time-varying constructs.}
 
-\item{p}{integer. For multiple-indicator models, specify a vector of length
+\item{p}{Integer. For multiple-indicator models, specify a vector of length
 \code{q} with the number of manifest indicators per construct.}
 
-\item{maxLag}{integer.}
+\item{max_lag}{Integer. The maximum lag of the autoregressive effect. The maximum
+is 3.}
 
-\item{btw.factor}{Logical. If \code{TRUE} (the default), a common between-level factor
+\item{btw_factor}{Logical. If \code{TRUE} (the default), a common between-level factor
 is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
-factor, indicator mean levels will be included as individual (random) effects stemming
+factor, indicator mean levels will be included as individual (random) effects drawn
 from a joint multivariate normal distribution.}
 
-\item{btw.model}{A list to indicate for which manifest indicator variables a common
+\item{btw_model}{A list to indicate for which manifest indicator variables a common
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
 
-\item{FixDynamics}{logical. FiVARmodel all random effect variances (eVARmodelcept those
+\item{fix_dynamics}{Logical. Fimodel all random effect variances (emodelcept those
 of individual traits) to zero.}
 
-\item{FixInnoVars}{logical. FiVARmodel all random effect variances (eVARmodelcept those
+\item{fix_inno_vars}{Logical. Fix all random effect variances (except those
 of individual traits) to zero.}
 
-\item{FixInnoCovs}{logical. Set all innovation covariances to a constant value.}
+\item{fix_inno_covs}{Logical. Set all innovation covariances to a constant value.}
 
-\item{InnoCovsZero}{logical. Set to TRUE to treat all innovations as independent.}
+\item{inno_covs_zero}{Logical. Set to TRUE to treat all innovations as independent.}
 
-\item{FEis0}{character. A character vector to indeVARmodel which fiVARmodeled model parameters
-should be fiVARmodeled to zero (Note: this results in removing the random effect
+\item{fixef_zero}{Character. A character vector to index which fixed effects
+should be fixed to zero (Note: this also results in removing the random effect
 variance of the respective parameter).}
 
-\item{REis0}{logical. Set to TRUE to treat all innovations as independent.}
+\item{ranef_zero}{Logical. Set to \code{TRUE} to treat all innovations as independent.}
 
-\item{RE.pred}{character vector or a named list. Include between-level covariate(s)
-as predictor(s) of all random effects in \code{VARmodel} by entering a vector of unique variable
+\item{ranef_pred}{A character vector or a named list. Include between-level covariate(s)
+as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).
+list (using the \code{param}-labels in \code{model}) can be entered (see details).
 Note that if a named list is provided, all names that do not match random
-parameters in \code{VARmodel} will be ignored.}
+parameters in \code{model} will be ignored.}
 
-\item{out.pred}{character vector or a named list. Include between-level covariate(s)
-as predictor(s) of all random effects in \code{VARmodel} by entering a vector of unique variable
+\item{out_pred}{A character vector or a named list. Include between-level covariate(s)
+as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).}
+list (using the \code{param}-labels in \code{model}) can be entered (see details).}
 
-\item{out.pred.add.btw}{tba}
+\item{out_pred_add_btw}{tba}
 }
 \value{
 An object of class \code{data.frame}.

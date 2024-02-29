@@ -2,18 +2,18 @@
 % Please edit documentation in R/mlts_fit.R
 \name{mlts_fit}
 \alias{mlts_fit}
-\title{Title}
+\title{Fit Bayesian Multilevel Manifest or Latent Time-Series Models}
 \usage{
 mlts_fit(
-  VARmodel,
+  model,
   data = NULL,
   id,
-  ts.ind,
+  ts,
   covariates = NULL,
   outcomes = NULL,
-  outcome.pred.btw = NULL,
-  center.covs = T,
-  std.outcome = T,
+  outcome_pred_btw = NULL,
+  center_covs = T,
+  std_outcome = T,
   time = NULL,
   tinterval,
   beep = NULL,
@@ -23,36 +23,44 @@ mlts_fit(
   iter = 500,
   chains = 2,
   cores = 2,
-  monitor.person.pars = F,
-  fit.model = T,
-  printMessage = T,
-  printWarning = T,
+  monitor_person_pars = F,
+  fit_model = T,
+  print_message = T,
+  print_warning = T,
   ...
 )
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}} and related functions.}
 
 \item{data}{An object of class data.frame (or one that can be coerced to that
 class) containing data of all variables used in the model.}
 
-\item{id}{tba.}
+\item{id}{Character. The variable in \code{data} that identifies the person or observational
+unit.}
 
-\item{ts.ind}{data.frame. Data input.}
+\item{ts}{Character. The variable(s) in \code{data} that
+contain the time-series construct. If multiple variables are provided in a
+character vector, a vector autoregressive model is fit.}
 
-\item{covariates}{data.frame. Data input.}
+\item{covariates}{Character. The covariate(s) in \code{data} used for prediction of
+random effects.}
 
-\item{outcomes}{data.frame. Data input.}
+\item{outcomes}{Character. The outcome(s) in \code{data} that should be
+predicted by random effects.}
 
-\item{outcome.pred.btw}{data.frame. Data input.}
+\item{outcome_pred_btw}{Character.}
 
-\item{center.covs}{data.frame. Data input.}
+\item{center_covs}{Logical. Should covariates be centered before inclusion
+in the model? Defaults to \code{TRUE}.}
 
-\item{std.outcome}{data.frame. Data input.}
+\item{std_outcome}{Logical. Should outcomes be standardized before inclusion
+in the model? Defaults to \code{TRUE}.}
 
 \item{time}{tba.}
 
-\item{tinterval}{tba.}
+\item{tinterval}{The step interval for approximation for a continuous time
+dynamic model. The smaller the step interval, the better the approximation.}
 
 \item{beep}{tba.}
 
@@ -65,18 +73,20 @@ class) containing data of all variables used in the model.}
 \item{iter}{A positive integer specifying the number of iterations for each
 chain (including 50\% used as warmup). The default is 500.}
 
-\item{chains}{A positive integer specifying the number of Markov chains. The default is 2.}
+\item{chains}{A positive integer specifying the number of Markov chains.
+The default is 2.}
 
-\item{cores}{The number of cores to use when executing the Markov chains in parallel. The default is 2 (see \code{\link[rstan]{stan}}).}
+\item{cores}{The number of cores to use when executing the Markov chains in parallel.
+The default is 2 (see \code{\link[rstan]{stan}}).}
 
-\item{monitor.person.pars}{data.frame. Data input.}
+\item{monitor_person_pars}{data.frame. Data input.}
 
-\item{fit.model}{logical. Set to FALSE to avoid fitting the model which may be
+\item{fit_model}{logical. Set to FALSE to avoid fitting the model which may be
 helpful to inspect prepared data used for model estimation (default = T).}
 
-\item{printMessage}{logical. Print messages based on defined inputs (default = TRUE).}
+\item{print_message}{logical. Print messages based on defined inputs (default = TRUE).}
 
-\item{printWarning}{logical. Print messages based on defined inputs (default = TRUE).}
+\item{print_warning}{logical. Print messages based on defined inputs (default = TRUE).}
 
 \item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }
@@ -84,5 +94,5 @@ helpful to inspect prepared data used for model estimation (default = T).}
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Fit Bayesian Multilevel Manifest or Latent Time-Series Models
 }

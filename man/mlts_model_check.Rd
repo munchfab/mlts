@@ -4,10 +4,10 @@
 \alias{mlts_model_check}
 \title{Title}
 \usage{
-mlts_model_check(VARmodel, data, ts.ind, covariates, outcomes)
+mlts_model_check(model, data, ts.ind, covariates, outcomes)
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
 \item{data}{data.frame. Data input.}
 

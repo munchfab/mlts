@@ -1,13 +1,13 @@
-update_model_REcors <- function(VARmodel) {
+update_model_REcors <- function(model) {
   # a helper function to call after changes were made to the number of labels
   # of the random effects in the model
-  # --> update the random effect correlations included in the VARmodel
+  # --> update the random effect correlations included in the model
 
   # remove
-  VARmodel <- VARmodel[VARmodel$Type != "RE correlation", ]
+  model <- model[model$Type != "RE correlation", ]
 
   # update random effect correlations
-  rand.pars <- (VARmodel[VARmodel$Type == "Fix effect" & VARmodel$isRandom == 1, "Param"])
+  rand.pars <- (model[model$Type == "Fix effect" & model$isRandom == 1, "Param"])
   n_rand <- length(rand.pars)
   btw.cov_pars <- c()
   if (n_rand > 1) {
@@ -32,53 +32,53 @@ update_model_REcors <- function(VARmodel) {
       "Param_Label" = "RE Cor",
       "isRandom" = 0
     )
-    VARmodel <- plyr::rbind.fill(VARmodel, mlts_model_priors(REcors, default = T))
+    model <- plyr::rbind.fill(model, mlts_model_priors(REcors, default = T))
     # consider dplyr because plyr is deprecated
-    # VARmodel <- dplyr::bind_rows(VARmodel, mlts_model_priors(REcors, default = T))
+    # model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = T))
   } else if (n_rand == 1) {
-    VARmodel <- VARmodel[VARmodel$Type != "RE Cor", ]
+    model <- model[model$Type != "RE Cor", ]
   }
 
 
-  return(VARmodel)
+  return(model)
 }
 
 
-replace_model_row <- function(VARmodel, row, replacement) {
+replace_model_row <- function(model, row, replacement) {
   # a helper function to select a specific row in the model and replace with
   # one (or multiple) row(s) while keeping the original order
 
   if (row == 1) {
-    VARmodel <- plyr::rbind.fill(replacement, VARmodel[2:nrow(VARmodel), ])
+    model <- plyr::rbind.fill(replacement, model[2:nrow(model), ])
     # consider dplyr because plyr is deprecated
-    # VARmodel <- dplyr::bind_rows(replacement, VARmodel[2:nrow(VARmodel), ])
-  } else if (row == nrow(VARmodel)) {
-    VARmodel <- plyr::rbind.fill(VARmodel[1:(nrow(VARmodel) - 1), ], replacement)
+    # model <- dplyr::bind_rows(replacement, model[2:nrow(model), ])
+  } else if (row == nrow(model)) {
+    model <- plyr::rbind.fill(model[1:(nrow(model) - 1), ], replacement)
     # consider dplyr because plyr is deprecated
-    # VARmodel <- dplyr::bind_rows(VARmodel[1:(nrow(VARmodel) - 1), ], replacement)
+    # model <- dplyr::bind_rows(model[1:(nrow(model) - 1), ], replacement)
   } else {
-    VARmodel <- plyr::rbind.fill(
-      VARmodel[1:(row - 1), ],
+    model <- plyr::rbind.fill(
+      model[1:(row - 1), ],
       replacement,
-      VARmodel[(row + 1):nrow(VARmodel), ]
+      model[(row + 1):nrow(model), ]
     )
     # consider dplyr because plyr is deprecated
-    # VARmodel <- dplyr::bind_rows(
-    #   VARmodel[1:(row - 1), ],
+    # model <- dplyr::bind_rows(
+    #   model[1:(row - 1), ],
     #   replacement,
-    #   VARmodel[(row + 1):nrow(VARmodel), ]
+    #   model[(row + 1):nrow(model), ]
     # )
   }
 
-  return(VARmodel)
+  return(model)
 }
 
-extract_indicator_info <- function(VARmodel, level = "Within", type = "Loading", incl.pos_p = F) {
+extract_indicator_info <- function(model, level = "Within", type = "Loading", incl.pos_p = F) {
   # a helper function to extract indicator information
 
   # create a table where all indocators are present
   # get subset
-  info <- VARmodel[VARmodel$Level == level & VARmodel$Type == type, ]
+  info <- model[model$Level == level & model$Type == type, ]
 
   # extract infos from parameter
   inds <- unlist(lapply(info$Param, function(x) {

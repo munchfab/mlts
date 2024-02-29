@@ -5,32 +5,32 @@
 \title{Title}
 \usage{
 mlts_model_constraint(
-  VARmodel,
-  FixDynamics = F,
-  FixInnoVars = F,
-  FixInnoCovs = F,
-  InnoCovsZero = F,
-  FEis0 = NULL,
-  REis0 = NULL
+  model,
+  fix_dynamics = F,
+  fix_inno_vars = F,
+  fix_inno_covs = F,
+  inno_covs_zero = F,
+  fixef_zero = NULL,
+  ranef_zero = NULL
 )
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
-\item{FixDynamics}{logical. Fix all random effect variances (except those
+\item{fix_dynamics}{logical. Fix all random effect variances (except those
 of individual traits) to zero.}
 
-\item{FixInnoVars}{logical. Set all innovation variances to a constant value.}
+\item{fix_inno_vars}{logical. Set all innovation variances to a constant value.}
 
-\item{FixInnoCovs}{logical. Set all innovation covariances to a constant value.}
+\item{fix_inno_covs}{logical. Set all innovation covariances to a constant value.}
 
-\item{InnoCovsZero}{logical. Set to TRUE to treat all innovations as independent.}
+\item{inno_covs_zero}{logical. Set to TRUE to treat all innovations as independent.}
 
-\item{FEis0}{character. A character vector to indeVARmodel which fiVARmodeled model parameters
-should be fiVARmodeled to zero (Note: this results in removing the random effect
+\item{fixef_zero}{character. A character vector to indemodel which fimodeled model parameters
+should be fimodeled to zero (Note: this results in removing the random effect
 variance of the respective parameter).}
 
-\item{REis0}{logical. Set to TRUE to treat all innovations as independent.}
+\item{ranef_zero}{logical. Set to TRUE to treat all innovations as independent.}
 }
 \value{
 An object of class \code{data.frame}.

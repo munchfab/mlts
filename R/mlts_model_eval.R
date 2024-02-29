@@ -1,31 +1,31 @@
 #' Title
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
+#' @param model data.frame. Output of model-Functions.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_model_eval <- function(VARmodel){
+mlts_model_eval <- function(model){
 
-  # read features of specified VARmodel
+  # read features of specified model
 
   # extract included lag-order
-  isPHI = which(startsWith(VARmodel$Param, "phi("))
-  VARmodel$Lag = NA
-  VARmodel$Lag[isPHI] = as.integer(substr(VARmodel$Param[isPHI], 5, 5))
-  maxLag = max(VARmodel$Lag, na.rm = T)
+  isPHI = which(startsWith(model$Param, "phi("))
+  model$Lag = NA
+  model$Lag[isPHI] = as.integer(substr(model$Param[isPHI], 5, 5))
+  maxLag = max(model$Lag, na.rm = T)
 
   # create additional columns
   ars = paste0("phi(",rep(1:3,each = 9),")_", 1:9, 1:9) # attention: max lag of 3 is hard-coded
-  VARmodel$isAR = ifelse(VARmodel$Param %in% ars,1,0)
+  model$isAR = ifelse(model$Param %in% ars,1,0)
 
 
   # check if measurement model is entered
-  isLatent = nrow(VARmodel[VARmodel$Model == "Measurement",])
+  isLatent = nrow(model[model$Model == "Measurement",])
   isLatent = ifelse(isLatent>0, TRUE, FALSE)
 
   ## Dynamic model
-  fix_pars = VARmodel[VARmodel$Type == "Fix effect",]
+  fix_pars = model[model$Type == "Fix effect",]
   # extract the number of (latent constructs)
   constructs = lapply(fix_pars$Param[startsWith(fix_pars$Param_Label, "Trait")], function(x){
     substr(strsplit(x, split = c("_"))[[1]][2], start = 1, stop = 1)
@@ -62,8 +62,8 @@ mlts_model_eval <- function(VARmodel){
   # number of indicators per latent construct
   if (isLatent == T) {
     # separate measurement model intercepts
-    alphas <- VARmodel[VARmodel$Model == "Measurement" &
-                         grepl("alpha", VARmodel$Param),
+    alphas <- model[model$Model == "Measurement" &
+                         grepl("alpha", model$Param),
                        "Param"]
     # create numeric vector with all indicators
     # and add 1 to the end (to measure number of indicators of last construct)
@@ -75,25 +75,25 @@ mlts_model_eval <- function(VARmodel){
 
     # extract indicator information
     ## start with within-part (which always contains all indicators)
-    ind_base = extract_indicator_info(VARmodel, level = "Within", type = "Loading", incl.pos_p = T)
+    ind_base = extract_indicator_info(model, level = "Within", type = "Loading", incl.pos_p = T)
 
     ## step-wise addition: ---------------------------------------------------
     indicators = merge(
-      x = ind_base, y = extract_indicator_info(VARmodel, level = "Within", type = "Measurement Error SD"), all.x = T)
+      x = ind_base, y = extract_indicator_info(model, level = "Within", type = "Measurement Error SD"), all.x = T)
 
-    add = extract_indicator_info(VARmodel, level = "Between", type = "Item intercepts")
+    add = extract_indicator_info(model, level = "Between", type = "Item intercepts")
     if(nrow(add)>0){
       indicators = merge(x = indicators, y = add, all.x = T)
     } else {
       indicators$alpha_isFree = 0
     }
-    add = extract_indicator_info(VARmodel, level = "Between", type = "Loading")
+    add = extract_indicator_info(model, level = "Between", type = "Loading")
     if(nrow(add)>0){
       indicators = merge(x = indicators, y = add, all.x = T)
     } else {
       indicators$lambdaB_isFree = 0
     }
-    add = extract_indicator_info(VARmodel, level = "Between", type = "Measurement Error SD")
+    add = extract_indicator_info(model, level = "Between", type = "Measurement Error SD")
     if(nrow(add)>0){
       indicators = merge(x = indicators, y = add, all.x = T)
       indicators$sigmaB_isFree[is.na(indicators$sigmaB_isFree)] = 0
@@ -103,7 +103,7 @@ mlts_model_eval <- function(VARmodel){
 
     # get between-level fixed effect infos
     # base decision on the presence of indicator-specific mean values
-    fixefs = VARmodel[VARmodel$Level == "Within" & startsWith(VARmodel$Param, "mu_"),]
+    fixefs = model[model$Level == "Within" & startsWith(model$Param, "mu_"),]
     ind_means = extract_indicator_info(fixefs, level = "Within", type = "Fix effect")
 
     if(nrow(ind_means)>0){
@@ -123,7 +123,7 @@ mlts_model_eval <- function(VARmodel){
 
 
     # add positions
-    fixefs = VARmodel[VARmodel$Level == "Within" & startsWith(VARmodel$Param_Label, "Trait"),]
+    fixefs = model[model$Level == "Within" & startsWith(model$Param_Label, "Trait"),]
     indicators$etaB_pos = unlist(lapply(indicators$etaB_label, function(x){
       which(fixefs$Param == x)
     }))
@@ -174,26 +174,26 @@ mlts_model_eval <- function(VARmodel){
   innos_fix_pos = cumsum(1 - innos_rand)
 
 
-  n_pars = sum((VARmodel$Type == "Fix effect" & !startsWith(VARmodel$Param, "r.zeta")))
-  n_random = sum(VARmodel$isRandom, na.rm = T)
+  n_pars = sum((model$Type == "Fix effect" & !startsWith(model$Param, "r.zeta")))
+  n_random = sum(model$isRandom, na.rm = T)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
   is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
-  re_pars = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
+  re_pars = model[model$Type=="Fix effect" & model$isRandom==1,]
   re_pars$par_no = 1:nrow(re_pars)
 
 
   # number of innovation covariances to include
   n_inno_covs = nrow(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),])
-  n_inno_cov_fix = sum((VARmodel$Type == "Fix effect" & startsWith(VARmodel$Param, "r.zeta")))
+  n_inno_cov_fix = sum((model$Type == "Fix effect" & startsWith(model$Param, "r.zeta")))
   inno_cov_pos = matrix(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"), "no"],
                         nrow = 1, ncol = n_inno_covs)
-  inno_cors = VARmodel[startsWith(VARmodel$Param, "r.zeta"),]
+  inno_cors = model[startsWith(model$Param, "r.zeta"),]
   n_inno_cors = nrow(inno_cors)
 
 
   # REs as OUTCOME ============================================================
-  RE.PREDS = VARmodel[VARmodel$Type == "RE prediction",]
+  RE.PREDS = model[model$Type == "RE prediction",]
 
   if(nrow(RE.PREDS)>0){
     # which REs to regress on
@@ -225,7 +225,7 @@ mlts_model_eval <- function(VARmodel){
 
 
   # OUTCOME PREDICTION ========================================================
-  OUT = VARmodel[VARmodel$Type=="Outcome prediction" & startsWith(VARmodel$Param, "b_"),]
+  OUT = model[model$Type=="Outcome prediction" & startsWith(model$Param, "b_"),]
   if(nrow(OUT) > 0){
     OUT$Var = substring(OUT$Param,3,regexpr(OUT$Param,pattern = ".ON.", fixed = T)-1)
     OUT$Pred = substring(OUT$Param, regexpr(OUT$Param,pattern = ".ON.", fixed = T)+4)
@@ -278,23 +278,23 @@ mlts_model_eval <- function(VARmodel){
   cols = c("prior_location", "prior_scale")
   # fixed effects (intercepts)
   prior_gamma = matrix(nrow = n_random, ncol = 2)
-  prior_gamma <- VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom == 1, cols]
+  prior_gamma <- model[model$Type=="Fix effect" & model$isRandom == 1, cols]
 
   # random effect SDs
   prior_sd_R = matrix(nrow = n_random, ncol = 2)
-  prior_sd_R = VARmodel[VARmodel$Type=="Random effect SD", cols]
+  prior_sd_R = model[model$Type=="Random effect SD", cols]
 
   # random effect correlations
   if(n_random == 1){
       prior_LKJ = 1
     } else {
-      prior_LKJ = unique(VARmodel$prior_location[VARmodel$Type=="RE correlation"])
+      prior_LKJ = unique(model$prior_location[model$Type=="RE correlation"])
     }
 
   # add fix effect prior of constant innovation variance (as SD)
   prior_sigma = matrix(ncol = 2, nrow = n_innos_fix)
   if(n_innos_fix>0){
-    prior_sigma = VARmodel[VARmodel$Param_Label=="Innovation Variance",cols]
+    prior_sigma = model[model$Param_Label=="Innovation Variance",cols]
   }
 
   # RE prediction
@@ -312,20 +312,20 @@ mlts_model_eval <- function(VARmodel){
     OUT = OUT[order(OUT$out_var_no, OUT$Pred_no),]
     prior_b_out = OUT[,cols]
     for(i in 1:n_out){
-      prior_alpha_out[i,1:2] = unlist(VARmodel[VARmodel$Param %in% c(paste0("alpha_",out_var[i])),cols])
-      prior_sigma_out[i,1:2] = unlist(VARmodel[VARmodel$Param %in% c(paste0("sigma_",out_var[i])),cols])
+      prior_alpha_out[i,1:2] = unlist(model[model$Param %in% c(paste0("alpha_",out_var[i])),cols])
+      prior_sigma_out[i,1:2] = unlist(model[model$Param %in% c(paste0("sigma_",out_var[i])),cols])
     }
   }
 
   # END PRIOR SPECIFICATION ====================================================
 
 
-  # store VARmodel with additional columns
-  VARmodelext = VARmodel
+  # store model with additional columns
+  modelext = model
 
   # create list to return
-  VARmodelinfos = rstan::nlist(
-    VARmodelext,
+  modelinfos = rstan::nlist(
+    modelext,
     q,
     p,
     maxLag,
@@ -371,7 +371,7 @@ mlts_model_eval <- function(VARmodel){
     prior_b_out, prior_alpha_out, prior_sigma_out
   )
 
-  return(VARmodelinfos)
+  return(modelinfos)
 }
 
 

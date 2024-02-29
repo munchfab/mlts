@@ -340,7 +340,7 @@ mlts_fit <- function(model,
 
 
   # combine preprocessed data and fitted stan object in a list object
-  VARresult <- list(
+  result <- list(
     "model" = model,
     "data" = data,
     "standata" = standata,
@@ -351,6 +351,6 @@ mlts_fit <- function(model,
     "person.pars.summary" = sums.i
   )
 
-  return(VARresult)
+  return(result)
 
 }

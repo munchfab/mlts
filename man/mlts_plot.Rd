@@ -8,22 +8,22 @@ mlts_plot(
   fit,
   type = c("fe", "re", "re.cor"),
   bpe = c("median", "mean"),
-  sort.est = NULL,
+  sort_est = NULL,
   xlab = NULL,
   ylab = NULL,
-  facet.ncol = 1,
-  dot.size = 1,
-  dot.color = "black",
-  dot.shape = 1,
-  err.bar.col = "black",
-  err.bar.width = 0.3,
-  add.true = FALSE,
-  true.col = "red",
-  true.shape = 22,
-  true.size = 1,
-  hide.xaxis.text = T,
+  facet_ncol = 1,
+  dot_size = 1,
+  dot_color = "black",
+  dot_shape = 1,
+  errorbar_color = "black",
+  errorbar_width = 0.3,
+  add_true = FALSE,
+  true_color = "red",
+  true_shape = 22,
+  true_size = 1,
+  hide_xaxis_text = T,
   par_labels = NULL,
-  labels.as.expression = F
+  labels_as_expressions = F
 )
 }
 \arguments{
@@ -41,37 +41,37 @@ type = "raneftab"
 posterior distribution (\code{bpe = "median"}). Set \code{bpe = "mean"} to use
 the mean of the posterior distribution as point estimates.}
 
-\item{sort.est}{Add parameter label for sorting of random effects.}
+\item{sort_est}{Add parameter label for sorting of random effects.}
 
 \item{xlab}{Title for the x axis.}
 
 \item{ylab}{Title for the y axis.}
 
-\item{facet.ncol}{Number of facet columns (see \code{ggplot2::facet_grid}).}
+\item{facet_ncol}{Number of facet columns (see \code{ggplot2::facet_grid}).}
 
-\item{dot.size}{Numeric, size of the dots that indicate the point estimates.}
+\item{dot_size}{Numeric, size of the dots that indicate the point estimates.}
 
-\item{dot.color}{Character vector, indicating the color of the point estimates.}
+\item{dot_color}{Character vector, indicating the color of the point estimates.}
 
-\item{dot.shape}{Numeric, shape of the dots that indicate the point estimates.}
+\item{dot_shape}{Numeric, shape of the dots that indicate the point estimates.}
 
-\item{err.bar.col}{integer.}
+\item{errorbar_color}{integer.}
 
-\item{err.bar.width}{integer.}
+\item{errorbar_width}{integer.}
 
-\item{add.true}{integer.}
+\item{add_true}{integer.}
 
-\item{true.col}{integer.}
+\item{true_color}{integer.}
 
-\item{true.shape}{integer.}
+\item{true_shape}{integer.}
 
-\item{true.size}{integer.}
+\item{true_size}{integer.}
 
-\item{hide.xaxis.text}{logical.}
+\item{hide_xaxis_text}{logical.}
 
 \item{par_labels}{integer.}
 
-\item{labels.as.expression}{logical.}
+\item{labels_as_expressions}{logical.}
 }
 \value{
 Returns a \code{ggplot}-object .

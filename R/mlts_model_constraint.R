@@ -1,118 +1,118 @@
 #' Title
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
-#' @param FixDynamics logical. Fix all random effect variances (except those
+#' @param model data.frame. Output of model-Functions.
+#' @param fix_dynamics logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
-#' @param FixInnoVars logical. Set all innovation variances to a constant value.
-#' @param FixInnoCovs logical. Set all innovation covariances to a constant value.
-#' @param InnoCovsZero logical. Set to TRUE to treat all innovations as independent.
-#' @param FEis0 character. A character vector to indeVARmodel which fiVARmodeled model parameters
-#' should be fiVARmodeled to zero (Note: this results in removing the random effect
+#' @param fix_inno_vars logical. Set all innovation variances to a constant value.
+#' @param fix_inno_covs logical. Set all innovation covariances to a constant value.
+#' @param inno_covs_zero logical. Set to TRUE to treat all innovations as independent.
+#' @param fixef_zero character. A character vector to indemodel which fimodeled model parameters
+#' should be fimodeled to zero (Note: this results in removing the random effect
 #' variance of the respective parameter).
-#' @param REis0 logical. Set to TRUE to treat all innovations as independent.
+#' @param ranef_zero logical. Set to TRUE to treat all innovations as independent.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_model_constraint <- function(VARmodel, FixDynamics = F, FixInnoVars = F,
-                                FixInnoCovs = F, InnoCovsZero = F,
-                                FEis0 = NULL, REis0 = NULL
+mlts_model_constraint <- function(model, fix_dynamics = F, fix_inno_vars = F,
+                                fix_inno_covs = F, inno_covs_zero = F,
+                                fixef_zero = NULL, ranef_zero = NULL
 ){
 
-  if(FixDynamics == T){
+  if(fix_dynamics == T){
 
     # update indentifier column
-    VARmodel$isRandom[grepl(VARmodel$Param_Label, pattern = "Dynamic")] = 0
+    model$isRandom[grepl(model$Param_Label, pattern = "Dynamic")] = 0
 
     # remove random effect SDs
-    VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                            VARmodel$Param_Label == "Dynamic"),]
+    model = model[!(model$Type == "Random effect SD" &
+                            model$Param_Label == "Dynamic"),]
   }
 
 
-  if(FixInnoVars == T){
+  if(fix_inno_vars == T){
 
     # update indentifier column
-    VARmodel$isRandom[grepl(VARmodel$Param, pattern = "ln.sigma2_")] = 0
+    model$isRandom[grepl(model$Param, pattern = "ln.sigma2_")] = 0
 
     # remove random effect SDs
-    VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                            VARmodel$Param_Label == "Log Innovation Variance"),]
+    model = model[!(model$Type == "Random effect SD" &
+                            model$Param_Label == "Log Innovation Variance"),]
     # adjust labels of fixed effects
-    VARmodel[(VARmodel$Type == "Fix effect" &
-                VARmodel$Param_Label == "Log Innovation Variance"), "Param_Label"] = "Innovation Variance"
+    model[(model$Type == "Fix effect" &
+                model$Param_Label == "Log Innovation Variance"), "Param_Label"] = "Innovation Variance"
     # adjust params
-    VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma2_")] = gsub(
-      VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma2_")],
+    model$Param[grepl(model$Param, pattern = "ln.sigma2_")] = gsub(
+      model$Param[grepl(model$Param, pattern = "ln.sigma2_")],
       pattern = "ln.sigma2_", replacement = "sigma_")
 
   }
 
-  if(FixInnoCovs == T){
+  if(fix_inno_covs == T){
 
     # update indentifier column
-    VARmodel$isRandom[VARmodel$Param_Label == "Log Innovation Covariance"] = 0
+    model$isRandom[model$Param_Label == "Log Innovation Covariance"] = 0
 
     # remove random effect SDs
-    VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" &
-                            VARmodel$Param_Label == "Log Innovation Covariance"),]
+    model = model[!(model$Type == "Random effect SD" &
+                            model$Param_Label == "Log Innovation Covariance"),]
 
     # adjust labels of fixed effects
-    VARmodel$Param_Label[(VARmodel$Type == "Fix effect" &
-                            VARmodel$Param_Label == "Log Innovation Covariance")] = "Innovation correlation"
+    model$Param_Label[(model$Type == "Fix effect" &
+                            model$Param_Label == "Log Innovation Covariance")] = "Innovation correlation"
 
     # adjust params
-    VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma_")] = gsub(
-      VARmodel$Param[grepl(VARmodel$Param, pattern = "ln.sigma_")],
+    model$Param[grepl(model$Param, pattern = "ln.sigma_")] = gsub(
+      model$Param[grepl(model$Param, pattern = "ln.sigma_")],
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
 
-  if(InnoCovsZero == T){
-    VARmodel = VARmodel[!grepl(VARmodel$Param_Label, pattern = "Covariance"),]
-    VARmodel = VARmodel[!grepl(VARmodel$Param, pattern = "r.zeta"),]
+  if(inno_covs_zero == T){
+    model = model[!grepl(model$Param_Label, pattern = "Covariance"),]
+    model = model[!grepl(model$Param, pattern = "r.zeta"),]
   }
 
   # remove individual effects from the dynamic model
-  if(!is.null(FEis0)){
-    VARmodel = VARmodel[!(VARmodel$Param %in% c(FEis0)),]
+  if(!is.null(fixef_zero)){
+    model = model[!(model$Param %in% c(fixef_zero)),]
     # remove respective random effects
-    VARmodel = VARmodel[!(VARmodel$Param %in% c(paste0("sigma_",FEis0))),]
+    model = model[!(model$Param %in% c(paste0("sigma_",fixef_zero))),]
   }
 
   # remove random effect SDs of constant parameters
-  if(!is.null(REis0)){
+  if(!is.null(ranef_zero)){
     # update identifier column
-    VARmodel$isRandom[VARmodel$Type=="Fix effect" & VARmodel$Param %in% c(REis0)] = 0
+    model$isRandom[model$Type=="Fix effect" & model$Param %in% c(ranef_zero)] = 0
 
-    isFixed = paste0("sigma_", VARmodel$Param[VARmodel$Type == "Fix effect" & VARmodel$isRandom == 0])
-    VARmodel = VARmodel[!(VARmodel$Type == "Random effect SD" & VARmodel$Param %in% isFixed),]
+    isFixed = paste0("sigma_", model$Param[model$Type == "Fix effect" & model$isRandom == 0])
+    model = model[!(model$Type == "Random effect SD" & model$Param %in% isFixed),]
 
     # adjust parameter labels for constant innovation variances
-    VARmodel[VARmodel$Param %in% REis0, "Param_Label"] = gsub(
-      VARmodel[VARmodel$Param %in% REis0, "Param_Label"],
+    model[model$Param %in% ranef_zero, "Param_Label"] = gsub(
+      model[model$Param %in% ranef_zero, "Param_Label"],
       pattern = "Log Innovation Variance", replacement = "Innovation Variance")
 
     # adjust parameter labels for constant innovation covariances
-    VARmodel[VARmodel$Param %in% REis0, "Param_Label"] = gsub(
-      VARmodel[VARmodel$Param %in% REis0, "Param_Label"],
+    model[model$Param %in% ranef_zero, "Param_Label"] = gsub(
+      model[model$Param %in% ranef_zero, "Param_Label"],
       pattern = "Log Innovation Covariance", replacement = "Innovation correlation")
 
     # adjust params
-    VARmodel[VARmodel$Param %in% REis0, "Param"] = gsub(
-      VARmodel[VARmodel$Param %in% REis0, "Param"],
+    model[model$Param %in% ranef_zero, "Param"] = gsub(
+      model[model$Param %in% ranef_zero, "Param"],
       pattern = "ln.sigma2_", replacement = "sigma_")
-    VARmodel[VARmodel$Param %in% REis0, "Param"] = gsub(
-      VARmodel[VARmodel$Param %in% REis0, "Param"],
+    model[model$Param %in% ranef_zero, "Param"] = gsub(
+      model[model$Param %in% ranef_zero, "Param"],
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
 
   # update RE correlations
-  VARmodel = update_model_REcors(VARmodel)
+  model = update_model_REcors(model)
 
   # update priors =============================================================
-  VARmodel = mlts_model_priors(VARmodel = VARmodel, default = T)
+  model = mlts_model_priors(model = model, default = T)
 
 
-  return(VARmodel)
+  return(model)
 
 }

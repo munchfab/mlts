@@ -4,10 +4,10 @@
 \alias{mlts_model_eval}
 \title{Title}
 \usage{
-mlts_model_eval(VARmodel)
+mlts_model_eval(model)
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 }
 \value{
 An object of class \code{data.frame}.

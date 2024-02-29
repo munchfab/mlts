@@ -1,40 +1,40 @@
-#' Add measurement model structure to a `VARmodel`-object
+#' Add measurement model structure to a `model`-object
 #'
-#' Add (or replace) a measurement model of an existing `VARmodel`-object. As default
+#' Add (or replace) a measurement model of an existing `model`-object. As default
 #' option, a multiple-indicator model will be included assuming a common between-level factor.
 #'
-#' @param VARmodel data.frame. Output of VARmodel-Functions.
+#' @param model data.frame. Output of model-Functions.
 #' @param q integer. The number of time-varying constructs.
 #' @param p integer. A vector of length `q` with the number of manifest
 #' indicators per construct.
-#' @param btw.factor Logical. If `TRUE` (the default), a common between-level factor
+#' @param btw_factor Logical. If `TRUE` (the default), a common between-level factor
 #' is modeled across all indicator variables. If `FALSE`, instead of a between-level
 #' factor, indicator mean levels will be included as individual (random) effects stemming
 #' from a joint multivariate normal distribution.
-#' @param btw.model A list to indicate for which manifest indicator variables a common
+#' @param btw_model A list to indicate for which manifest indicator variables a common
 #' between-level factor should be modeled (see Details for detailed instructions).
 #' At this point restricted to one factor per latent construct.
 #' @return An object of class `data.frame`.
-#' @details Update a `VARmodel`-object.
+#' @details Update a `model`-object.
 #' @examples
 #' # build a manifest two-level AR(1) model
-#' VARmodel <- mlts_model(q = 1)
+#' model <- mlts_model(q = 1)
 #'
 #' # add measurement model using three indicators
-#' VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+#' model <- mlts_model_measurement(model, q = 1, p = 3, btw_factor = TRUE)
 #'
 #' # only indicator-specific (random) intercepts are modeled
-#' VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+#' model <- mlts_model_measurement(model, q = 1, p = 3, btw_factor = TRUE)
 #'
 #' # A more fine-grained between-level measurement model can be specified via:
-#' VARmodel <- mlts_model_measurement(
-#'               VARmodel, q = 1, p = 3,
-#'               btw.model = list(""))
+#' model <- mlts_model_measurement(
+#'               model, q = 1, p = 3,
+#'               btw_model = list(""))
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
 #' @export
 #'
-mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL){
+mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL){
 
   if(length(p) == 1){
     p = rep(p, times = q)
@@ -47,39 +47,39 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
     }
   }
 
-  # print a warning if VARmodel already contains a measurement model
-  if("Measurement" %in% VARmodel$Model){
-    message("VARmodel already contains a measurement model specification which will be overwritten.")
-    VARmodel = VARmodel[VARmodel$Model != "Measurement",]
+  # print a warning if model already contains a measurement model
+  if("Measurement" %in% model$Model){
+    message("model already contains a measurement model specification which will be overwritten.")
+    model = model[model$Model != "Measurement",]
   }
 
 
   # print a warning, if model already contains a between-level structure
-  if(sum(grepl(VARmodel$Type, pattern = "prediction"))>0){
+  if(sum(grepl(model$Type, pattern = "prediction"))>0){
     warning("Between-level prediction models are removed when changes to the measurement model are made.")
-    VARmodel = VARmodel[grepl(VARmodel$Type, pattern = "prediction"),]
+    model = model[grepl(model$Type, pattern = "prediction"),]
   }
 
-  ## build the btw.model-argument if none is provided
-  if(is.null(btw.model)){
-    btw.model = list()
+  ## build the btw_model-argument if none is provided
+  if(is.null(btw_model)){
+    btw_model = list()
     for(i in 1:q){
-      if(btw.factor == T){
-        btw.model[[i]] = c(1:p[i])
+      if(btw_factor == T){
+        btw_model[[i]] = c(1:p[i])
       } else {
-        btw.model[[i]] = c(NA)
+        btw_model[[i]] = c(NA)
       }
     }
   }
 
-  ## extract information from btw.model in loop over dimensions --------------
+  ## extract information from btw_model in loop over dimensions --------------
   btw.pars = list() # declare a list object to store results
   for(i in 1:q){
     N_inds = p[i]
-    N_inds_means = N_inds - length(stats::na.omit(btw.model[[i]]))
-    inds_means = which(!(1:p[i] %in% btw.model[[i]]))
+    N_inds_means = N_inds - length(stats::na.omit(btw_model[[i]]))
+    inds_means = which(!(1:p[i] %in% btw_model[[i]]))
     N_etaB_inds = N_inds - N_inds_means
-    etaB_inds = which((1:p[i] %in% btw.model[[i]]))
+    etaB_inds = which((1:p[i] %in% btw_model[[i]]))
     N_etaB = ifelse(N_inds == N_inds_means, 0, 1)
 
     # create fixed effect structural part  ==================================
@@ -124,7 +124,7 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
       )
     }
 
-    # combine and replace in VARmodel
+    # combine and replace in model
     if(N_etaB == 1 & N_inds_means > 0){
       fix = rbind(etaB.fix, mus.fix)
       rand = rbind(etaB.rand, mus.rand)
@@ -139,13 +139,13 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
     fix = mlts_model_priors(fix, default = T)    # add default priors
     rand = mlts_model_priors(rand, default = T)
 
-    row_to_repl = which(VARmodel$Param == paste0("mu_",i) & VARmodel$Type == "Fix effect")
-    VARmodel = replace_model_row(VARmodel, row_to_repl, fix)
-    row_to_repl = which(VARmodel$Param == paste0("sigma_mu_",i) & VARmodel$Type == "Random effect SD")
-    VARmodel = replace_model_row(VARmodel, row_to_repl, rand)
+    row_to_repl = which(model$Param == paste0("mu_",i) & model$Type == "Fix effect")
+    model = replace_model_row(model, row_to_repl, fix)
+    row_to_repl = which(model$Param == paste0("sigma_mu_",i) & model$Type == "Random effect SD")
+    model = replace_model_row(model, row_to_repl, rand)
 
     # update the random effect correlations
-    VARmodel = update_model_REcors(VARmodel)
+    model = update_model_REcors(model)
 
 
     # Between-level =============================================================
@@ -219,7 +219,7 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
     )
     mm.pars[[i]] = plyr::rbind.fill(loadsW, errVarW)
     # consider dplyr because plyr is deprecated
-    # VARmodel = dplyr::bind_rows(loadsW, errVarW)
+    # model = dplyr::bind_rows(loadsW, errVarW)
   }
 
   # combine
@@ -234,17 +234,17 @@ mlts_model_measurement <- function(VARmodel, q, p, btw.factor = TRUE, btw.model 
   # ]
 
   ## add default priors
-  mm.pars = mlts_model_priors(VARmodel = mm.pars, default = T)
+  mm.pars = mlts_model_priors(model = mm.pars, default = T)
 
 
   # add to structural part
-  VARmodel = plyr::rbind.fill(VARmodel, mm.pars)
+  model = plyr::rbind.fill(model, mm.pars)
   # consider dplyr because plyr is deprecated
-  # VARmodel = dplyr::bind_rows(VARmodel, mm.pars)
+  # model = dplyr::bind_rows(model, mm.pars)
 
 
 
-  return(VARmodel)
+  return(model)
 
 }
 

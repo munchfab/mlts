@@ -7,7 +7,7 @@
 prepare_data(
   data,
   id,
-  ts.ind,
+  ts,
   time = NULL,
   tinterval,
   beep = NULL,
@@ -16,25 +16,26 @@ prepare_data(
   na.rm = FALSE,
   outcomes = NULL,
   covariates = NULL,
-  outcome.pred.btw = NULL
+  outcome_pred_btw = NULL
 )
 }
 \arguments{
 \item{data}{An object of class \code{data.frame} (or one that can be coerced
 to that class) in long format.}
 
-\item{id}{character. The variable in \code{data} that identifies the person or
-observational unit.}
+\item{id}{Character. The variable in \code{data} that identifies the person or observational
+unit.}
 
-\item{ts.ind}{character. The variable(s) in \code{data} that contain(s) the time series data.}
+\item{ts}{Character. The variable(s) in \code{data} that
+contain the time-series construct. If multiple variables are provided in a
+character vector, a vector autoregressive model is fit.}
 
-\item{time}{character. The variable in \code{data} that contains the (continuous) time (as
-string).}
+\item{time}{Character. The variable in \code{data} that contains the (continuous) time.}
 
-\item{tinterval}{The step interval for approximation for a continuous time DSEM.
-The smaller the step interval, the better the approximation.}
+\item{tinterval}{The step interval for approximation for a continuous time
+dynamic model. The smaller the step interval, the better the approximation.}
 
-\item{beep}{character. The variable in \code{data} that contains the running
+\item{beep}{Character. The variable in \code{data} that contains the running
 beep from 1 to TP for each person.}
 
 \item{days}{Optional. If a running beep identifier is provided via the \code{beep} argument and
@@ -45,13 +46,13 @@ in \code{data} that contains the day identifier can be added to correct for over
 
 \item{na.rm}{logical. As default option missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
-missing values in variables given in \code{ts.ind}.}
+missing values in variables given in \code{ts}.}
 
 \item{outcomes}{character.}
 
 \item{covariates}{character.}
 
-\item{outcome.pred.btw}{character.}
+\item{outcome_pred_btw}{character.}
 }
 \value{
 A \code{list} that can be passed to \code{stan()}.

@@ -11,34 +11,34 @@
 #' @param bpe The Bayesian point estimate is, by default, the median of the
 #' posterior distribution (`bpe = "median"`). Set `bpe = "mean"` to use
 #' the mean of the posterior distribution as point estimates.
-#' @param sort.est Add parameter label for sorting of random effects.
+#' @param sort_est Add parameter label for sorting of random effects.
 #' @param xlab Title for the x axis.
 #' @param ylab Title for the y axis.
-#' @param facet.ncol Number of facet columns (see `ggplot2::facet_grid`).
-#' @param dot.size Numeric, size of the dots that indicate the point estimates.
-#' @param dot.color Character vector, indicating the color of the point estimates.
-#' @param dot.shape Numeric, shape of the dots that indicate the point estimates.
-#' @param err.bar.col integer.
-#' @param err.bar.width integer.
-#' @param add.true integer.
-#' @param true.col integer.
-#' @param true.shape integer.
-#' @param true.size integer.
-#' @param hide.xaxis.text logical.
+#' @param facet_ncol Number of facet columns (see `ggplot2::facet_grid`).
+#' @param dot_size Numeric, size of the dots that indicate the point estimates.
+#' @param dot_color Character vector, indicating the color of the point estimates.
+#' @param dot_shape Numeric, shape of the dots that indicate the point estimates.
+#' @param errorbar_color integer.
+#' @param errorbar_width integer.
+#' @param add_true integer.
+#' @param true_color integer.
+#' @param true_shape integer.
+#' @param true_size integer.
+#' @param hide_xaxis_text logical.
 #' @param par_labels integer.
-#' @param labels.as.expression logical.
+#' @param labels_as_expressions logical.
 #' @return Returns a `ggplot`-object .
 #'
 #' @export
 #'
 #' @examples TBA
 mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
-                      sort.est = NULL, xlab = NULL, ylab = NULL,
-                      facet.ncol = 1, dot.size = 1, dot.color = "black", dot.shape = 1,
-                      err.bar.col = "black", err.bar.width = 0.3,
-                      add.true = FALSE, true.col = "red", true.shape = 22, true.size = 1,
-                      hide.xaxis.text = T,
-                      par_labels = NULL, labels.as.expression = F){
+                      sort_est = NULL, xlab = NULL, ylab = NULL,
+                      facet_ncol = 1, dot_size = 1, dot_color = "black", dot_shape = 1,
+                      errorbar_color = "black", errorbar_width = 0.3,
+                      add_true = FALSE, true_color = "red", true_shape = 22, true_size = 1,
+                      hide_xaxis_text = T,
+                      par_labels = NULL, labels_as_expressions = F){
 
   type <- match.arg(type)
   bpe <- match.arg(bpe)
@@ -59,7 +59,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     # order fix effects
     p.data$Param <- factor(p.data$Param, levels = rev(p.data$Param))
     # add parameter type used for facets
-    p.data$Param_type <- fit$VARmodel$Type
+    p.data$Param_type <- fit$model$Type
     # order parameter type
     p.data$Param_type <- factor(p.data$Param_type, levels = c(
       "Fix effect", "Random effect SD", "RE correlation",
@@ -70,22 +70,22 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
 
     # build general plot
     aes <- ggplot2::aes
-    P <- ggplot2::ggplot(data = p.data, aes(y = Param, x = bpe)) +
-          ggplot2::geom_point(color = dot.color, size = dot.size, shape = dot.shape) +
-          ggplot2::geom_errorbar(aes(xmin = `2.5%`, xmax = `97.5%`),
-                                 color = err.bar.col,
-                                 width = err.bar.width) +
-          ggplot2::facet_wrap(~Param_type, ncol = facet.ncol, scales = "free", shrink = T) +
+    P <- ggplot2::ggplot(data = p.data, aes(y = .data$Param, x = .data$bpe)) +
+          ggplot2::geom_point(color = dot_color, size = dot_size, shape = dot_shape) +
+          ggplot2::geom_errorbar(aes(xmin = .data$`2.5%`, xmax = .data$`97.5%`),
+                                 color = errorbar_color,
+                                 width = errorbar_width) +
+          ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = T) +
           ggplot2::labs(x = xlab, y = ylab) +
           ggplot2::scale_x_continuous(n.breaks = 8) +
           ggplot2::theme_bw()
 
     # optional add true scores
-    if(add.true == TRUE){
-    P <- P + ggplot2::geom_point(aes(x = true.val),
-                                 color = true.col,
-                                 shape = true.shape,
-                                 size = true.size)
+    if(add_true == TRUE){
+    P <- P + ggplot2::geom_point(aes(x = .data$true.val),
+                                 color = true_color,
+                                 shape = true_shape,
+                                 size = true_size)
     }
   }
 
@@ -104,7 +104,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     }
 
     # evaluate model
-    infos <- mlts_model_eval(fit$VARmodel)
+    infos <- mlts_model_eval(fit$model)
 
     # extract data used for plotting
     p.data <- fit$person.pars.summary
@@ -113,8 +113,8 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     p.data$ID <- p.data[,2]
 
     # if sorting is requested, change levels of ID variable
-    if(!is.null(sort.est)){
-      sorted = p.data[p.data$Param == sort.est,]
+    if(!is.null(sort_est)){
+      sorted = p.data[p.data$Param == sort_est,]
       sorted = sorted[order(sorted$mean),]
       p.data$ID <- factor(p.data$ID, levels = sorted$ID)
     } else {
@@ -127,26 +127,26 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
 
     # build general plot
     aes = ggplot2::aes
-    P <- ggplot2::ggplot(data = p.data, aes(x = ID, y = mean)) +
+    P <- ggplot2::ggplot(data = p.data, ggplot::aes(x = .data$ID, y = .data$mean)) +
            ggplot2::geom_point() +
-           ggplot2::geom_errorbar(aes(ymin = `2.5%`, ymax = `97.5%`),
-                                  color = err.bar.col,
-                                  width = err.bar.width) +
-           ggplot2::facet_wrap(~Param, scale = "free", ncol = facet.ncol) +
+           ggplot2::geom_errorbar(aes(ymin = .data$`2.5%`, ymax = .data$`97.5%`),
+                                  color = errorbar_color,
+                                  width = errorbar_width) +
+           ggplot2::facet_wrap(~.data$Param, scale = "free", ncol = facet_ncol) +
            ggplot2::theme_bw() +
            ggplot2::labs(y = ylab, x = xlab) +
            ggplot2::theme(axis.text.x = ggplot2::element_text(
              angle = 45, hjust = 1, vjust = 1, size = 7))
 
      # optional add true scores
-     if(add.true == TRUE){
-     P <- P + ggplot2::geom_point(aes(y = true.val),
-                                  color = true.col,
-                                  shape = true.shape,
-                                  size = true.size)
+     if(add_true == TRUE){
+     P <- P + ggplot2::geom_point(aes(y = .data$true.val),
+                                  color = true_color,
+                                  shape = true_shape,
+                                  size = true_size)
      }
 
-     if(hide.xaxis.text){
+     if(hide_xaxis_text){
      P <- P + ggplot2::theme(axis.text.x = ggplot2::element_blank())
      }
 
@@ -159,7 +159,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     # panels
 
     # evaluate model
-    infos <- mlts_model_eval(fit$VARmodel)
+    infos <- mlts_model_eval(fit$model)
 
     # get the data
     if(bpe == "median"){
@@ -198,7 +198,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
       if(length(unique(sub$Param)) == 1){
         sub$lab_x = re_par_combi[i,1]
         sub$lab_y = re_par_combi[i,1]
-        p_list[[i]] <- ggplot2::ggplot(sub, ggplot2::aes(x = bpe)) +
+        p_list[[i]] <- ggplot2::ggplot(sub, ggplot2::aes(x = .data$bpe)) +
           ggplot2::geom_histogram(fill = "grey", color = "black") +
           ggplot2::theme_classic() +
           ggplot2::scale_x_continuous(n.breaks = 7) +
@@ -207,13 +207,13 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                 strip.text = ggplot2::element_text(face = 2),
                 axis.title = ggplot2::element_blank())
 
-        if(labels.as.expression == T){
+        if(labels_as_expressions == T){
           p_list[[i]] <- p_list[[i]] +
-            ggplot2::facet_grid(cols = ggplot2::vars(lab_x), switch = "y",
+            ggplot2::facet_grid(cols = ggplot2::vars(.data$lab_x), switch = "y",
                        labeller = ggplot2::label_parsed)
         } else {
           p_list[[i]] <- p_list[[i]] +
-            ggplot2::facet_grid(cols = ggplot2::vars(lab_x), switch = "y")
+            ggplot2::facet_grid(cols = ggplot2::vars(.data$lab_x), switch = "y")
         }
 
       } else {
@@ -223,8 +223,8 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
           lab_x = re_par_combi[i,2],
           lab_y = re_par_combi[i,1]
         )
-        p_list[[i]] <- ggplot2::ggplot(df, aes(x = x, y = y)) +
-          ggplot2::geom_point(color = dot.color, shape = dot.shape, fill = "grey") +
+        p_list[[i]] <- ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y)) +
+          ggplot2::geom_point(color = dot_color, shape = dot_shape, fill = "grey") +
           ggplot2::theme_classic() +
           ggplot2::stat_smooth(method = "lm", se = F) +
           ggplot2::scale_x_continuous(n.breaks = 7) +
@@ -235,7 +235,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                 axis.title = ggplot2::element_blank()
           )
 
-  #       if(labels.as.expression == T){
+  #       if(labels_as_expressions == T){
   #         p_list[[i]] <- p_list[[i]] +
   #           ggplot2::facet_grid(#cols = ggplot2::vars(lab_x),
   # #                              rows = ggplot2::vars(lab_y),

@@ -2,24 +2,24 @@
 % Please edit documentation in R/mlts_model_measurement.R
 \name{mlts_model_measurement}
 \alias{mlts_model_measurement}
-\title{Add measurement model structure to a \code{VARmodel}-object}
+\title{Add measurement model structure to a \code{model}-object}
 \usage{
-mlts_model_measurement(VARmodel, q, p, btw.factor = TRUE, btw.model = NULL)
+mlts_model_measurement(model, q, p, btw_factor = TRUE, btw_model = NULL)
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
 \item{q}{integer. The number of time-varying constructs.}
 
 \item{p}{integer. A vector of length \code{q} with the number of manifest
 indicators per construct.}
 
-\item{btw.factor}{Logical. If \code{TRUE} (the default), a common between-level factor
+\item{btw_factor}{Logical. If \code{TRUE} (the default), a common between-level factor
 is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
 factor, indicator mean levels will be included as individual (random) effects stemming
 from a joint multivariate normal distribution.}
 
-\item{btw.model}{A list to indicate for which manifest indicator variables a common
+\item{btw_model}{A list to indicate for which manifest indicator variables a common
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
 }
@@ -27,26 +27,26 @@ At this point restricted to one factor per latent construct.}
 An object of class \code{data.frame}.
 }
 \description{
-Add (or replace) a measurement model of an existing \code{VARmodel}-object. As default
+Add (or replace) a measurement model of an existing \code{model}-object. As default
 option, a multiple-indicator model will be included assuming a common between-level factor.
 }
 \details{
-Update a \code{VARmodel}-object.
+Update a \code{model}-object.
 }
 \examples{
 # build a manifest two-level AR(1) model
-VARmodel <- mlts_model(q = 1)
+model <- mlts_model(q = 1)
 
 # add measurement model using three indicators
-VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+model <- mlts_model_measurement(model, q = 1, p = 3, btw_factor = TRUE)
 
 # only indicator-specific (random) intercepts are modeled
-VARmodel <- mlts_model_measurement(VARmodel, q = 1, p = 3, btw.factor = TRUE)
+model <- mlts_model_measurement(model, q = 1, p = 3, btw_factor = TRUE)
 
 # A more fine-grained between-level measurement model can be specified via:
-VARmodel <- mlts_model_measurement(
-              VARmodel, q = 1, p = 3,
-              btw.model = list(""))
+model <- mlts_model_measurement(
+              model, q = 1, p = 3,
+              btw_model = list(""))
 # Which models a common latent factor on the between-level for the first three
 # indicators and a random indicator mean for the fourth indicator.
 }

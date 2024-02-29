@@ -2,7 +2,7 @@
 #'
 #' @param model data.frame. Output of model-Functions.
 #' @param data data.frame. Data input.
-#' @param ts.ind tba.
+#' @param ts tba.
 #' @param covariates tba.
 #' @param outcomes tba.
 #' @param outcome_pred_btw tba.
@@ -12,7 +12,7 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-VARprepare <- function(model, data, ts.ind, covariates = NULL, outcomes = NULL,
+VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
                        outcome_pred_btw = NULL, center_covs = T, std_outcome = T
 ){
 
@@ -21,13 +21,13 @@ VARprepare <- function(model, data, ts.ind, covariates = NULL, outcomes = NULL,
 
   # data specific information: -------------------------------------------------
   N = length(unique(data$num_id))         # number of subjects
-  D = length(ts.ind)                      # number of time-varying constructs
+  D = length(ts)                      # number of time-varying constructs
   N_obs = nrow(data)                      # total number of observations (obs)
   N_obs_id = data.frame(table(data$num_id))$Freq # number of obs per subject
 
   ## handling of missing values
-  n_miss = sum(is.na(data[,ts.ind]))           # overall number of NAs
-  n_miss_D = sapply(ts.ind, FUN = function(x){ # store number of NAs per D
+  n_miss = sum(is.na(data[,ts]))           # overall number of NAs
+  n_miss_D = sapply(ts, FUN = function(x){ # store number of NAs per D
     sum(is.na(data[,x]))
   })
   n_miss_D = as.array(n_miss_D)
@@ -35,13 +35,13 @@ VARprepare <- function(model, data, ts.ind, covariates = NULL, outcomes = NULL,
   pos_miss_D = matrix(0, nrow = D, ncol = max(n_miss_D), byrow = T)
   for(i in 1:D){
     if(n_miss_D[i] > 0){
-      pos_miss_D[i,1:n_miss_D[i]] = which(is.na(data[,ts.ind[i]]))
+      pos_miss_D[i,1:n_miss_D[i]] = which(is.na(data[,ts[i]]))
     }
   }
 
   ## replace missing values with -Inf
-  data[,ts.ind][is.na(data[,ts.ind])] = -Inf
-  y = t(data[,ts.ind])   # store observations
+  data[,ts][is.na(data[,ts])] = -Inf
+  y = t(data[,ts])   # store observations
 
   # ----
 
@@ -170,12 +170,12 @@ VARprepare <- function(model, data, ts.ind, covariates = NULL, outcomes = NULL,
     standata$D_perP = as.array(as.integer(infos$indicators$q))
 
     # alternative missing data indexing
-    n_miss = sum(data[,ts.ind] == -Inf)           # overall number of NAs
-    n_miss_p = as.array(sapply(ts.ind, FUN = function(x){sum(data[,x] == -Inf)}))
+    n_miss = sum(data[,ts] == -Inf)           # overall number of NAs
+    n_miss_p = as.array(sapply(ts, FUN = function(x){sum(data[,x] == -Inf)}))
     pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = T)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
-        pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts.ind[i]] == -Inf)
+        pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts[i]] == -Inf)
       }
     }
     standata$n_miss <- n_miss

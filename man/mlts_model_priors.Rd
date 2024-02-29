@@ -4,10 +4,10 @@
 \alias{mlts_model_priors}
 \title{Title}
 \usage{
-mlts_model_priors(VARmodel, default = F)
+mlts_model_priors(model, default = F)
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}

@@ -5,7 +5,7 @@
 \title{Title}
 \usage{
 mlts_sim(
-  VARmodel,
+  model,
   default = F,
   N,
   TP,
@@ -15,7 +15,7 @@ mlts_sim(
 )
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of VARmodel-Functions.}
+\item{model}{data.frame. Output of model-Functions.}
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}

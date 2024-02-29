@@ -5,30 +5,30 @@
 \title{Title}
 \usage{
 mlts_model_betw(
-  VARmodel,
-  RE.pred = NULL,
-  out.pred = NULL,
-  out.pred.add.btw = NULL
+  model,
+  ranef_pred = NULL,
+  out_pred = NULL,
+  out_pred_add_btw = NULL
 )
 }
 \arguments{
-\item{VARmodel}{data.frame. Output of \code{VARmodel()}-functions.}
+\item{model}{data.frame. Output of \code{model()}-functions.}
 
-\item{RE.pred}{character vector or a named list. Include between-level covariate(s)
-as predictor(s) of all random effects in \code{VARmodel} by entering a vector of unique variable
+\item{ranef_pred}{character vector or a named list. Include between-level covariate(s)
+as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).
+list (using the \code{param}-labels in \code{model}) can be entered (see details).
 Note that if a named list is provided, all names that do not match random
-parameters in \code{VARmodel} will be ignored.}
+parameters in \code{model} will be ignored.}
 
-\item{out.pred}{character vector or a named list. Include between-level covariate(s)
-as predictor(s) of all random effects in \code{VARmodel} by entering a vector of unique variable
+\item{out_pred}{character vector or a named list. Include between-level covariate(s)
+as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{VARmodel}) can be entered (see details).}
+list (using the \code{param}-labels in \code{model}) can be entered (see details).}
 
-\item{out.pred.add.btw}{tba}
+\item{out_pred_add_btw}{tba}
 }
 \value{
 An object of class \code{data.frame}.
