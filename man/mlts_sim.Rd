@@ -9,7 +9,7 @@ mlts_sim(
   default = F,
   N,
   TP,
-  burn.in = 500,
+  burn.in = 50,
   seed = NULL,
   btw.var.sds = NULL
 )

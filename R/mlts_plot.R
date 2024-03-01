@@ -191,6 +191,10 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     )
     p_list = list()
     sub = c()
+
+    suppressWarnings({
+      suppressMessages({
+
     for(i in 1:nrow(re_par_combi)){
 
       sub = p.data[p.data$Param %in% unlist(re_par_combi[i,]),]
@@ -251,6 +255,9 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     }
 
     P = cowplot::plot_grid(plotlist = p_list, align = "hv")
+
+      })
+    })
 
   }
 

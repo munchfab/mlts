@@ -41,7 +41,7 @@
 mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
                           fix_dynamics = F, fix_inno_vars = F,
-                          fix_inno_covs = F, inno_covs_zero = NULL,
+                          fix_inno_covs = T, inno_covs_zero = F,
                           fixef_zero = NULL, ranef_zero = NULL,
                           ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL){
 

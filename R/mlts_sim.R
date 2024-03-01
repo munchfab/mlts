@@ -11,8 +11,8 @@
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_sim <- function(model, default = F, N, TP, burn.in = 500, seed = NULL,
-                        btw.var.sds = NULL){
+mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
+                     btw.var.sds = NULL){
 
   if(!is.null(seed)){
     set.seed(seed)
@@ -57,11 +57,10 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 500, seed = NULL,
     # FIX EFFECTS ========
     model.type = "Fix effect"
     ## Mus
-    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = 1
+    n_traits = length(model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")])
+    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
+      x = seq(from= 0, to = 1, by = 0.1), size = n_traits)
     ## Phis
-    # model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = sample(
-    #   c(round(seq(from = -0.3, to = 0.3, by = 0.05),2)), replace = T,
-    #   size = nrow(infos$fix_pars_dyn))
     # dynamic parameters separately for each lag
     phis = infos$fix_pars_dyn
     phis$true.val = NA
@@ -82,7 +81,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 500, seed = NULL,
 
 
     ## log innovation variances
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.4
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.35
     ## Fixed innovation variance
     model$true.val[model$Type==model.type & model$Param_Label=="Innovation Variance"] = 0.75
 
@@ -96,7 +95,8 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 500, seed = NULL,
     # RANDOM EFFECT SDs ==========
     model.type = "Random effect SD"
     ## Mus
-    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = 1
+    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
+      x = seq(from= 0.7, to = 1.2, by = 0.1), size = n_traits, replace = T)
     ## Phis
     model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
     ## log innovation variances
