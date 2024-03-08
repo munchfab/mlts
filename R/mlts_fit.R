@@ -351,6 +351,9 @@ mlts_fit <- function(model,
     "person.pars.summary" = sums.i
   )
 
+  # assign class
+  class(results) <- "mltsfit"
+
   return(result)
 
 }

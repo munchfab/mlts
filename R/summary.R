@@ -1,4 +1,20 @@
-summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95) {
+#' Create a summary of a fitted model with class `mltsfit`
+#'
+#' @param object An object of class `mltsfit`.
+#' @param priors Logical. Should priors be included in the summary?
+#' Defaults to `FALSE`.
+#' @param se Logical. Should the Monte Carlo Standard Error be included
+#' in the summary? Defaults to `FALSE`.
+#' @param prob A value between 0 and 1 to indicate the width of the credible
+#' interval. Default is .95.
+#' @param ... Additional arguments affecting the summary produced.
+#'
+#' @return
+#' @export
+#'
+#' @examples
+summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
+                            ...) {
 
   object <- object
   pop_pars <- object$pop.pars.summary
@@ -37,7 +53,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95) {
   call_fix_inno_vars <- ifelse(
     all(
       infos$fix_pars[
-        infos$fix_pars$Param_Label == "Innovation Variance", "isRandom"
+        grepl("ln.sigma", infos$fix_pars$Param), "isRandom"
       ] == 0
     ),
     paste0(", fix_inno_vars = TRUE"),
@@ -53,6 +69,18 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95) {
     sep = ""
   )
 
-  cat(model_call)
+
+  # get fixed effects for printing
+  fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(
+    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
+  )]
+  colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # fixef <- c(
+  #   cat("Fixed Effects:\n"),
+  #   print(fixef_params, row.names = FALSE)
+  # )
+
+  cat(model_call, "Fixed Effects:\n", sep = "\n")
 
 }
