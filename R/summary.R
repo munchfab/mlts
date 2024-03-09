@@ -32,7 +32,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     "mlts_model(q = ", infos$q,
     sep = ""
   )
-  call_end <- ")"
+  call_end <- ")\n"
 
   call_p <- ifelse(
     infos$isLatent == TRUE,
@@ -69,18 +69,32 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     sep = ""
   )
 
-
   # get fixed effects for printing
   fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(
     "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
   )]
   colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
 
-  # fixef <- c(
-  #   cat("Fixed Effects:\n"),
-  #   print(fixef_params, row.names = FALSE)
-  # )
+  # get random effects for printing
+  ranef_params <- pop_pars[grepl("Random", pop_pars$Type), c(
+    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
+  )]
+  # drop sigma_ prefix in Param
+  ranef_params[grepl("sigma_", ranef_params$Param), "Param"] <- gsub(
+    "sigma_", "", ranef_params$Param
+  )
+  colnames(ranef_params)[1:3] <- c("", "Estimate", "Post.SD")
 
-  cat(model_call, "Fixed Effects:\n", sep = "\n")
+  # assemble everything
+  cat(model_call)
+  if (nrow(fixef_params) > 0) {
+    cat("\nFixed Effects:\n")
+    print(fixef_params, row.names = FALSE)
+  }
+  if (nrow(ranef_params) > 0) {
+    cat("\nRandom Effects SD:\n")
+    print(ranef_params, row.names = FALSE)
+  }
+
 
 }
