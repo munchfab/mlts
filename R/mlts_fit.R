@@ -352,7 +352,7 @@ mlts_fit <- function(model,
   )
 
   # assign class
-  class(results) <- "mltsfit"
+  class(result) <- "mltsfit"
 
   return(result)
 
