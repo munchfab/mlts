@@ -146,6 +146,8 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   if(infos$n_cov>1){
     for(i in 2:infos$n_cov){
       cov_name[i-1] = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
+      # name btw.var.sds vector
+      names(btw.var.sds) <- unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
       W[1:N,i] = stats::rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
     }
   }
