@@ -17,6 +17,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
                             ...) {
 
   object <- object
+  N_obs <- object$standata$N_obs
+  N_ids <- object$standata$N
   pop_pars <- object$pop.pars.summary
   chains <- object$stanfit@sim$chains
   iter <- object$stanfit@sim$iter
@@ -59,15 +61,54 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     paste0(", fix_inno_vars = TRUE"),
     ""
   )
+  call_ranef_pred <- ifelse(
+    length(infos$n_cov_vars) > 1,
+    paste0(
+      ", ranef_pred = ", ifelse(
+        length(infos$n_cov_vars) == 1,
+        paste0("\"", infos$n_cov_vars, "\""),
+        paste0("c(", paste0(paste0("\"", infos$n_cov_vars, "\""), collapse = ", "),
+               ")")
+      )
+    ), ""
+  )
+  call_out_pred <- ifelse(
+    length(infos$out_var) > 0,
+    paste0(
+      ", out_pred = ", ifelse(
+        length(infos$out_var) == 1,
+        paste0("\"", infos$out_var, "\""),
+        paste0("c(", paste0(paste0("\"", infos$out_var, "\""), collapse = ", "),
+               ")")
+      )
+    ), ""
+  )
+
+
+
 
   # concatenate and paste to summary output
   model_call <- paste(
     call_start, call_p, call_maxlag,
     # maybe not necessary?
     call_fix_dynamics, call_fix_inno_vars,
+    call_ranef_pred, call_out_pred,
     call_end,
     sep = ""
   )
+
+  # number of observations and IDs
+  data_info <- paste0(
+    "Data: ",
+    N_obs, " observations in ", N_ids, " IDs\n"
+  )
+
+  # Type is missing pop_pars if model is latent
+  # disable this workaround when fixed
+  if (infos$isLatent == TRUE) {
+    pop_pars <- merge(pop_pars, object$model[, c("Type", "Param")], by = "Param")
+  }
+
 
   # get fixed effects for printing
   fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(
@@ -75,26 +116,114 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   )]
   colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
 
-  # get random effects for printing
-  ranef_params <- pop_pars[grepl("Random", pop_pars$Type), c(
+  # get random effects SD for printing
+  ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(
     "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
   )]
   # drop sigma_ prefix in Param
-  ranef_params[grepl("sigma_", ranef_params$Param), "Param"] <- gsub(
-    "sigma_", "", ranef_params$Param
+  ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- gsub(
+    "sigma_", "", ranef_sds$Param
   )
-  colnames(ranef_params)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # get random effects correlation for printing
+  ranef_corrs <- pop_pars[grepl("RE correlation", pop_pars$Type), c(
+    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
+  )]
+  # drop r_ prefix in Param
+  ranef_corrs[grepl("r_", ranef_corrs$Param), "Param"] <- gsub(
+    "r_", "", ranef_corrs$Param
+  )
+  colnames(ranef_corrs)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # get random effect predictors
+  ranef_preds <- pop_pars[grepl("RE prediction", pop_pars$Type), c(
+    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
+  )]
+  ranef_preds[grepl(".ON.", ranef_preds$Param), "Param"] <- gsub(
+    "b_(.*).ON.(.*)", "\\1 ~ \\2", ranef_preds$Param
+  )
+  colnames(ranef_preds)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # get outcome prediction effects
+  outcomes <- pop_pars[
+    grepl("Outcome prediction", pop_pars$Type) & !grepl("sigma_", pop_pars$Param),
+    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
+  ]
+  outcomes$Param <- ifelse(
+    grepl(".ON.", outcomes$Param),
+    gsub("b_(.*).ON.(.*)", "\\1 ~ \\2", outcomes$Param), ifelse(
+      grepl("alpha", outcomes$Param),
+      gsub("alpha_(\\w+)", "\\1 ~ 1", outcomes$Param),
+      NA
+    )
+  )
+  colnames(outcomes)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # get outcome SDs
+  outcomes_sds <- pop_pars[
+    grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),
+    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
+  ]
+  outcomes_sds[grepl("sigma_", outcomes_sds$Param), "Param"] <- gsub(
+    "sigma_(\\w+)", "\\1", outcomes_sds$Param
+  )
+  colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
+
+  # get measurement model parameters
+  mm_pars <- pop_pars[
+    grepl("Measurement|Item|Loading", pop_pars$Type),
+    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
+  ]
+  colnames(mm_pars)[1:3] <- c("", "Estimate", "Post.SD")
+
+
 
   # assemble everything
   cat(model_call)
-  if (nrow(fixef_params) > 0) {
+  cat(data_info)
+  if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) == 0) {
     cat("\nFixed Effects:\n")
     print(fixef_params, row.names = FALSE)
   }
-  if (nrow(ranef_params) > 0) {
-    cat("\nRandom Effects SD:\n")
-    print(ranef_params, row.names = FALSE)
+  if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) == 0) {
+    cat("\nFixed Effects:\n")
+    fixef_params <- rbind(fixef_params, ranef_preds)
+    print(fixef_params, row.names = FALSE)
   }
+  if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) > 0) {
+    cat("\nFixed Effects:\n")
+    fixef_params <- rbind(fixef_params, outcomes)
+    print(fixef_params, row.names = FALSE)
+  }
+  if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) > 0) {
+    cat("\nFixed Effects:\n")
+    fixef_params <- rbind(fixef_params, ranef_preds, outcomes)
+    print(fixef_params, row.names = FALSE)
+  }
+  if (nrow(ranef_sds) > 0 & nrow(outcomes_sds) == 0) {
+    cat("\nRandom Effects SDs:\n")
+    print(ranef_sds, row.names = FALSE)
+  }
+  if (nrow(ranef_sds) > 0 & nrow(outcomes_sds) > 0) {
+    cat("\nRandom Effects SDs:\n")
+    ranef_sds <- rbind(ranef_sds, outcomes_sds)
+    print(ranef_sds, row.names = FALSE)
+  }
+  if (nrow(ranef_corrs) > 0) {
+    cat("\nRandom Effects Correlations:\n")
+    print(ranef_corrs, row.names = FALSE)
+  }
+  if (nrow(mm_pars) > 0) {
+    cat("\nMeasurement Model Parameters:\n")
+    print(mm_pars, row.names = FALSE)
+  }
+
+  cat("\nSamples were drawn using ", algorithm, " on ", date, ".\n",
+      "For each parameter, Bulk_ESS and Tail_ESS are measures of effective\n",
+      "sample size, and Rhat is the potential scale reduction factor\n",
+      "on split chains (at convergence, Rhat = 1).",
+      sep = "")
 
 
 }

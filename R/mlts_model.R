@@ -7,7 +7,7 @@
 #' is 3.
 #' @param fix_inno_vars Logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
-#' @param fix_dynamics Logical. Fimodel all random effect variances (emodelcept those
+#' @param fix_dynamics Logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
 #' @param fix_inno_covs Logical. Set all innovation covariances to a constant value.
 #' @param inno_covs_zero Logical. Set to TRUE to treat all innovations as independent.
