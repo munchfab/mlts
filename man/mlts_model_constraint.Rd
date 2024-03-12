@@ -26,8 +26,8 @@ of individual traits) to zero.}
 
 \item{inno_covs_zero}{logical. Set to TRUE to treat all innovations as independent.}
 
-\item{fixef_zero}{character. A character vector to indemodel which fimodeled model parameters
-should be fimodeled to zero (Note: this results in removing the random effect
+\item{fixef_zero}{character. A character vector to index which fixed model parameters
+should be fixed to zero (Note: this results in removing the random effect
 variance of the respective parameter).}
 
 \item{ranef_zero}{logical. Set to TRUE to treat all innovations as independent.}

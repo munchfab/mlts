@@ -39,7 +39,7 @@ from a joint multivariate normal distribution.}
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
 
-\item{fix_dynamics}{Logical. Fimodel all random effect variances (emodelcept those
+\item{fix_dynamics}{Logical. Fix all random effect variances (except those
 of individual traits) to zero.}
 
 \item{fix_inno_vars}{Logical. Fix all random effect variances (except those
