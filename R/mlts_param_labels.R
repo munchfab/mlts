@@ -16,8 +16,16 @@ mlts_param_labels <- function(VARmodel){
 
   # first add infos to VARmodel to extract variable names
   ##### FIXED EFFECT INTERCEPTS ================================================
-  FEints = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
-  FEints$Param_stan = paste0("gammas[",1:nrow(FEints),"]")
+
+  # this doesn't add fixed intercept mu_1 (if its not random), so it doesnt
+  # show in summary
+  FEints_random = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
+  FEints_random$Param_stan = paste0("gammas[",1:nrow(FEints_random),"]")
+  FEints_fixed <- VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==0,]
+  FEints_fixed$Param_stan = paste0("b_fix[",1:nrow(FEints_fixed),"]")
+  FEints <- rbind(FEints_random, FEints_fixed)
+  FEints <- FEints[order(as.numeric(row.names(FEints))), ] # sort by row number
+
   # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "sigma2_", replacement = "sigma^2_", fixed = T)
   # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "_", replacement = "[", fixed = T)
   # FEints$Param_expr = paste0(FEints$Param_expr,"]")
@@ -45,7 +53,7 @@ mlts_param_labels <- function(VARmodel){
   ##### RE CORRELATIONS ========================================================
   REcors = VARmodel[VARmodel$Type == "RE correlation",]
   if(nrow(REcors > 0)){
-    rand_pars = FEints$Param
+    rand_pars = FEints_random$Param
     rand_pars_pos = 1:length(rand_pars)
     REcors$Param_stan = REcors$Param
     for(i in 1:length(rand_pars)){

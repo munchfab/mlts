@@ -9,7 +9,7 @@
 #' interval. Default is .95.
 #' @param ... Additional arguments affecting the summary produced.
 #'
-#' @return
+#' @return A summary of model parameters.
 #' @export
 #'
 #' @examples

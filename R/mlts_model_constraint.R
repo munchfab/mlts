@@ -6,8 +6,8 @@
 #' @param fix_inno_vars logical. Set all innovation variances to a constant value.
 #' @param fix_inno_covs logical. Set all innovation covariances to a constant value.
 #' @param inno_covs_zero logical. Set to TRUE to treat all innovations as independent.
-#' @param fixef_zero character. A character vector to indemodel which fimodeled model parameters
-#' should be fimodeled to zero (Note: this results in removing the random effect
+#' @param fixef_zero character. A character vector to index which fixed model parameters
+#' should be fixed to zero (Note: this results in removing the random effect
 #' variance of the respective parameter).
 #' @param ranef_zero logical. Set to TRUE to treat all innovations as independent.
 #'
