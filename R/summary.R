@@ -61,6 +61,24 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     paste0(", fix_inno_vars = TRUE"),
     ""
   )
+  call_fixef_zero <- ""
+  call_ranef_zero <- ifelse(
+    sum(infos$fix_pars[, "isRandom"] == 0) == 1,
+    paste0(", ranef_zero = \"",
+           infos$fix_pars[infos$fix_pars$isRandom == 0, "Param"],
+           "\""),
+    ifelse(
+      sum(infos$fix_pars[, "isRandom"] == 0) > 1,
+      paste0(
+        ", ranef_zero = c(",
+        paste0(
+          "\"", infos$fix_pars[infos$fix_pars$isRandom == 0, "Param"], "\"",
+          collapse = ", "
+        ),
+        ")"
+      ), ""
+    )
+  )
   call_ranef_pred <- ifelse(
     length(infos$n_cov_vars) > 1,
     paste0(
@@ -92,6 +110,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     call_start, call_p, call_maxlag,
     # maybe not necessary?
     call_fix_dynamics, call_fix_inno_vars,
+    call_fixef_zero, call_ranef_zero,
     call_ranef_pred, call_out_pred,
     call_end,
     sep = ""
