@@ -17,6 +17,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
                             ...) {
 
   object <- object
+  model <- object$model
   N_obs <- object$standata$N_obs
   N_ids <- object$standata$N
   pop_pars <- object$pop.pars.summary
@@ -61,7 +62,6 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     paste0(", fix_inno_vars = TRUE"),
     ""
   )
-  call_fixef_zero <- ""
   call_ranef_zero <- ifelse(
     sum(infos$fix_pars[, "isRandom"] == 0) == 1,
     paste0(", ranef_zero = \"",
@@ -101,8 +101,30 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
       )
     ), ""
   )
-
-
+  # determine fixed effects fixed to zero
+  sat_model <- mlts_model(
+    q = infos$q,
+    p = if (all(infos$p == 1)) {NULL} else {infos$p},
+    max_lag = infos$maxLag,
+    ranef_pred = if (length(infos$n_cov_vars) > 1) {infos$n_cov_vars} else {NULL},
+    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL}
+  )
+  sat_model_fixed <- sat_model[grepl("Fix", sat_model$Type), "Param"]
+  model_fixed <- model[grepl("Fix", model$Type), "Param"]
+  fe_zero <- setdiff(
+    union(sat_model_fixed, model_fixed), intersect(sat_model_fixed, model_fixed)
+  )
+  call_fixef_zero <- ifelse(
+    length(fe_zero) > 0,
+    paste0(
+      ", fixef_zero = ", ifelse(
+        length(fe_zero) == 1,
+        paste0("\"", fe_zero, "\""),
+        paste0("c(", paste0(paste0("\"", fe_zero, "\""), collapse = ", "),
+               ")")
+      )
+    ), ""
+  )
 
 
   # concatenate and paste to summary output
