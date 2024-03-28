@@ -10,7 +10,7 @@
   se = FALSE,
   prob = 0.95,
   bpe = c("mean", "median"),
-  digit = 3,
+  digits = 3,
   flag.signif = FALSE,
   ...
 )
@@ -32,9 +32,11 @@ interval. Default is .95.}
 \item{bpe.}{Bayesian posterior estimate can be either "mean" (the default)
 or the "median" of the posterior distribution.}
 
-\item{digit.}{Number of digits.}
+\item{digits.}{Number of digits.}
 
 \item{flag.signif.}{Add significance flags based on \code{prob} (default = FALSE).}
+
+\item{priors.}{Add prior information (default = FALSE).}
 }
 \value{
 A summary of model parameters.

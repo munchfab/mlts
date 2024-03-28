@@ -9,8 +9,9 @@
 #' interval. Default is .95.
 #' @param bpe. Bayesian posterior estimate can be either "mean" (the default)
 #' or the "median" of the posterior distribution.
-#' @param digit. Number of digits.
+#' @param digits. Number of digits.
 #' @param flag.signif. Add significance flags based on `prob` (default = FALSE).
+#' @param priors. Add prior information (default = FALSE).
 #' @param ... Additional arguments affecting the summary produced.
 #'
 #' @return A summary of model parameters.
@@ -19,7 +20,7 @@
 #' @examples
 #' 1 + 1
 summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe = c("mean", "median"),
-                            digit = 3, flag.signif = FALSE, ...) {
+                            digits = 3, flag.signif = FALSE, ...) {
 
   object <- object
   model <- object$model
@@ -40,7 +41,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
   # create a summary table using the monitor-function in rstan
   par_labels = mlts_param_labels(object$model)
   sums <- rstan::monitor(object$stanfit, probs = probs, print = F)
-  sums <- round(sums[1:dim(sums)[1],1:ncol(sums)],3)
+  sums <- round(sums[1:dim(sums)[1],1:ncol(sums)],digits)
   sums$Param_stan = row.names(sums)
   pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
 
@@ -50,11 +51,28 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
     (pop_pars[,prob.cols[1]] < 0 & pop_pars[,prob.cols[2]] < 0),
     "*", " ")
 
+  # create prior column
+  pop_pars$prior = ifelse(pop_pars$prior_type == "LKJ",
+                          paste0(pop_pars$prior_type,"(",pop_pars$prior_location,")"),
+                          paste0(pop_pars$prior_type,"(",pop_pars$prior_location,", ",
+                                 pop_pars$prior_scale, ")"))
+
   # choose columns to print
-  if(flag.signif == F){
-    cols = c( "Param", bpe, "sd", prob.cols, "Rhat", "Bulk_ESS", "Tail_ESS")
+  if(se == T){
+    colnames(pop_pars)[which(colnames(pop_pars) == "se_mean")] <- "MC.SE"
+    cols = c("Param", bpe, "sd", "MC.SE", prob.cols)
   } else {
-    cols = c( "Param", bpe, "sd", prob.cols, "signif", "Rhat", "Bulk_ESS", "Tail_ESS")
+    cols = c("Param", bpe, "sd", prob.cols)
+  }
+
+  if(flag.signif == T){
+    cols = c(cols, "signif", "Rhat", "Bulk_ESS", "Tail_ESS")
+  } else {
+    cols = c(cols, "Rhat", "Bulk_ESS", "Tail_ESS")
+  }
+
+  if(priors == T) {
+    cols = c(cols, "prior")
   }
 
   infos <- mlts_model_eval(object$model)
@@ -178,7 +196,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
   conv = rstan::monitor(object$stanfit, print = F, probs = prob)
   convergence <- paste0(
     "Model convergence criteria: \n",
-    "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
+    "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),digits), " (should be < 1.01)\n",
     "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > 100 per chain) \n",
     "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > 100 per chain) \n",
     "  Number of divergent transitions: ", get_num_divergent(object$stanfit), " (should be 0) \n"
@@ -304,5 +322,16 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
       "on split chains (at convergence, Rhat = 1).",
       sep = "")
 
+  sum.table = rbind(
+    fixef_params,
+    ranef_sds,
+    ranef_corrs,
+    outcomes,
+    outcomes_sds,
+    ranef_preds,
+    mm_pars
+  )
+
+  return(sum.table)
 
 }
