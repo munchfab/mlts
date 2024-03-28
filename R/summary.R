@@ -285,10 +285,6 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
     cat("\nRandom Effects Correlations:\n")
     print(ranef_corrs, row.names = FALSE)
   }
-  if (nrow(ranef_corrs) > 0) {
-    cat("\nRandom Effects Correlations:\n")
-    print(ranef_corrs, row.names = FALSE)
-  }
   if(nrow(outcomes) > 0) {
     cat("\nOutcome Prediction:\n")
     print(outcomes, row.names = F)
