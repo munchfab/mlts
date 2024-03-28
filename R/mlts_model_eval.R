@@ -179,9 +179,9 @@ mlts_model_eval <- function(model){
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
   # this doesn't recognize a fixed mean I think
-  # is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
+  is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
   # this should but I'm not sure if this is intended
-  is_fixed = matrix(fix_pars$no[fix_pars$isRandom==0], nrow = 1, ncol = n_fixed)
+  #is_fixed = matrix(fix_pars$no[fix_pars$isRandom==0], nrow = 1, ncol = n_fixed)
   re_pars = model[model$Type=="Fix effect" & model$isRandom==1,]
   re_pars$par_no = 1:nrow(re_pars)
 

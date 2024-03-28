@@ -7,25 +7,55 @@
 #' in the summary? Defaults to `FALSE`.
 #' @param prob A value between 0 and 1 to indicate the width of the credible
 #' interval. Default is .95.
+#' @param bpe. Bayesian posterior estimate can be either "mean" (the default)
+#' or the "median" of the posterior distribution.
+#' @param digit. Number of digits.
+#' @param flag.signif. Add significance flags based on `prob` (default = FALSE).
 #' @param ... Additional arguments affecting the summary produced.
 #'
 #' @return A summary of model parameters.
 #' @export
 #'
 #' @examples
-summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
-                            ...) {
+#' 1 + 1
+summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe = c("mean", "median"),
+                            digit = 3, flag.signif = FALSE, ...) {
 
   object <- object
   model <- object$model
   N_obs <- object$standata$N_obs
   N_ids <- object$standata$N
-  pop_pars <- object$pop.pars.summary
+  # pop_pars <- object$pop.pars.summary
   chains <- object$stanfit@sim$chains
   iter <- object$stanfit@sim$iter
   thin <- object$stanfit@sim$thin
   date <- object$stanfit@date
   algorithm <- object$stanfit@stan_args[[1]]$algorithm
+  bpe = ifelse(bpe == "mean", "mean", "50%")
+  alpha = 1-prob
+  probs = c(alpha/2, .50, 1-alpha/2)
+  prob.cols = paste0(c(100-(100-(alpha/2)*100), 100-(alpha/2)*100), "%")
+
+  # get CIs based on prob
+  # create a summary table using the monitor-function in rstan
+  par_labels = mlts_param_labels(object$model)
+  sums <- rstan::monitor(object$stanfit, probs = probs, print = F)
+  sums <- round(sums[1:dim(sums)[1],1:ncol(sums)],3)
+  sums$Param_stan = row.names(sums)
+  pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
+
+  # add significance flags
+  pop_pars$signif = ifelse(
+    (pop_pars[,prob.cols[1]] > 0 & pop_pars[,prob.cols[2]] > 0) |
+    (pop_pars[,prob.cols[1]] < 0 & pop_pars[,prob.cols[2]] < 0),
+    "*", " ")
+
+  # choose columns to print
+  if(flag.signif == F){
+    cols = c( "Param", bpe, "sd", prob.cols, "Rhat", "Bulk_ESS", "Tail_ESS")
+  } else {
+    cols = c( "Param", bpe, "sd", prob.cols, "signif", "Rhat", "Bulk_ESS", "Tail_ESS")
+  }
 
   infos <- mlts_model_eval(object$model)
 
@@ -144,23 +174,29 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     N_obs, " observations in ", N_ids, " IDs\n"
   )
 
+  # model convergence info
+  conv = rstan::monitor(object$stanfit, print = F, probs = prob)
+  convergence <- paste0(
+    "Model convergence criteria: \n",
+    "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
+    "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > 100 per chain) \n",
+    "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > 100 per chain) \n",
+    "  Number of divergent transitions: ", get_num_divergent(object$stanfit), " (should be 0) \n"
+  )
+
   # Type is missing pop_pars if model is latent
   # disable this workaround when fixed
-  if (infos$isLatent == TRUE) {
-    pop_pars <- merge(pop_pars, object$model[, c("Type", "Param")], by = "Param")
-  }
+  # if (infos$isLatent == TRUE) {
+  #   pop_pars <- merge(pop_pars, object$model[, c("Type", "Param")], by = "Param")
+  # }
 
 
   # get fixed effects for printing
-  fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(
-    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
-  )]
+  fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(cols)]
   colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
 
   # get random effects SD for printing
-  ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(
-    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
-  )]
+  ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(cols)]
   # drop sigma_ prefix in Param
   ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- gsub(
     "sigma_", "", ranef_sds$Param
@@ -168,9 +204,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
 
   # get random effects correlation for printing
-  ranef_corrs <- pop_pars[grepl("RE correlation", pop_pars$Type), c(
-    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
-  )]
+  ranef_corrs <- pop_pars[grepl("RE correlation", pop_pars$Type), c(cols)]
+
   # drop r_ prefix in Param
   ranef_corrs[grepl("r_", ranef_corrs$Param), "Param"] <- gsub(
     "r_", "", ranef_corrs$Param
@@ -178,9 +213,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   colnames(ranef_corrs)[1:3] <- c("", "Estimate", "Post.SD")
 
   # get random effect predictors
-  ranef_preds <- pop_pars[grepl("RE prediction", pop_pars$Type), c(
-    "Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS"
-  )]
+  ranef_preds <- pop_pars[grepl("RE prediction", pop_pars$Type), c(cols)]
   ranef_preds[grepl(".ON.", ranef_preds$Param), "Param"] <- gsub(
     "b_(.*).ON.(.*)", "\\1 ~ \\2", ranef_preds$Param
   )
@@ -188,9 +221,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   # get outcome prediction effects
   outcomes <- pop_pars[
-    grepl("Outcome prediction", pop_pars$Type) & !grepl("sigma_", pop_pars$Param),
-    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
-  ]
+    grepl("Outcome prediction", pop_pars$Type) & !grepl("sigma_", pop_pars$Param),cols]
   outcomes$Param <- ifelse(
     grepl(".ON.", outcomes$Param),
     gsub("b_(.*).ON.(.*)", "\\1 ~ \\2", outcomes$Param), ifelse(
@@ -202,20 +233,14 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   colnames(outcomes)[1:3] <- c("", "Estimate", "Post.SD")
 
   # get outcome SDs
-  outcomes_sds <- pop_pars[
-    grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),
-    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
-  ]
+  outcomes_sds <- pop_pars[grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),cols]
   outcomes_sds[grepl("sigma_", outcomes_sds$Param), "Param"] <- gsub(
     "sigma_(\\w+)", "\\1", outcomes_sds$Param
   )
   colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
 
   # get measurement model parameters
-  mm_pars <- pop_pars[
-    grepl("Measurement|Item|Loading", pop_pars$Type),
-    c("Param", "mean", "sd", "2.5%", "97.5%", "Rhat", "Bulk_ESS", "Tail_ESS")
-  ]
+  mm_pars <- pop_pars[grepl("Measurement|Item|Loading", pop_pars$Type),cols]
   colnames(mm_pars)[1:3] <- c("", "Estimate", "Post.SD")
 
 
@@ -223,25 +248,30 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # assemble everything
   cat(model_call)
   cat(data_info)
-  if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) == 0) {
+  cat(convergence)
+  if (nrow(fixef_params) > 0) {
     cat("\nFixed Effects:\n")
     print(fixef_params, row.names = FALSE)
   }
-  if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) == 0) {
-    cat("\nFixed Effects:\n")
-    fixef_params <- rbind(fixef_params, ranef_preds)
-    print(fixef_params, row.names = FALSE)
-  }
-  if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) > 0) {
-    cat("\nFixed Effects:\n")
-    fixef_params <- rbind(fixef_params, outcomes)
-    print(fixef_params, row.names = FALSE)
-  }
-  if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) > 0) {
-    cat("\nFixed Effects:\n")
-    fixef_params <- rbind(fixef_params, ranef_preds, outcomes)
-    print(fixef_params, row.names = FALSE)
-  }
+  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) == 0) {
+  #   cat("\nFixed Effects:\n")
+  #   print(fixef_params, row.names = FALSE)
+  # }
+  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) == 0) {
+  #   cat("\nFixed Effects:\n")
+  #   fixef_params <- rbind(fixef_params, ranef_preds)
+  #   print(fixef_params, row.names = FALSE)
+  # }
+  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) > 0) {
+  #   cat("\nFixed Effects:\n")
+  #   fixef_params <- rbind(fixef_params, outcomes)
+  #   print(fixef_params, row.names = FALSE)
+  # }
+  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) > 0) {
+  #   cat("\nFixed Effects:\n")
+  #   fixef_params <- rbind(fixef_params, ranef_preds, outcomes)
+  #   print(fixef_params, row.names = FALSE)
+  # }
   if (nrow(ranef_sds) > 0 & nrow(outcomes_sds) == 0) {
     cat("\nRandom Effects SDs:\n")
     print(ranef_sds, row.names = FALSE)
@@ -254,6 +284,18 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   if (nrow(ranef_corrs) > 0) {
     cat("\nRandom Effects Correlations:\n")
     print(ranef_corrs, row.names = FALSE)
+  }
+  if (nrow(ranef_corrs) > 0) {
+    cat("\nRandom Effects Correlations:\n")
+    print(ranef_corrs, row.names = FALSE)
+  }
+  if(nrow(outcomes) > 0) {
+    cat("\nOutcome Prediction:\n")
+    print(outcomes, row.names = F)
+  }
+  if(nrow(ranef_preds) > 0) {
+    cat("\nRandom Effects Regressed On:\n")
+    print(ranef_preds, row.names = F)
   }
   if (nrow(mm_pars) > 0) {
     cat("\nMeasurement Model Parameters:\n")

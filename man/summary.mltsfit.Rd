@@ -4,7 +4,16 @@
 \alias{summary.mltsfit}
 \title{Create a summary of a fitted model with class \code{mltsfit}}
 \usage{
-\method{summary}{mltsfit}(object, priors = FALSE, se = FALSE, prob = 0.95, ...)
+\method{summary}{mltsfit}(
+  object,
+  priors = FALSE,
+  se = FALSE,
+  prob = 0.95,
+  bpe = c("mean", "median"),
+  digit = 3,
+  flag.signif = FALSE,
+  ...
+)
 }
 \arguments{
 \item{object}{An object of class \code{mltsfit}.}
@@ -19,7 +28,20 @@ in the summary? Defaults to \code{FALSE}.}
 interval. Default is .95.}
 
 \item{...}{Additional arguments affecting the summary produced.}
+
+\item{bpe.}{Bayesian posterior estimate can be either "mean" (the default)
+or the "median" of the posterior distribution.}
+
+\item{digit.}{Number of digits.}
+
+\item{flag.signif.}{Add significance flags based on \code{prob} (default = FALSE).}
+}
+\value{
+A summary of model parameters.
 }
 \description{
 Create a summary of a fitted model with class \code{mltsfit}
+}
+\examples{
+1 + 1
 }
