@@ -14,4 +14,5 @@ test_that("Common pathmodels are rendered without errors", {
   expect_no_error(
     mlts_model_paths(model)
   )
+  file.remove(c("pathmodel.rmd", "pathmodel.pdf"))
 })
