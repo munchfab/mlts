@@ -7,11 +7,11 @@
 #' in the summary? Defaults to `FALSE`.
 #' @param prob A value between 0 and 1 to indicate the width of the credible
 #' interval. Default is .95.
-#' @param bpe. Bayesian posterior estimate can be either "mean" (the default)
+#' @param bpe Bayesian posterior estimate can be either "mean" (the default)
 #' or the "median" of the posterior distribution.
-#' @param digits. Number of digits.
-#' @param flag.signif. Add significance flags based on `prob` (default = FALSE).
-#' @param priors. Add prior information (default = FALSE).
+#' @param digits Number of digits.
+#' @param flag_signif Add significance flags based on `prob` (default = FALSE).
+#' @param priors Add prior information (default = FALSE).
 #' @param ... Additional arguments affecting the summary produced.
 #'
 #' @return A summary of model parameters.
@@ -19,8 +19,9 @@
 #'
 #' @examples
 #' 1 + 1
-summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe = c("mean", "median"),
-                            digits = 3, flag.signif = FALSE, ...) {
+summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
+                            bpe = c("mean", "median"),
+                            digits = 3, flag_signif = FALSE, ...) {
 
   object <- object
   model <- object$model
@@ -65,7 +66,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
     cols = c("Param", bpe, "sd", prob.cols)
   }
 
-  if(flag.signif == T){
+  if(flag_signif == T){
     cols = c(cols, "signif", "Rhat", "Bulk_ESS", "Tail_ESS")
   } else {
     cols = c(cols, "Rhat", "Bulk_ESS", "Tail_ESS")
@@ -199,7 +200,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95, bpe 
     "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),digits), " (should be < 1.01)\n",
     "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > 100 per chain) \n",
     "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > 100 per chain) \n",
-    "  Number of divergent transitions: ", get_num_divergent(object$stanfit), " (should be 0) \n"
+    "  Number of divergent transitions: ", rstan::get_num_divergent(object$stanfit),
+    " (should be 0) \n"
   )
 
   # Type is missing pop_pars if model is latent

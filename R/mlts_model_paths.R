@@ -785,6 +785,8 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
 
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
+  # replace rzeta with pi
+  all_bpars$Param <- gsub("rzeta", "pi", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "$\\\\\\1_{\\2}$", gsub(
@@ -796,7 +798,7 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
           "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\3;\\2}$", gsub(
             # replace rzeta with pi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(lnsigma|rzeta)_(\\d+)", "$\\\\pi_{\\2}$" ,all_bpars$Param
+            "(lnsigma|pi)_(\\d+)", "$\\\\pi_{\\2}$" ,all_bpars$Param
           )
         )
       )
