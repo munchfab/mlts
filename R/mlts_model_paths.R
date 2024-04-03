@@ -782,10 +782,9 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   all_bpars <- model[grepl("Fix", model$Type), ]
   # the next line removes non-random effects completely, if desired
   # all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
-
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
-  # replace rzeta with pi
+  # replace rzeta with pi (ugly fix but ok)
   all_bpars$Param <- gsub("rzeta", "pi", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
