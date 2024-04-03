@@ -350,7 +350,7 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
   )
 
   inno_dist <- ",\\\\ \n\\text{with}~
-  \\zeta_{y, i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi})"
+  \\zeta_{i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi})"
 
   # within-model formula
   wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, inno_dist, end_math)
@@ -371,6 +371,8 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
   all_bpars <- model[grepl("Fix", model$Type), ]
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
+  # replace rzeta with pi (ugly fix but ok)
+  all_bpars$Param <- gsub("rzeta", "pi", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
@@ -379,7 +381,11 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
           # replace underscore digit with latex subscript for phis
-          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", all_bpars$Param
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", gsub(
+            # replace rzeta with pi in case of fixed
+            # innovation covariance (ugly fix but ok)
+            "(lnsigma|pi)_(\\d+)", "\\\\pi_{\\2}", all_bpars$Param
+          )
         )
       )
     )
