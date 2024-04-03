@@ -11,7 +11,7 @@
   prob = 0.95,
   bpe = c("mean", "median"),
   digits = 3,
-  flag.signif = FALSE,
+  flag_signif = FALSE,
   ...
 )
 }
@@ -27,14 +27,14 @@ in the summary? Defaults to \code{FALSE}.}
 \item{prob}{A value between 0 and 1 to indicate the width of the credible
 interval. Default is .95.}
 
-\item{...}{Additional arguments affecting the summary produced.}
-
-\item{bpe.}{Bayesian posterior estimate can be either "mean" (the default)
+\item{bpe}{Bayesian posterior estimate can be either "mean" (the default)
 or the "median" of the posterior distribution.}
 
-\item{digits.}{Number of digits.}
+\item{flag_signif}{Add significance flags based on \code{prob} (default = FALSE).}
 
-\item{flag.signif.}{Add significance flags based on \code{prob} (default = FALSE).}
+\item{...}{Additional arguments affecting the summary produced.}
+
+\item{digits.}{Number of digits.}
 
 \item{priors.}{Add prior information (default = FALSE).}
 }
