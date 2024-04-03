@@ -707,7 +707,7 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   # paste sigmas in one string
   sigma <- paste(sigma_vec, collapse = "\n")
   # do the same for innovation covariances
-  all_psis <- model[grepl("ln.sigma_", model$Param) & grepl("Fix", model$Type), ]
+  all_psis <- model[grepl("ln.sigma_|r.zeta", model$Param) & grepl("Fix", model$Type), ]
   # n_psi <- nrow(all_psis)
   psi_vec <- c()
   if (nrow(all_psis) >= 1) {
@@ -723,16 +723,26 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
     } else {
       for (i in 1:(infos$q - 1)) {
         for (j in (i + 1):infos$q) {
-          psi_vec <- c(
-            psi_vec, paste0(
-              "\\draw  [cov", ifelse(
-                # decorate with dot on path if parameter is random
-                all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
-                ", postaction = random]", "]"
-              ),
-              "  (delta", i, "t.0)  to node  []  {$\\pi_{", i, j, "}$}  (delta", j, "t.0);"
+          if (any(grepl("ln.sigma", all_psis$Param)) == TRUE) {
+            psi_vec <- c(
+              psi_vec, paste0(
+                "\\draw  [cov", ifelse(
+                  # decorate with dot on path if parameter is random
+                  all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
+                  ", postaction = random]", "]"
+                ),
+                "  (delta", i, "t.0)  to node  []  {$\\pi_{", i, j, "}$}  (delta", j, "t.0);"
+              )
             )
-          )
+          } else {
+            psi_vec <- c(
+              psi_vec, paste0(
+                "\\draw  [cov]",
+                "  (delta", i, "t.0)  to node  []  {$\\pi_{", i, j,
+                "}$}  (delta", j, "t.0);"
+              )
+            )
+          }
         }
       }
     }
@@ -779,11 +789,15 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "$\\\\\\1_{\\2}$", gsub(
       # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "log($\\\\pi_{\\2}$)", gsub(
+      "(lnsigma2)_(\\d+)", "log($\\\\pi_{\\2}$)", gsub(
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "$\\\\\\1^{b}_\\3$", gsub(
           # replace underscore digit with latex subscript for phis
-          "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\3;\\2}$", all_bpars$Param
+          "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\3;\\2}$", gsub(
+            # replace rzeta with pi in case of fixed
+            # innovation covariance (ugly fix but ok)
+            "(lnsigma|rzeta)_(\\d+)", "$\\\\pi_{\\2}$" ,all_bpars$Param
+          )
         )
       )
     )
