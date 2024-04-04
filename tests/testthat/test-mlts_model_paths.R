@@ -4,6 +4,11 @@ test_that("Common pathmodels are rendered without errors", {
   expect_no_error(
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
+  # 2 construct, 1 indicator, no lagged effects
+  model <- mlts_model(q = 2)
+  expect_no_error(
+    mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
+  )
   # 2 construct, 3 indicator, no lagged effects
   model <- mlts_model(q = 1, p = 3)
   expect_no_error(
@@ -14,6 +19,12 @@ test_that("Common pathmodels are rendered without errors", {
   expect_no_error(
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
+  # 1 constructs, 3 indicators, with btw_lvl_factor
+  # model <- mlts_model(q = 1, p = 3)
+  # model <- mlts_model_measurement(model, q = 1,  p = 3, btw_factor = F)
+  # expect_no_error(
+  #   mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
+  # )
   file.remove(c(
     "./tests/testthat/pathmodel.rmd",
     "./tests/testthat/pathmodel.pdf"
