@@ -1,6 +1,10 @@
 #' Create TeX Model Formula from mlts model object
 #'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
+#' @param file An optional string containing the name of the file and file path.
+#' Has to have .pdf file format.
+#' @param keep_tex Logical. Should the TeX file be kept (additional to the
+#' Rmd file)? Defaults to `FALSE`.
 #' @param ts To be included in future releases.
 #' An optional character vector containing the names of the time-series
 #' variables or indicators.
@@ -10,8 +14,6 @@
 #' @param outcomes To be included in future releases.
 #' An optional character vector containing the names of the between-level
 #' outcomes.
-#' @param keep_tex Logical. Should the TeX file be kept (additional to the
-#' Rmd file)? Defaults to `FALSE`.
 #' @return An RMarkdown file that is automatically rendered to a pdf document.
 #' @export
 #' @export
@@ -22,8 +24,10 @@
 #'
 #' # create formula from the specified model
 #' mlts_model_formula(model = model)
-mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
-                               outcomes = NULL, keep_tex = FALSE) {
+mlts_model_formula <- function(model, file = NULL,
+                               keep_tex = FALSE,
+                               ts = NULL, covariates = NULL,
+                               outcomes = NULL) {
 
   # extract model infos
   infos <- mlts_model_eval(model)
@@ -31,11 +35,20 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
   # extract model data frame
   model <- model
 
-  # create empty markdown file, delete if already existing
-  if (file.exists("formula.rmd")) {
-    file.remove("formula.rmd")
+  # get file path, choose top-level directory if not specified
+  if (!is.null(file)) {
+    rmd_file <- gsub(".pdf", ".rmd", file)
+    pdf_file <- file
+  } else {
+    rmd_file <- "formula.rmd"
+    pdf_file <- "formula.pdf"
   }
-  rmarkdown::draft(file = "formula.rmd",
+
+  # create empty markdown file, delete if already existing
+  if (file.exists(rmd_file)) {
+    file.remove(rmd_file)
+  }
+  rmarkdown::draft(file = rmd_file,
                    template = "formula",
                    package = "mlts",
                    edit = FALSE)
@@ -44,9 +57,9 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
   if (keep_tex == TRUE) {
     yaml_keep_tex <- gsub(
       "output: pdf_document", "output: pdf_document:\n\tkeep_tex: true",
-      readLines("formula.rmd")
+      readLines(rmd_file)
     )
-    writeLines(yaml_keep_tex, "formula.rmd")
+    writeLines(yaml_keep_tex, rmd_file)
   }
 
   # latex center begin and end
@@ -225,7 +238,7 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
 
 
   # paste within_model to markdown
-  cat(decomposition, file = "formula.rmd", append = TRUE)
+  cat(decomposition, file = rmd_file, append = TRUE)
 
 
 
@@ -360,7 +373,7 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
 
 
   # paste within_model to markdown
-  cat(within_model, file = "formula.rmd", append = TRUE)
+  cat(within_model, file = rmd_file, append = TRUE)
 
 
   # between-model #############################################################
@@ -606,13 +619,13 @@ mlts_model_formula <- function(model, ts = NULL, covariates = NULL,
 
 
   # paste within_model to markdown
-  cat(between_model, file = "formula.rmd", append = TRUE)
+  cat(between_model, file = rmd_file, append = TRUE)
 
   # render markdown input #####################################################
 
   # render markdown
   rmarkdown::render(
-    input = "formula.rmd"
+    input = rmd_file
   )
 
 }

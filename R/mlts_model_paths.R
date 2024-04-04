@@ -1,6 +1,12 @@
 #' Create Path Diagrams from mlts model object
 #'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
+#' @param file An optional string containing the name of the file and file path.
+#' Has to have .pdf file format.
+#' @param add_png Logical. Set to `TRUE` to transform created PDF to .png file
+#' using `pdftools::pdf_convert`.
+#' @param keep_tex Logical. Should the TeX file be kept (additional to the
+#' Rmd file)? Defaults to `FALSE`.
 #' @param ts To be included in future releases.
 #' An optional character vector containing the names of the time-series
 #' variables or indicators.
@@ -10,10 +16,6 @@
 #' @param outcomes To be included in future releases.
 #' An optional character vector containing the names of the between-level
 #' outcomes.
-#' @param add_png Logical. Set to `TRUE` to transform created PDF to .png file
-#' using `pdftools::pdf_convert`.
-#' @param keep_tex Logical. Should the TeX file be kept (additional to the
-#' Rmd file)? Defaults to `FALSE`.
 #' @return An RMarkdown file that is automatically rendered to a pdf document.
 #' @export
 #'
@@ -23,9 +25,10 @@
 #'
 #' # create a pathmodel from the specified model
 #' mlts_model_paths(model = model)
-mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
-                             outcomes = NULL,
-                             add_png = FALSE, keep_tex = FALSE) {
+mlts_model_paths <- function(model, file = NULL,
+                             add_png = FALSE, keep_tex = FALSE,
+                             ts = NULL, covariates = NULL,
+                             outcomes = NULL) {
 
 
   # extract model infos
@@ -34,11 +37,20 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   # extract model data frame
   model <- model
 
-  # create empty markdown file, delete if already existing
-  if (file.exists("pathmodel.rmd")) {
-    file.remove("pathmodel.rmd")
+  # get file path, choose top-level directory if not specified
+  if (!is.null(file)) {
+    rmd_file <- gsub(".pdf", ".rmd", file)
+    pdf_file <- file
+  } else {
+    rmd_file <- "pathmodel.rmd"
+    pdf_file <- "pathmodel.pdf"
   }
-  rmarkdown::draft(file = "pathmodel.rmd",
+
+  # create empty markdown file, delete if already existing
+  if (file.exists(rmd_file)) {
+    file.remove(rmd_file)
+  }
+  rmarkdown::draft(file = rmd_file,
                    template = "pathmodel",
                    package = "mlts",
                    edit = FALSE)
@@ -47,9 +59,9 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   if (keep_tex == TRUE) {
     yaml_keep_tex <- gsub(
       "output: pdf_document", "output: pdf_document:\n\tkeep_tex: true",
-      readLines("pathmodel.rmd")
+      readLines(rmd_file)
     )
-    writeLines(yaml_keep_tex, "pathmodel.rmd")
+    writeLines(yaml_keep_tex, rmd_file)
   }
 
   # latex figure begin and end
@@ -403,7 +415,7 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   )
 
   # paste decomposition to markdown
-  cat(decomposition, file = "pathmodel.rmd", append = TRUE)
+  cat(decomposition, file = rmd_file, append = TRUE)
 
 
   # within-model ##############################################################
@@ -767,7 +779,7 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   )
 
   # paste within_model to markdown
-  cat(within_model, file = "pathmodel.rmd", append = TRUE)
+  cat(within_model, file = rmd_file, append = TRUE)
 
 
   # between-model #############################################################
@@ -1000,20 +1012,20 @@ mlts_model_paths <- function(model, ts = NULL, covariates = NULL,
   )
 
   # paste within_model to markdown
-  cat(between_model, file = "pathmodel.rmd", append = TRUE)
+  cat(between_model, file = rmd_file, append = TRUE)
 
 
   # render markdown input #####################################################
 
   # render markdown
   rmarkdown::render(
-    input = "pathmodel.rmd"
+    input = rmd_file
   )
 
   # optional: store PDF pages as separate pngs ################################
   if (add_png == T) {
     pdftools::pdf_convert(
-      pdf = "pathmodel.pdf",
+      pdf = pdf_file,
       format = "png",
       pages = NULL,
       filenames = NULL,

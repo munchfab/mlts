@@ -18,8 +18,7 @@
 \arguments{
 \item{object}{An object of class \code{mltsfit}.}
 
-\item{priors}{Logical. Should priors be included in the summary?
-Defaults to \code{FALSE}.}
+\item{priors}{Add prior information (default = FALSE).}
 
 \item{se}{Logical. Should the Monte Carlo Standard Error be included
 in the summary? Defaults to \code{FALSE}.}
@@ -30,13 +29,11 @@ interval. Default is .95.}
 \item{bpe}{Bayesian posterior estimate can be either "mean" (the default)
 or the "median" of the posterior distribution.}
 
+\item{digits}{Number of digits.}
+
 \item{flag_signif}{Add significance flags based on \code{prob} (default = FALSE).}
 
 \item{...}{Additional arguments affecting the summary produced.}
-
-\item{digits.}{Number of digits.}
-
-\item{priors.}{Add prior information (default = FALSE).}
 }
 \value{
 A summary of model parameters.

@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 library(mlts)
 ```
 
-One of the simplest models we can fit with `mlts` is a first order autoregressive model with only one observed variable. We start by specifying the model with `mlts_model()`. The argument `q` controls the number of time-series constructs. For this simple model, the following call is sufficient:
+One of the simplest models we can fit with `mlts` is a multilevel first order autoregressive model with only one observed variable. We start by specifying the model with `mlts_model()`. The argument `q` controls the number of time-series constructs. For this simple model, the following call is sufficient:
 
 ```{r}
 ar1_model <- mlts_model(q = 1)
