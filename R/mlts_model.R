@@ -1,4 +1,4 @@
-#' Title
+#' Build a multilevel latent time series model
 #'
 #' @param q Integer. The number of time-varying constructs.
 #' @param p Integer. For multiple-indicator models, specify a vector of length
@@ -35,7 +35,7 @@
 #' between-level covariates as predictors of specific random effects, a named
 #' list (using the `param`-labels in `model`) can be entered (see details).
 #' @param out_pred_add_btw tba
-#' @return An object of class `data.frame`.
+#' @return An object of class `data.frame` containing all model parameters.
 #' @export
 #'
 mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),

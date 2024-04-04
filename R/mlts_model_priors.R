@@ -1,6 +1,6 @@
-#' Title
+#' Add custom prior distributions to mlts model
 #'
-#' @param model data.frame. Output of model-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
 #'

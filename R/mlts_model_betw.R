@@ -1,6 +1,6 @@
-#' Title
+#' Add between-level variables to mlts model
 #'
-#' @param model data.frame. Output of `model()`-functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param ranef_pred character vector or a named list. Include between-level covariate(s)
 #' as predictor(s) of all random effects in `model` by entering a vector of unique variable
 #' names. Alternatively, to include between-level covariates or differing sets of

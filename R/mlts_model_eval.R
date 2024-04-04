@@ -1,6 +1,6 @@
 #' Title
 #'
-#' @param model data.frame. Output of model-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #'
 #' @return An object of class `data.frame`.
 #' @export

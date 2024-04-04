@@ -1,9 +1,9 @@
-#' Add measurement model structure to a `model`-object
+#' Add measurement model structure to mlts model
 #'
 #' Add (or replace) a measurement model of an existing `model`-object. As default
 #' option, a multiple-indicator model will be included assuming a common between-level factor.
 #'
-#' @param model data.frame. Output of model-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param q integer. The number of time-varying constructs.
 #' @param p integer. A vector of length `q` with the number of manifest
 #' indicators per construct.

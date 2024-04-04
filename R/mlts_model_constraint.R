@@ -1,6 +1,6 @@
-#' Title
+#' Add parameter constraints to mlts model
 #'
-#' @param model data.frame. Output of model-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param fix_dynamics logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
 #' @param fix_inno_vars logical. Set all innovation variances to a constant value.

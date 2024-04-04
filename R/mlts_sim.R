@@ -1,6 +1,6 @@
-#' Title
+#' Simulate data from mlts model
 #'
-#' @param model data.frame. Output of model-Functions.
+#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
 #' @param N integer. Number of observational units.
