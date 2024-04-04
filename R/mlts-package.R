@@ -2,13 +2,13 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom magrittr %>%
-#' @import Rcpp
 #' @import methods
+#' @import Rcpp
+#' @importFrom magrittr %>%
+#' @importFrom RcppParallel RcppParallelLibs
+#' @importFrom rlang .data
 #' @importFrom rstan sampling
 #' @importFrom rstantools rstan_config
-#' @importFrom RcppParallel RcppParallelLibs
-#' @import Rcpp
 #' @useDynLib mlts, .registration = TRUE
 ## usethis namespace: end
 NULL
