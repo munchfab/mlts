@@ -61,21 +61,25 @@ mlts_model_eval <- function(model){
 
   # number of indicators per latent construct
   if (isLatent == T) {
+    # the following is probably not needed because we have extract_indicator_info()
     # separate measurement model intercepts
-    alphas <- model[model$Model == "Measurement" &
-                         grepl("alpha", model$Param),
-                       "Param"]
-    # create numeric vector with all indicators
-    # and add 1 to the end (to measure number of indicators of last construct)
-    ind <- c(as.numeric(gsub("(.+).(\\d)", "\\2", alphas)), 1)
-    # create a difference vector
-    diffs <- c(1, diff(ind))
-    # extract number of indicators
-    p <- ind[which(diffs <= 0) - 1]
+    # alphas <- model[model$Model == "Measurement" &
+    #                      grepl("alpha", model$Param),
+    #                    "Param"]
+    # # create numeric vector with all indicators
+    # # and add 1 to the end (to measure number of indicators of last construct)
+    # ind <- c(as.numeric(gsub("(.+).(\\d)", "\\2", alphas)), 1)
+    # # create a difference vector
+    # diffs <- c(1, diff(ind))
+    # # extract number of indicators
+    # p <- ind[which(diffs <= 0) - 1]
 
     # extract indicator information
     ## start with within-part (which always contains all indicators)
     ind_base = extract_indicator_info(model, level = "Within", type = "Loading", incl.pos_p = T)
+
+    # extract number of indicators
+    p <- as.numeric(aggregate(p ~ q, data = ind_base, FUN = max)$p)
 
     ## step-wise addition: ---------------------------------------------------
     indicators = merge(
@@ -128,6 +132,10 @@ mlts_model_eval <- function(model){
       which(fixefs$Param == x)
     }))
     indicators$YB_free_pos = cumsum(indicators$sigmaB_isFree)
+    indicators$btw_factor <- ifelse(
+      indicators$alpha_isFree == 0 & grepl("mu", indicators$etaB_label),
+      0, 1
+    )
 
     # prepare infos to be passed to stan model ---------------------------------
     n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = T)

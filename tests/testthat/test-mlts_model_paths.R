@@ -9,8 +9,13 @@ test_that("Common pathmodels are rendered without errors", {
   expect_no_error(
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
-  # 2 construct, 3 indicator, no lagged effects
+  # 1 construct, 3 indicator, no lagged effects
   model <- mlts_model(q = 1, p = 3)
+  expect_no_error(
+    mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
+  )
+  # 2 construct, 3 indicator, no lagged effects
+  model <- mlts_model(q = 2, p = c(3, 3))
   expect_no_error(
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
@@ -19,14 +24,19 @@ test_that("Common pathmodels are rendered without errors", {
   expect_no_error(
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
-  # 1 constructs, 3 indicators, with btw_lvl_factor
-  # model <- mlts_model(q = 1, p = 3)
-  # model <- mlts_model_measurement(model, q = 1,  p = 3, btw_factor = F)
-  # expect_no_error(
-  #   mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
-  # )
-  file.remove(c(
-    "./tests/testthat/pathmodel.rmd",
-    "./tests/testthat/pathmodel.pdf"
-  ))
+  # 1 constructs, 3 indicators, with btw_factor = F
+  model <- mlts_model(q = 1, p = 3)
+  model <- mlts_model_measurement(model, q = 1,  p = 3, btw_factor = F)
+  expect_no_error(
+    mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
+  )
+  # 2 constructs, 3 indicators each, with btw_factor = F
+  model <- mlts_model(q = 2, p = c(3, 3))
+  model <- mlts_model_measurement(model, q = 2,  p = c(3, 3), btw_factor = F)
+  expect_no_error(
+    mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
+  )
+  # remove files
+  files <- list.files("./tests/testthat/")
+  file.remove(files[grep("pathmodel", files)])
 })

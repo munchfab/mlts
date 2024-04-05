@@ -147,7 +147,19 @@ mlts_model_paths <- function(model, file = NULL,
       ind_vec <- c() # indicator variables
       # latent variables (within and between)
       wlat <- "\\node  [latent]  (eta1wt)  [above = 4em of c]  {$\\eta^w_{1,t}$};"
-      blat <- "\\node  [latent]  (eta1b)  [below = 4em of c]  {$\\eta^b_{1}$};"
+      if (all(infos$indicators$btw_factor == 1)) {
+        blat <- "\\node  [latent]  (eta1b)  [below = 4em of c]  {$\\eta^b_{1}$};"
+      } else {
+        blat_vec <- c()
+        for (i in 1:infos$p) {
+          blat_vec[i] <- paste0(
+            "\\node  [latent, minimum width = 3em]  (mu1", i,
+            ")  [below = 4em of y1", i, "t]  ",
+            "{$\\mu_{1", i, "}$};"
+          )
+        }
+        blat <- paste(blat_vec, collapse = "\n")
+      }
       wlat_paths_vec <- c() # paths from latent variables to indicators
       blat_paths_vec <- c() # paths from latent variables to indicators
       epswt_vec <- c() # residuals within
@@ -158,12 +170,12 @@ mlts_model_paths <- function(model, file = NULL,
         if (i == 1) {
           # first indicator variable
           ind_vec <- c(ind_vec, paste0(
-            "\\node  [manifest]  (y", i, "t)  {$y_{", i, ",t}$};"
+            "\\node  [manifest]  (y1", i, "t)  {$y_{1", i, ",t}$};"
           ))
           # first error (labeled)
           epswt_vec <- c(epswt_vec, paste0(
-            "\\node  [error]  (eps", i, "wt)  [above left = 1em of y",
-            i, "t]  {\\scriptsize$\\varepsilon^w_{", i, ",t}$};"
+            "\\node  [error]  (eps1", i, "wt)  [above left = 1em of y1",
+            i, "t]  {\\scriptsize$\\varepsilon^w_{1", i, ",t}$};"
           ))
           # epsb_vec <- c(epsb_vec, paste0(
           #   "\\node  [error]  (eps", i, "b)  [below left = 1em of y",
@@ -172,27 +184,27 @@ mlts_model_paths <- function(model, file = NULL,
         } else {
           # all other indicators
           ind_vec <- c(ind_vec, paste0(
-            "\\node  [manifest]  (y", i, "t)  [right = 1.5em of y",
-            i - 1, "t]  {$y_{", i, ",t}$};"
+            "\\node  [manifest]  (y1", i, "t)  [right = 1.5em of y1",
+            i - 1, "t]  {$y_{1", i, ",t}$};"
           ))
           # residuals
           epswt_vec <- c(epswt_vec, paste0(
-            "\\node  [error]  (eps", i, "wt)  [above left = .75em of y", i, "t]  {};"
+            "\\node  [error]  (eps1", i, "wt)  [above left = .75em of y1", i, "t]  {};"
           ))
           if (i == infos$p) {
             # place coordinates between first and last indicator variables
             # of construct
             coord <- paste0(
-              "\\node  [coordinate]  (c)  at ($(y1t) !0.5! (y", i, "t)$)  {};"
+              "\\node  [coordinate]  (c)  at ($(y11t) !0.5! (y1", i, "t)$)  {};"
             )
             # label last error on between level
             epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, "b)  [below right = 1em of y",
-              i, "t]  {\\scriptsize$\\varepsilon^b_{", i, "}$};"
+              "\\node  [error]  (eps1", i, "b)  [below right = 1em of y1",
+              i, "t]  {\\scriptsize$\\varepsilon^b_{1", i, "}$};"
             ))
           } else {
             epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, "b)  [below right = .75em of y", i, "t]  {};"
+              "\\node  [error]  (eps1", i, "b)  [below right = .75em of y1", i, "t]  {};"
             ))
           }
         }
@@ -203,22 +215,27 @@ mlts_model_paths <- function(model, file = NULL,
               # label path with constraint if necessary
               model[model$Param == paste0("lambdaW_1.", i), "Constraint"] == "= 1",
               "$1$}", paste0("$\\lambda^w_{", i, "}$}")
-            ), "  (y", i, "t.north);"
+            ), "  (y1", i, "t.north);"
         ))
         blat_paths_vec <- c(blat_paths_vec, paste0(
-          "\\draw  [path]  (eta1b)  to node  [fill = white, anchor = center]
-            {\\scriptsize", ifelse(
-              # label path with constraint if necessary
-              model[model$Param == paste0("lambdaB_1.", i), "Constraint"] == "= 1",
-              "$1$}", paste0("$\\lambda^b_{", i, "}$}")
-            ), "  (y", i, "t.south);"
+          "\\draw  [path]  ", ifelse(
+            all(infos$indicators$btw_factor == 1),
+            paste0("(eta1b)"), paste0("(mu1", i, ")")
+          ), "  to node  ", ifelse(
+            all(infos$indicators$btw_factor == 0),
+            "[]", "[fill = white, anchor = center]"
+          ),  "{", ifelse(
+            # label path with constraint if necessary
+            model[model$Param == paste0("lambdaB_1.", i), "Constraint"] == "= 1",
+            "\\scriptsize $1$", paste0("\\scriptsize $\\lambda^b_{", i, "}$")
+          ), "}  (y1", i, "t.south);"
         ))
         epswt_paths_vec <- c(epswt_paths_vec, paste0(
-          "\\draw  [path]  (eps", i, "wt)  to node  []  {}  (y", i, "t.north west);"
+          "\\draw  [path]  (eps1", i, "wt)  to node  []  {}  (y1", i, "t.north west);"
         ))
         if (i != 1) {
           epsb_paths_vec <- c(epsb_paths_vec, paste0(
-            "\\draw  [path]  (eps", i, "b)  to node  []  {}  (y", i, "t.south east);"
+            "\\draw  [path]  (eps1", i, "b)  to node  []  {}  (y1", i, "t.south east);"
           ))
         }
       }
@@ -281,10 +298,22 @@ mlts_model_paths <- function(model, file = NULL,
           "\\node  [latent]  (etaw", i, "t)  [above = 4em of c", i,
           "]  {$\\eta^w_{", i, ",t}$};"
         ))
-        blat_vec <- c(blat_vec, paste0(
-          "\\node  [latent]  (etab", i, ")  [below = 4em of c", i,
-          "]  {$\\eta^b_{", i, "}$};"
-        ))
+        if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
+          # if common between-factor is modeled, use eta
+          blat_vec <- c(blat_vec, paste0(
+            "\\node  [latent]  (etab", i, ")  [below = 4em of c", i,
+            "]  {$\\eta^b_{", i, "}$};"
+          ))
+        } else {
+          # if no between-factor is modeled, use mu
+          for (j in 1:infos$p[i]) {
+            blat_vec <- c(blat_vec, paste0(
+              "\\node  [latent, minimum width = 3em]  (mu", i, j,
+              ")  [below = 3em of y", i, j,
+              "t]  {$\\mu_{", i, j, "}$};"
+            ))
+          }
+        }
         # if one construct only has 1 indicator, place coordinate at indicator node
         if (infos$p[i] == 1) {
           coord_vec <- c(coord_vec, paste0(
@@ -407,15 +436,22 @@ mlts_model_paths <- function(model, file = NULL,
               "$1$}", paste0("$\\lambda^w_{", i, j, "}$}")
             ), "  (y", i, j, "t.north);"
           ))
-          blat_paths_vec <- c(blat_paths_vec, paste0(
-            "\\draw  [path]  (etab",
-            i, ")  to node  [fill = white, anchor = center]  {\\scriptsize",
-            ifelse(
-              # label path with constraint if necessary
-              model[model$Param == paste0("lambdaB_", i, ".", j), "Constraint"] == "= 1",
-              "$1$}", paste0("$\\lambda^b_{", i, j, "}$}")
-            ), "  (y", i, j, "t.south);"
-          ))
+          if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
+            blat_paths_vec <- c(blat_paths_vec, paste0(
+              "\\draw  [path]  (etab",
+              i, ")  to node  [fill = white, anchor = center]  {\\scriptsize",
+              ifelse(
+                # label path with constraint if necessary
+                model[model$Param == paste0("lambdaB_", i, ".", j), "Constraint"] == "= 1",
+                "$1$}", paste0("$\\lambda^b_{", i, j, "}$}")
+              ), "  (y", i, j, "t.south);"
+            ))
+          } else {
+            blat_paths_vec <- c(blat_paths_vec, paste0(
+              "\\draw  [path]  (mu",
+              i, j, ")  to node  []  {}  (y", i, j, "t.south);"
+            ))
+          }
         }
       }
       # paste together
