@@ -3,7 +3,7 @@
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
 #' @param file An optional string containing the name of the file and file path.
 #' Has to have .pdf file format.
-#' @param keep_tex Logical. Should the TeX file be kept (additional to the
+#' @param keep_tex lnical. Should the TeX file be kept (additional to the
 #' Rmd file)? Defaults to `FALSE`.
 #' @param ts To be included in future releases.
 #' An optional character vector containing the names of the time-series
@@ -120,25 +120,43 @@ mlts_model_formula <- function(model, file = NULL,
     int_b_vec <- c() # between-model intercepts
     for (i in 1:infos$q) {
       lat_w_vec <- c(lat_w_vec, paste0("\\eta^w_{", i, ", t} \\\\"))
-      lat_b_vec <- c(lat_b_vec, paste0("\\eta^b_{", i, "} \\\\"))
       lam_w_list[[i]] <- matrix(ncol = infos$q, nrow = infos$p[i], data = 0)
-      lam_b_list[[i]] <- matrix(ncol = infos$q, nrow = infos$p[i], data = 0)
+      if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
+        # if common between-factor is modeled, use eta
+        lat_b_vec <- c(lat_b_vec, paste0("\\eta^b_{", i, "} \\\\"))
+        # and use loading matrix
+        lam_b_list[[i]] <- matrix(ncol = infos$q, nrow = infos$p[i], data = 0)
+      } else {
+        # if no common between-factor is modeled, use mu (nothing)
+        lat_b_vec <- lat_b_vec
+        # and don't use loading matrix
+        lam_b_list[[i]] <- NULL
+      }
       for (j in 1:infos$p[i]) {
         # decomposition to within- and between-parts
         ts_vec <- c(ts_vec, paste0("y_{", i, j, ", t} \\\\"))
         ts_w_vec <- c(ts_w_vec, paste0("y_{", i, j, ", t}^w \\\\"))
         ts_b_vec <- c(ts_b_vec, paste0("\\mu_{", i, j, "} \\\\"))
         eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", t}^w \\\\"))
-        eps_b_vec <- c(eps_b_vec, ifelse(
-          j == 1,
-          "0 \\\\", # first residual fixed to zero
-          paste0("\\varepsilon_{", i, j, "}^b \\\\")
-        ))
-        int_b_vec <- c(int_b_vec, ifelse(
-          j == 1,
-          "0 \\\\", # first indicator intercept fixed to zero
-          paste0("\\alpha_{", i, j, "}^b \\\\")
-        ))
+        # if common between-factor is modeled, build between-level formula
+        if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
+          # if common between-factor is modeled, use eta
+          int_b_vec <- c(int_b_vec, ifelse(
+            j == 1,
+            "0 \\\\", # first indicator intercept fixed to zero
+            paste0("\\alpha_{", i, j, "}^b \\\\")
+          ))
+          # and residual vector
+          eps_b_vec <- c(eps_b_vec, ifelse(
+            j == 1,
+            "0 \\\\", # first residual fixed to zero
+            paste0("\\varepsilon_{", i, j, "}^b \\\\")
+          ))
+        } else {
+          # if no common between-factor is modeled, don't add formula
+          int_b_vec <- int_b_vec
+          eps_b_vec <- eps_b_vec
+        }
         # within-model loading matrix
         if (
           infos$indicators[
@@ -151,15 +169,19 @@ mlts_model_formula <- function(model, file = NULL,
           lam_w_list[[i]][j, i] <- paste0("\\lambda_{", i, j, "}^w")
         }
         # between-model loading matrix
-        if (
-          infos$indicators[
-            infos$indicators$q == i & infos$indicators$p == j,
-            "lambdaB_isFree"
-          ] == 0
-        ) {
-          lam_b_list[[i]][j, i] <- "1"
+        if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
+          if (
+            infos$indicators[
+              infos$indicators$q == i & infos$indicators$p == j,
+              "lambdaB_isFree"
+            ] == 0
+          ) {
+            lam_b_list[[i]][j, i] <- "1"
+          } else {
+            lam_b_list[[i]][j, i] <- paste0("\\lambda_{", i, j, "}^b")
+          }
         } else {
-          lam_b_list[[i]][j, i] <- paste0("\\lambda_{", i, j, "}^b")
+          lam_b_list <- lam_b_list
         }
       }
     }
@@ -177,12 +199,14 @@ mlts_model_formula <- function(model, file = NULL,
     }
     lam_b_mat <- do.call(rbind, lam_b_list)
     lam_b_vec <- c()
-    for (i in 1:nrow(lam_b_mat)) {
-      for (j in 1:ncol(lam_b_mat)) {
-        if (j == ncol(lam_b_mat)) {
-          lam_b_vec <- c(lam_b_vec, paste0(lam_b_mat[i, j], " \\\\"))
-        } else {
-          lam_b_vec <- c(lam_b_vec, paste0(lam_b_mat[i, j], " &"))
+    if (!is.null(lam_b_mat)) {
+      for (i in 1:nrow(lam_b_mat)) {
+        for (j in 1:ncol(lam_b_mat)) {
+          if (j == ncol(lam_b_mat)) {
+            lam_b_vec <- c(lam_b_vec, paste0(lam_b_mat[i, j], " \\\\"))
+          } else {
+            lam_b_vec <- c(lam_b_vec, paste0(lam_b_mat[i, j], " &"))
+          }
         }
       }
     }
@@ -207,27 +231,31 @@ mlts_model_formula <- function(model, file = NULL,
       sep = "\n"
     )
     dcf_lhs_w <- paste(begin_bmatrix, ts_w, end_bmatrix, sep = "\n")
-    dcf_lhs_b <- paste(begin_bmatrix, ts_b, end_bmatrix, sep = "\n")
     dcf_rhs_w <- paste(
       begin_bmatrix, lam_w, end_bmatrix,
       begin_bmatrix, lat_w, end_bmatrix, "+",
       begin_bmatrix, eps_w, end_bmatrix,
       sep = "\n"
     )
-    dcf_rhs_b <- paste(
-      begin_bmatrix, int_b, end_bmatrix, "+",
-      begin_bmatrix, lam_b, end_bmatrix,
-      begin_bmatrix, lat_b, end_bmatrix, "+",
-      begin_bmatrix, eps_b, end_bmatrix,
-      sep = "\n"
-    )
+    if (!is.null(lat_b_vec)) {
+      dcf_lhs_b <- paste(begin_bmatrix, ts_b, end_bmatrix, sep = "\n")
+      dcf_rhs_b <- paste(
+        begin_bmatrix, int_b, end_bmatrix, "+",
+        begin_bmatrix, lam_b, end_bmatrix,
+        begin_bmatrix, lat_b, end_bmatrix, "+",
+        begin_bmatrix, eps_b, end_bmatrix,
+        sep = "\n"
+      )
+    }
 
     # decomposition formula with within- and between-level measurement model
     dcf <- paste(
       begin_math,
       dcf_lhs, "=", dcf_rhs, "\\\\",
       dcf_lhs_w, "=", dcf_rhs_w, "\\\\",
-      dcf_lhs_b, "=", dcf_rhs_b, "\\\\",
+      if (!is.null(lat_b_vec)) {
+        paste(dcf_lhs_b, "=", dcf_rhs_b, "\\\\")
+      },
       end_math
     )
   }
@@ -266,7 +294,7 @@ mlts_model_formula <- function(model, file = NULL,
   all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
   all_phis$names <- gsub(
     # replace underscore digit with latex subscript
-    "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", all_phis$Param
+    "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", all_phis$Param
   )
 
   # all_phis$mat_row <- as.numeric(
@@ -384,20 +412,20 @@ mlts_model_formula <- function(model, file = NULL,
   all_bpars <- model[grepl("Fix", model$Type), ]
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
-  # replace rzeta with pi (ugly fix but ok)
-  all_bpars$Param <- gsub("rzeta", "pi", all_bpars$Param)
+  # replace rzeta with psi (ugly fix but ok)
+  all_bpars$Param <- gsub("rzeta", "psi", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
-      # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+      # replace lnsigma with ln(pi)
+      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
           # replace underscore digit with latex subscript for phis
-          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", gsub(
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
             # replace rzeta with pi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(lnsigma|pi)_(\\d+)", "\\\\pi_{\\2}", all_bpars$Param
+            "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", all_bpars$Param
           )
         )
       )
@@ -407,12 +435,12 @@ mlts_model_formula <- function(model, file = NULL,
   all_bpars$names2 <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2,i}", gsub(
-      # replace lnsigma with log(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2,i})", gsub(
+      # replace lnsigma with ln(pi)
+      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2},i})", gsub(
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
           # replace underscore digit with latex subscript for phis
-          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2,i}", all_bpars$Param
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3,i}", all_bpars$Param
         )
       )
     )
@@ -468,8 +496,8 @@ mlts_model_formula <- function(model, file = NULL,
     re_preds$names <- gsub(
       # replace underscore digit with latex subscript
       "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
-        # replace lnsigma with log(pi)
-        "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+        # replace lnsigma with ln(pi)
+        "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\pi_{\\2})", gsub(
           # replace uppercase B for between-level latent variables
           "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
             # replace underscore digit with latex subscript for phis
@@ -539,8 +567,8 @@ mlts_model_formula <- function(model, file = NULL,
     out$names <- gsub(
       # replace underscore digit with latex subscript
       "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
-        # replace lnsigma with log(pi)
-        "(lnsigma2|lnsigma)_(\\d+)", "\\\\log(\\\\pi_{\\2})", gsub(
+        # replace lnsigma with ln(pi)
+        "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\pi_{\\2})", gsub(
           # replace uppercase B for between-level latent variables
           "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
             # replace underscore digit with latex subscript for phis

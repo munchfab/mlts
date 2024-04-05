@@ -14,8 +14,14 @@ test_that("Common formulas are rendered without errors", {
   expect_no_error(
     mlts_model_formula(model, file = "./tests/testthat/formula.pdf")
   )
-  file.remove(c(
-    "./tests/testthat/formula.rmd",
-    "./tests/testthat/formula.pdf"
-  ))
+  # 1 constructs, 3 indicators, with btw_factor = F
+  model <- mlts_model(q = 1, p = 3)
+  model <- mlts_model_measurement(model, q = 1,  p = 3, btw_factor = F)
+  expect_no_error(
+    mlts_model_formula(model, file = "./tests/testthat/formula.pdf")
+  )
+
+  # remove files
+  files <- list.files("./tests/testthat/", full.names = TRUE)
+  file.remove(files[grep("formula", files)])
 })

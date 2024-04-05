@@ -37,6 +37,6 @@ test_that("Common pathmodels are rendered without errors", {
     mlts_model_paths(model, file = "./tests/testthat/pathmodel.pdf")
   )
   # remove files
-  files <- list.files("./tests/testthat/")
+  files <- list.files("./tests/testthat/", full.names = TRUE)
   file.remove(files[grep("pathmodel", files)])
 })
