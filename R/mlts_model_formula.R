@@ -2,7 +2,7 @@
 #'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
 #' @param file An optional string containing the name of the file and file path.
-#' Has to have .pdf file format.
+#' Has to end with .pdf file format.
 #' @param keep_tex lnical. Should the TeX file be kept (additional to the
 #' Rmd file)? Defaults to `FALSE`.
 #' @param ts To be included in future releases.

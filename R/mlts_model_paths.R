@@ -2,7 +2,7 @@
 #'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
 #' @param file An optional string containing the name of the file and file path.
-#' Has to have .pdf file format.
+#' Has to end with .pdf file format.
 #' @param add_png Logical. Set to `TRUE` to transform created PDF to .png file
 #' using `pdftools::pdf_convert`.
 #' @param keep_tex Logical. Should the TeX file be kept (additional to the
