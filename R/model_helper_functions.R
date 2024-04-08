@@ -94,3 +94,13 @@ extract_indicator_info <- function(model, level = "Within", type = "Loading", in
 
   return(ind.info)
 }
+
+# change colnames in summary function
+change_colnames <-  function(data, cols) {
+  names <- colnames(data)
+  names[grepl("Param", colnames(data))] <- ""
+  names[grepl("50%", colnames(data))] <- "Post. Median"
+  names[grepl("mean", colnames(data))] <- "Post. Mean"
+  names[grepl("sd", colnames(data))] <- "Post. SD"
+  return(names)
+}
