@@ -2,12 +2,12 @@
 % Please edit documentation in R/mlts_model_measurement.R
 \name{mlts_model_measurement}
 \alias{mlts_model_measurement}
-\title{Add measurement model structure to a \code{model}-object}
+\title{Add measurement model structure to mlts model}
 \usage{
 mlts_model_measurement(model, q, p, btw_factor = TRUE, btw_model = NULL)
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{q}{integer. The number of time-varying constructs.}
 

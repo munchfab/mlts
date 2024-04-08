@@ -79,7 +79,7 @@ mlts_model_eval <- function(model){
     ind_base = extract_indicator_info(model, level = "Within", type = "Loading", incl.pos_p = T)
 
     # extract number of indicators
-    p <- as.numeric(aggregate(p ~ q, data = ind_base, FUN = max)$p)
+    p <- as.numeric(stats::aggregate(p ~ q, data = ind_base, FUN = max)$p)
 
     ## step-wise addition: ---------------------------------------------------
     indicators = merge(

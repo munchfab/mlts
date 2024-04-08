@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_sim.R
 \name{mlts_sim}
 \alias{mlts_sim}
-\title{Title}
+\title{Simulate data from mlts model}
 \usage{
 mlts_sim(
   model,
@@ -15,7 +15,7 @@ mlts_sim(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}
@@ -34,5 +34,5 @@ added.}
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Simulate data from mlts model
 }

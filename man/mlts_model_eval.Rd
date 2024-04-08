@@ -7,7 +7,7 @@
 mlts_model_eval(model)
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 }
 \value{
 An object of class \code{data.frame}.

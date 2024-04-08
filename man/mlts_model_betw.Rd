@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_model_betw.R
 \name{mlts_model_betw}
 \alias{mlts_model_betw}
-\title{Title}
+\title{Add between-level variables to mlts model}
 \usage{
 mlts_model_betw(
   model,
@@ -12,7 +12,7 @@ mlts_model_betw(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of \code{model()}-functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{ranef_pred}{character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
@@ -34,5 +34,5 @@ list (using the \code{param}-labels in \code{model}) can be entered (see details
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Add between-level variables to mlts model
 }
