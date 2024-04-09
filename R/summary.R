@@ -34,7 +34,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   date <- object$stanfit@date
   algorithm <- object$stanfit@stan_args[[1]]$algorithm
   bpe = ifelse(bpe == "mean", "mean", "50%")
-  alpha = 1-prob
+  alpha = 1 - prob
   probs = c(alpha/2, .50, 1-alpha/2)
   prob.cols = paste0(c(100-(100-(alpha/2)*100), 100-(alpha/2)*100), "%")
 
@@ -42,7 +42,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # create a summary table using the monitor-function in rstan
   par_labels = mlts_param_labels(object$model)
   sums <- rstan::monitor(object$stanfit, probs = probs, print = F)
-  sums <- round(sums[1:dim(sums)[1],1:ncol(sums)],digits)
+  sums <- round(sums[1:dim(sums)[1], 1:ncol(sums)], digits)
   sums$Param_stan = row.names(sums)
   pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
 
@@ -213,7 +213,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   # get fixed effects for printing
   fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(cols)]
-  colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(fixef_params) <- change_colnames(fixef_params)
 
   # get random effects SD for printing
   ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(cols)]
@@ -221,23 +222,25 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- gsub(
     "sigma_", "", ranef_sds$Param
   )
-  colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(ranef_sds) <- change_colnames(ranef_sds)
 
   # get random effects correlation for printing
   ranef_corrs <- pop_pars[grepl("RE correlation", pop_pars$Type), c(cols)]
-
   # drop r_ prefix in Param
   ranef_corrs[grepl("r_", ranef_corrs$Param), "Param"] <- gsub(
     "r_", "", ranef_corrs$Param
   )
-  colnames(ranef_corrs)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(ranef_corrs)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(ranef_corrs) <- change_colnames(ranef_corrs)
 
   # get random effect predictors
   ranef_preds <- pop_pars[grepl("RE prediction", pop_pars$Type), c(cols)]
   ranef_preds[grepl(".ON.", ranef_preds$Param), "Param"] <- gsub(
     "b_(.*).ON.(.*)", "\\1 ~ \\2", ranef_preds$Param
   )
-  colnames(ranef_preds)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(ranef_preds)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(ranef_preds) <- change_colnames(ranef_preds)
 
   # get outcome prediction effects
   outcomes <- pop_pars[
@@ -250,18 +253,21 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
       NA
     )
   )
-  colnames(outcomes)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(outcomes)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(outcomes) <- change_colnames(outcomes)
 
   # get outcome SDs
   outcomes_sds <- pop_pars[grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),cols]
   outcomes_sds[grepl("sigma_", outcomes_sds$Param), "Param"] <- gsub(
     "sigma_(\\w+)", "\\1", outcomes_sds$Param
   )
-  colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(outcomes_sds) <- change_colnames(outcomes_sds)
 
   # get measurement model parameters
   mm_pars <- pop_pars[grepl("Measurement|Item|Loading", pop_pars$Type),cols]
-  colnames(mm_pars)[1:3] <- c("", "Estimate", "Post.SD")
+  # colnames(mm_pars)[1:3] <- c("", "Estimate", "Post.SD")
+  colnames(mm_pars) <- change_colnames(mm_pars)
 
 
 
@@ -324,16 +330,17 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
       "on split chains (at convergence, Rhat = 1).",
       sep = "")
 
-  sum.table = rbind(
-    fixef_params,
-    ranef_sds,
-    ranef_corrs,
-    outcomes,
-    outcomes_sds,
-    ranef_preds,
-    mm_pars
-  )
-
-  return(sum.table)
+  # this is not needed I think, it gets printed behind the cat() calls
+  # sum.table = rbind(
+  #   fixef_params,
+  #   ranef_sds,
+  #   ranef_corrs,
+  #   outcomes,
+  #   outcomes_sds,
+  #   ranef_preds,
+  #   mm_pars
+  # )
+  #
+  # return(sum.table)
 
 }

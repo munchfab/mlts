@@ -4,7 +4,6 @@
 ## usethis namespace: start
 #' @import methods
 #' @import Rcpp
-#' @importFrom magrittr %>%
 #' @importFrom RcppParallel RcppParallelLibs
 #' @importFrom rlang .data
 #' @importFrom rstan sampling

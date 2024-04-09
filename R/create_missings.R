@@ -101,18 +101,6 @@ create_missings <- function(data, tinterval, id, time,
   )
 
 
-  # dplyr version
-  # dsem_data <- dplyr::full_join(
-  #   imp_data, data,
-  #   by = c("num_id", time)
-  # )
-
-  # fill original IDs up
-  # dsem_data <- dplyr::group_by(.data = dsem_data, num_id)
-  # dsem_data <- tidyr::fill(dsem_data, id, .direction = "downup")
-  # dsem_data <- dplyr::ungroup(dsem_data)
-
-
   if (clean == TRUE) {
     # remove helper columns
     helpers <- c(

@@ -17,7 +17,7 @@ mlts_model_formula(
 \item{model}{A model built with \code{\link[mlts]{mlts_model}}.}
 
 \item{file}{An optional string containing the name of the file and file path.
-Has to have .pdf file format.}
+Has to end with .pdf file format.}
 
 \item{keep_tex}{lnical. Should the TeX file be kept (additional to the
 Rmd file)? Defaults to \code{FALSE}.}
