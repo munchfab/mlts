@@ -42,6 +42,7 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
                           fix_dynamics = F, fix_inno_vars = F,
                           fix_inno_covs = T, inno_covs_zero = F,
+                          inno_covs_dir = NULL,
                           fixef_zero = NULL, ranef_zero = NULL,
                           ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL){
 
@@ -63,6 +64,27 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
     stop("If multiple indicators are used for latent constructs,",
          " p should be a vector of length q containing the number of",
          " indicators for each latent construct (see Vignettes for examples).")
+  }
+
+
+  if(q == 2 & inno_covs_zero == F & fix_inno_covs == F){
+    if(is.null(inno_covs_dir)){
+      stop(
+        "For a bivariate VAR model with person-specific innovation covariances, ",
+        "a latent variable appraoch will be used. This affords putting a restriction ",
+        "on the loading parameters of the latent innovation covariance factor,",
+        "specifying the association of innovations as either positive (inno_covs_dir == 'pos') ",
+        "or negative (inno_covs_dir = 'neg').")
+    }
+    if(inno_covs_dir == "pos"){
+
+    } else if(inno_covs_dir == "neg"){
+
+    } else {
+      stop(
+        "Inputs of `inno_covs_dir` should be one of 'pos' or 'neg'"
+      )
+    }
   }
 
 
@@ -192,17 +214,14 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
 
   # CONSTRAINTS ===============================================================
 
-  if(q > 1 & is.null(inno_covs_zero)){
+  if(q > 1 & inno_covs_zero == T){
     inno_covs_zero = TRUE
   } else {
     inno_covs_zero = FALSE
   }
-  if(inno_covs_zero == FALSE & q > 1 & fix_inno_covs == FALSE){
-message("Note: When specifying a VAR(1) model with person-specific innovation
-covariances, a latent-variable approach will be used which affords introducing
-contraints on the loading parameters of the latent covariance factor(s).
-(see Hamaker et al., 2018). If innovation covariances are set as a constant
-or set to 0 in a subsequent step, this warning can be ignored.")
+  if(inno_covs_zero == FALSE & q > 2 & fix_inno_covs == FALSE){
+stop("Note: At this point, specifying a VAR(1) model with person-specific innovation covariances",
+     "is only possible for `q == 2`.")
     }
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
