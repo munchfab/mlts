@@ -2,16 +2,16 @@
 % Please edit documentation in R/mlts_model_check.R
 \name{mlts_model_check}
 \alias{mlts_model_check}
-\title{Title}
+\title{Helper function to run a series of user input checks and print detailed warnings}
 \usage{
-mlts_model_check(model, data, ts.ind, covariates, outcomes)
+mlts_model_check(model, data, ts, covariates, outcomes)
 }
 \arguments{
 \item{model}{data.frame. Output of model-Functions.}
 
 \item{data}{data.frame. Data input.}
 
-\item{ts.ind}{tba}
+\item{ts}{tba}
 
 \item{covariates}{tba}
 
@@ -21,5 +21,5 @@ mlts_model_check(model, data, ts.ind, covariates, outcomes)
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Helper function to run a series of user input checks and print detailed warnings
 }

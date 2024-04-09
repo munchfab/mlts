@@ -2,12 +2,12 @@
 % Please edit documentation in R/mlts_model_priors.R
 \name{mlts_model_priors}
 \alias{mlts_model_priors}
-\title{Title}
+\title{Add custom prior distributions to mlts model}
 \usage{
 mlts_model_priors(model, default = F)
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}
@@ -16,5 +16,5 @@ added.}
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Add custom prior distributions to mlts model
 }

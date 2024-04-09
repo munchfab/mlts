@@ -118,27 +118,24 @@ mlts_param_labels <- function(VARmodel){
     alphas = data.frame(
       "Param" = paste0("alpha_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("alpha[",1:N_inds,"]")#,
-#      "Param_expr" = paste0("alpha[",infos$indicators$q, ".",infos$indicators$p,"]")
       )
+    alphas = merge(x = alphas, y = VARmodel[VARmodel$Type=="Intercept",],
+                   by = "Param", all.x = T)
     loadB = data.frame(
       "Param" = paste0("lambdaB_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("loadB[",1:N_inds,"]")#,
-    #  "Param_expr" = paste0("lambda^B[",infos$indicators$q, ".",infos$indicators$p,"]")
       )
     loadW = data.frame(
       "Param" = paste0("lambdaW_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("loadW[",1:N_inds,"]")#,
-  #    "Param_expr" = paste0("lambda^W[",infos$indicators$q, ".",infos$indicators$p,"]")
       )
     sigmaB = data.frame(
       "Param" = paste0("sigmaB_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("sigmaB[",1:N_inds,"]")#,
-    #  "Param_expr" = paste0("sigma^B[",infos$indicators$q, ".",infos$indicators$p, "]")
       )
     sigmaW = data.frame(
       "Param" = paste0("sigmaW_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("sigmaW[",1:N_inds,"]")#,
-    #  "Param_expr" = paste0("sigma^W[",infos$indicators$q, ".",infos$indicators$p, "]")
       )
     mm.pars = rbind(alphas, loadB, sigmaB, loadW, sigmaW)
   }

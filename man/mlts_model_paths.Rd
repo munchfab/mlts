@@ -6,15 +6,25 @@
 \usage{
 mlts_model_paths(
   model,
+  file = NULL,
+  add_png = FALSE,
+  keep_tex = FALSE,
   ts = NULL,
   covariates = NULL,
-  outcomes = NULL,
-  add_png = FALSE,
-  keep_tex = FALSE
+  outcomes = NULL
 )
 }
 \arguments{
 \item{model}{A model built with \code{\link[mlts]{mlts_model}}.}
+
+\item{file}{An optional string containing the name of the file and file path.
+Has to have .pdf file format.}
+
+\item{add_png}{Logical. Set to \code{TRUE} to transform created PDF to .png file
+using \code{pdftools::pdf_convert}.}
+
+\item{keep_tex}{Logical. Should the TeX file be kept (additional to the
+Rmd file)? Defaults to \code{FALSE}.}
 
 \item{ts}{To be included in future releases.
 An optional character vector containing the names of the time-series
@@ -27,12 +37,6 @@ covariates.}
 \item{outcomes}{To be included in future releases.
 An optional character vector containing the names of the between-level
 outcomes.}
-
-\item{add_png}{Logical. Set to \code{TRUE} to transform created PDF to .png file
-using \code{pdftools::pdf_convert}.}
-
-\item{keep_tex}{Logical. Should the TeX file be kept (additional to the
-Rmd file)? Defaults to \code{FALSE}.}
 }
 \value{
 An RMarkdown file that is automatically rendered to a pdf document.

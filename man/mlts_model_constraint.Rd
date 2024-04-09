@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_model_constraint.R
 \name{mlts_model_constraint}
 \alias{mlts_model_constraint}
-\title{Title}
+\title{Add parameter constraints to mlts model}
 \usage{
 mlts_model_constraint(
   model,
@@ -15,7 +15,7 @@ mlts_model_constraint(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{fix_dynamics}{logical. Fix all random effect variances (except those
 of individual traits) to zero.}
@@ -36,5 +36,5 @@ variance of the respective parameter).}
 An object of class \code{data.frame}.
 }
 \description{
-Title
+Add parameter constraints to mlts model
 }

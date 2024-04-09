@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_model.R
 \name{mlts_model}
 \alias{mlts_model}
-\title{Title}
+\title{Build a multilevel latent time series model}
 \usage{
 mlts_model(
   q,
@@ -14,6 +14,7 @@ mlts_model(
   fix_inno_vars = F,
   fix_inno_covs = T,
   inno_covs_zero = F,
+  inno_covs_dir = NULL,
   fixef_zero = NULL,
   ranef_zero = NULL,
   ranef_pred = NULL,
@@ -72,8 +73,8 @@ list (using the \code{param}-labels in \code{model}) can be entered (see details
 \item{out_pred_add_btw}{tba}
 }
 \value{
-An object of class \code{data.frame}.
+An object of class \code{data.frame} containing all model parameters.
 }
 \description{
-Title
+Build a multilevel latent time series model
 }
