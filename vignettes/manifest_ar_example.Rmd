@@ -30,4 +30,74 @@ We can check the parameters present in the model by just calling the object:
 ar1_model
 ```
 
-When `mlts_model()` sets up this model, all model parameters are free (i.e., not constrained) by default. In the AR(1) model, there are three fixed effects: the grand mean (`mu_1`) of the outcome, the autoregressive effect (`phi(1)_11`), and the innovation variance (`ln.sigma2_1`).
+When `mlts_model()` sets up this model, all model parameters are free (i.e., not constrained) by default. On the within level, there are three fixed effects: the grand mean (`mu_1`) of the outcome, the autoregressive effect (`phi(1)_11`), and the natural log of the innovation variance (`ln.sigma2_1`). Note that the log is used to prevent the variance from dropping below zero. For each of these effects, random effects are also estimated on the between level, which are drawn from a multivariate normal distribution with zero mean. Standard deviations of random effects are indicated with a `sigma_` prefix, and random effect correlations are indicated with an `r_` prefix.
+
+A TeX formula for the above model can be obtained by calling the `mlts_model_formula()` function on the model object. By default, the function produces an RMarkdown file and renders it to a pdf file using `knitr`. However, the TeX file can also be kept by calling `keep_tex = TRUE` within the function call.
+
+```{r eval=FALSE}
+mlts_model_formula(ar1_model)
+```
+
+<center>
+\[\text{Decomposition.}\]
+</center>
+\[
+\begin{gathered} \begin{bmatrix}
+y_{1, t} \\
+\end{bmatrix} = \begin{bmatrix}
+\mu_{1} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+y_{1, t}^w \\
+\end{bmatrix} \end{gathered}
+\]
+\vspace{1em}
+<center>
+\[\text{Within-model.}\]
+</center> \[
+\begin{gathered} \begin{bmatrix}
+y_{1, t}^w \\
+\end{bmatrix} = \begin{bmatrix} \phi_{11(1)} \\ \end{bmatrix} \begin{bmatrix} y_{1, t - 1}^w \\ \end{bmatrix} + \begin{bmatrix} \zeta_{1, t} \\ \end{bmatrix} ,\\ 
+\text{with}~
+  \zeta_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Psi}) \end{gathered}
+\]
+\vspace{1em}
+<center>
+\[\text{Between-model.}\]
+</center> \[
+\begin{gathered} \begin{bmatrix} \mu_{1,i}\\
+\phi_{(1)11,i}\\
+\ln(\sigma_{\zeta_{1},i})\\ \end{bmatrix} = \begin{bmatrix} \gamma_{0,\mu_{1}}\\
+\gamma_{0,\phi_{(1)11}}\\
+\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}\\ \end{bmatrix} +
+  \begin{bmatrix} \upsilon_{\mu_{1},i}\\
+\upsilon_{\phi_{(1)11},i}\\
+\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}\\ \end{bmatrix} ,\\ 
+\text{with}~
+  \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega})  \end{gathered}
+\]
+\vspace{1em}
+
+Furthermore, a path model can also be produced with the function `mlts_model_paths()`. Again, the function produces an RMarkdown and pdf file by default. A png file for each level can also be produced by calling `add_png = TRUE` and the TeX code for the path model can be kept with `keep_tex = TRUE`.
+
+```{r eval=FALSE}
+mlts_model_paths(ar1_model)
+```
+
+```{r echo=FALSE, out.width="22%", fig.align='center'}
+knitr::include_graphics(c("pathmodel_1.png"))
+```
+
+```{r echo=FALSE, out.width="58%", fig.align='center'}
+knitr::include_graphics(c("pathmodel_2.png"))
+```
+
+```{r echo=FALSE, out.width="40%", fig.align='center'}
+knitr::include_graphics(c("pathmodel_3.png"))
+```
+
+To fit the above model, we pass it together with the data set to `mlts_fit()`. We need to specify the variable in `data` that contains the time-series in the `ts` argument and the variable that contains the unit identifier in the `id` argument.
+
+
+
