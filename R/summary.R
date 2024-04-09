@@ -156,7 +156,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     p = if (all(infos$p == 1)) {NULL} else {infos$p},
     max_lag = infos$maxLag,
     ranef_pred = if (length(infos$n_cov_vars) > 1) {infos$n_cov_vars} else {NULL},
-    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL}
+    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL},
     fix_inno_covs =  if (infos$n_inno_cov_fix > 0) {TRUE} else {FALSE},
     inno_covs_zero =  if(infos$n_inno_covs==1) {T} else {F},
     inno_covs_dir = "pos" ##### needs adjustment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
