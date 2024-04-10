@@ -770,7 +770,7 @@ mlts_model_paths <- function(model, file = NULL,
   phi <- paste(phi_vec, collapse = "\n")
 
   # do the same for innovation variances
-  all_sigmas <- model[grepl("ln.sigma2", model$Param) & grepl("Fix", model$Type), ]
+  all_sigmas <- model[grepl("ln.sigma2|sigma_", model$Param) & grepl("Fix", model$Type), ]
   n_sigma <- nrow(all_sigmas)
   sigma_vec <- c()
   for (i in 1:n_sigma) {
@@ -778,10 +778,16 @@ mlts_model_paths <- function(model, file = NULL,
       sigma_vec, paste0(
         "\\draw  [var", ifelse(
           # decorate with dot on path if parameter is random
-          all_sigmas[all_sigmas$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
+          # all_sigmas[all_sigmas$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
+          all_sigmas[i, "isRandom"] == 1,
           ", postaction = random]", "]"
         ),
-        "  (zeta", i, "t.120)  to node  []  {$\\sigma^2_{\\zeta_{", i, "}}$}  (zeta", i, "t.60);"
+        "  (zeta", i, "t.120)  to node  []  {$\\sigma", ifelse(
+          # if ln.sigma present, use variance, else standard deviation (?)
+          grepl("ln", all_sigmas$Param[i]),
+          "^2", ""
+        ),
+        "_{\\zeta_{", i, "}}$}  (zeta", i, "t.60);"
       )
     )
   }

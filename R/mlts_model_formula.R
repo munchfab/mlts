@@ -431,19 +431,31 @@ mlts_model_formula <- function(model, file = NULL,
       )
     )
   )
+  # special case for fixed innovation variances
+  all_bpars$names <- ifelse(
+    startsWith(all_bpars$Param, "sigma_"),
+    gsub("(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}}", all_bpars$Param),
+    all_bpars$names
+  )
   # add one unit-specific names version (add i subscript)
   all_bpars$names2 <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2,i}", gsub(
       # replace lnsigma with ln(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2},i})", gsub(
+      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2},i})", gsub(
         # replace uppercase B for between-level latent variables
-        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_{\\3,i}", gsub(
           # replace underscore digit with latex subscript for phis
           "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3,i}", all_bpars$Param
         )
       )
     )
+  )
+  # special case for fixed innovation variances
+  all_bpars$names2 <- ifelse(
+    startsWith(all_bpars$Param, "sigma_"),
+    gsub("(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2},i}", all_bpars$Param),
+    all_bpars$names2
   )
   # number of bpars
   n_bpars <- nrow(all_bpars)

@@ -9,7 +9,8 @@
 #' @param fixef_zero character. A character vector to index which fixed model parameters
 #' should be fixed to zero (Note: this results in removing the random effect
 #' variance of the respective parameter).
-#' @param ranef_zero logical. Set to TRUE to treat all innovations as independent.
+#' @param ranef_zero character. A character vector to index which random effect
+#' parameters should be fixed to zero.
 #'
 #' @return An object of class `data.frame`.
 #' @export
