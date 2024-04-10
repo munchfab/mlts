@@ -156,7 +156,10 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     p = if (all(infos$p == 1)) {NULL} else {infos$p},
     max_lag = infos$maxLag,
     ranef_pred = if (length(infos$n_cov_vars) > 1) {infos$n_cov_vars} else {NULL},
-    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL}
+    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL},
+    fix_inno_covs =  if (infos$n_inno_cov_fix > 0) {TRUE} else {FALSE},
+    inno_covs_zero =  if(infos$n_inno_covs==1) {T} else {F},
+    inno_covs_dir = "pos" ##### needs adjustment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   )
   sat_model_fixed <- sat_model[grepl("Fix", sat_model$Type), "Param"]
   model_fixed <- model[grepl("Fix", model$Type), "Param"]
@@ -259,7 +262,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # get outcome SDs
   outcomes_sds <- pop_pars[grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),cols]
   outcomes_sds[grepl("sigma_", outcomes_sds$Param), "Param"] <- gsub(
-    "sigma_(\\w+)", "\\1", outcomes_sds$Param
+    "sigma_(\\w+)", "\\Residual SD \\1", outcomes_sds$Param
   )
   # colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
   colnames(outcomes_sds) <- change_colnames(outcomes_sds)
@@ -298,13 +301,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   #   fixef_params <- rbind(fixef_params, ranef_preds, outcomes)
   #   print(fixef_params, row.names = FALSE)
   # }
-  if (nrow(ranef_sds) > 0 & nrow(outcomes_sds) == 0) {
+  if (nrow(ranef_sds) > 0) {
     cat("\nRandom Effects SDs:\n")
-    print(ranef_sds, row.names = FALSE)
-  }
-  if (nrow(ranef_sds) > 0 & nrow(outcomes_sds) > 0) {
-    cat("\nRandom Effects SDs:\n")
-    ranef_sds <- rbind(ranef_sds, outcomes_sds)
     print(ranef_sds, row.names = FALSE)
   }
   if (nrow(ranef_corrs) > 0) {
@@ -313,6 +311,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   }
   if(nrow(outcomes) > 0) {
     cat("\nOutcome Prediction:\n")
+    outcomes <- rbind(outcomes, outcomes_sds)
     print(outcomes, row.names = F)
   }
   if(nrow(ranef_preds) > 0) {

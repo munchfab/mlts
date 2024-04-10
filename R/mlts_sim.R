@@ -7,16 +7,16 @@
 #' @param TP integer. Number of measurements per observational unit.
 #' @param burn.in integer.
 #' @param seed integer.
+#' @param seed.true integer.
 #' @param btw.var.sds integer.
+#'
 #' @return An object of class `data.frame`.
 #' @export
 #'
 mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
-                     btw.var.sds = NULL){
+                     seed.true = 1, btw.var.sds = NULL){
 
-  if(!is.null(seed)){
-    set.seed(seed)
-  }
+  set.seed(seed.true)
 
   ### start with a check that sds are entered for all between variables
 
@@ -81,13 +81,13 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
 
     ## log innovation variances
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.35
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.3
     ## Fixed innovation variance
     model$true.val[model$Type==model.type & model$Param_Label=="Innovation Variance"] = 0.75
 
     ###### NEEDS UPDATING ----
     ## Log innovation covariance
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = -1
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = -0.3
     model$true.val[model$Type==model.type & model$Param_Label=="Innovation correlation"] = -0.15
     ###### ----
 
@@ -100,9 +100,9 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     ## Phis
     model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
     ## log innovation variances
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = 0.2
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = 0.25
     ## log innovation covaraince(s)
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = 0.15
+    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = 0.25
 
 
     # RANDOM EFFECT CORRELATIONS ============
@@ -128,6 +128,14 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
   }
 
+
+  # set seed for data generation
+  if(!is.null(seed)){
+    set.seed(seed)
+  }
+
+
+
   # run again after adding true parameter values
   infos = mlts_model_eval(model)
 
@@ -147,7 +155,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     for(i in 2:infos$n_cov){
       cov_name[i-1] = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
       # name btw.var.sds vector
-      names(btw.var.sds) <- unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
+      # names(btw.var.sds) <- unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
       W[1:N,i] = stats::rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
     }
   }
@@ -237,10 +245,12 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
     if(q == 1){
       inno_var_mat = matrix(data = innoVars.i, nrow = 1, ncol = 1)
+    # } else if(q == 2 & infos$n_inno_covs == 1){
+    #   inno_var_mat = diag(innoVars.i)
+    #   inno_var_mat[1,2] <- inno_var_mat[2,1] <- exp(btw[i, infos$inno_cov_pos])
     } else {
       inno_var_mat = diag(innoVars.i)
 
-      ########## ADD INNOVATION COVARIANCES HERE ::::::::::::::::::::::::::::::::
       if(infos$n_inno_cors > 0){
         for(xx in 1:q){
           for(yy in 1:q){
@@ -252,9 +262,6 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
           }
         }
       }
-
-
-      # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
     }
 
     for(t in 1:NT){
@@ -277,6 +284,13 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
           y = y_lag * transition
         }
         y = y + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat) # add error
+
+
+        if(infos$q == 2 & infos$n_inno_covs == 1){
+          inno_t = rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
+          y = y + inno_t
+        }
+
         within[within$ID==i & within$time==t, y_cols] = y
       }
     }

@@ -14,6 +14,7 @@ mlts_model(
   fix_inno_vars = F,
   fix_inno_covs = T,
   inno_covs_zero = F,
+  inno_covs_dir = NULL,
   fixef_zero = NULL,
   ranef_zero = NULL,
   ranef_pred = NULL,

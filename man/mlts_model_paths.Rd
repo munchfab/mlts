@@ -18,7 +18,7 @@ mlts_model_paths(
 \item{model}{A model built with \code{\link[mlts]{mlts_model}}.}
 
 \item{file}{An optional string containing the name of the file and file path.
-Has to end with .pdf file format.}
+Has to have .pdf file format.}
 
 \item{add_png}{Logical. Set to \code{TRUE} to transform created PDF to .png file
 using \code{pdftools::pdf_convert}.}

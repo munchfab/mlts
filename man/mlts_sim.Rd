@@ -11,6 +11,7 @@ mlts_sim(
   TP,
   burn.in = 50,
   seed = NULL,
+  seed.true = 1,
   btw.var.sds = NULL
 )
 }
@@ -27,6 +28,8 @@ added.}
 \item{burn.in}{integer.}
 
 \item{seed}{integer.}
+
+\item{seed.true}{integer.}
 
 \item{btw.var.sds}{integer.}
 }
