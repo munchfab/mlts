@@ -3,6 +3,7 @@
 S3method(summary,mltsfit)
 export(VARprepare)
 export(create_missings)
+export(create_missings2)
 export(mlts_fit)
 export(mlts_model)
 export(mlts_model_betw)

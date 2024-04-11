@@ -2,9 +2,10 @@
 % Please edit documentation in R/create_missings.R
 \name{create_missings}
 \alias{create_missings}
-\title{Create Missings for Approximation of Continuous Time Dynamic Models}
+\title{Create Missings for Approximation of Continuous Time Dynamic Models
+(new version)}
 \usage{
-create_missings(data, tinterval, id, time, btw_vars = NULL, clean = TRUE)
+create_missings(data, tinterval, id, time, btw_vars = NULL)
 }
 \arguments{
 \item{data}{An object of class \code{data.frame} (or one that can be coerced
@@ -21,12 +22,25 @@ string).}
 
 \item{btw_vars}{The names of between-level variables in the data to be
 added in newly created rows with NAs.}
-
-\item{clean}{Logical. Remove helper columns. Defaults to \code{TRUE}.}
 }
 \value{
 A \code{data.frame} with missings imputed for use in \code{prepare_data()}.
 }
 \description{
 Create Missings for Approximation of Continuous Time Dynamic Models
+(new version)
+}
+\examples{
+# create some data for example
+data <- data.frame(
+  id = rep(c(1, 2), each = 4),
+  time = c(0, 3, 4, 6,
+           1, 4, 5, 7)
+)
+
+# create missings to approximate continuous time process
+create_missings(
+  data = data, id = "id", time = "time",
+  tinterval = 1 # use time interval of 1 minute
+)
 }
