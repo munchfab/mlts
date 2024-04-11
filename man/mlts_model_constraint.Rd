@@ -30,7 +30,8 @@ of individual traits) to zero.}
 should be fixed to zero (Note: this results in removing the random effect
 variance of the respective parameter).}
 
-\item{ranef_zero}{logical. Set to TRUE to treat all innovations as independent.}
+\item{ranef_zero}{character. A character vector to index which random effect
+parameters should be fixed to zero.}
 }
 \value{
 An object of class \code{data.frame}.
