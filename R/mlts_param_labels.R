@@ -133,7 +133,8 @@ mlts_param_labels <- function(model){
   par_tab = rbind(FEints, FEdyn, Fix.Covs, FEsigma, REsds, REcors, REpred, OUTpred)
 
   if(infos$isLatent == T){
-    par_tab = plyr::rbind.fill(par_tab, mm.pars)
+    # par_tab = plyr::rbind.fill(par_tab, mm.pars)
+    par_tab <- dplyr::bind_rows(par_tab, mm.pars)
   }
 
   return(par_tab)
