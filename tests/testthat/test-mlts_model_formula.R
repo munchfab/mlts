@@ -82,5 +82,5 @@ test_that("Common model formulas are rendered without errors", {
   )
   # remove files
   files <- list.files(path, full.names = TRUE)
-  file.remove(files[grep("pathmodel", files)])
+  file.remove(files[grep("formula", files)])
 })

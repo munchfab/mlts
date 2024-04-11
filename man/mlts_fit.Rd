@@ -53,7 +53,7 @@ predicted by random effects.}
 \item{center_covs}{Logical. Should covariates be centered before inclusion
 in the model? Defaults to \code{TRUE}.}
 
-\item{time}{tba.}
+\item{time}{Character. The variable in \code{data} that contains the (continuous) time.}
 
 \item{tinterval}{The step interval for approximation for a continuous time
 dynamic model. The smaller the step interval, the better the approximation.}
@@ -75,14 +75,15 @@ The default is 2.}
 \item{cores}{The number of cores to use when executing the Markov chains in parallel.
 The default is 2 (see \code{\link[rstan]{stan}}).}
 
-\item{monitor_person_pars}{data.frame. Data input.}
+\item{monitor_person_pars}{Logical. Should person parameters (i.e., values of the
+latent variables) be stored? Default is FALSE.}
 
-\item{fit_model}{logical. Set to FALSE to avoid fitting the model which may be
-helpful to inspect prepared data used for model estimation (default = T).}
+\item{fit_model}{Logical. Set to FALSE to avoid fitting the model which may be
+helpful to inspect prepared data used for model estimation (default = TRUE).}
 
-\item{print_message}{logical. Print messages based on defined inputs (default = TRUE).}
+\item{print_message}{Logical. Print messages based on defined inputs (default = TRUE).}
 
-\item{print_warning}{logical. Print messages based on defined inputs (default = TRUE).}
+\item{print_warning}{Logical. Print warnings based on defined inputs (default = TRUE).}
 
 \item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }
@@ -91,4 +92,23 @@ An object of class \code{data.frame}.
 }
 \description{
 Fit Bayesian Multilevel Manifest or Latent Time-Series Models
+}
+\examples{
+\donttest{
+ # build simple mlts model for two time-series variables
+ model <- mlts_model(q = 2)
+
+ # fit model with (artificial) dataset ts_data
+ fit <- mlts_fit(
+   model = model,
+   data = ts_data,
+   ts = c("Y1", "Y2"), # time-series variables
+   id = "ID", # identifier variable
+   tinterval = 1 # interval for approximation of continuous-time dynamic model,
+ )
+
+ # inspect model summary
+ summary(fit)
+}
+
 }

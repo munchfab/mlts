@@ -6,7 +6,7 @@ test_that("Missings are inserted correctly (at least same as in MPlus)", {
   mplus30 <- testthat::test_path("testdata", "mplus30.rda")
   load(mplus30)
   # load("mplus30.rda")
-  data30 <- create_missings2(
+  data30 <- create_missings(
     data = mplus_raw, tinterval = 30, id = "UserID", time = "timecont"
   )
   expect_equal(
@@ -20,7 +20,7 @@ test_that("Missings are inserted correctly (at least same as in MPlus)", {
   # mplus dataset with 15 minutes tinterval
   mplus15 <- testthat::test_path("testdata", "mplus15.rda")
   load(mplus15)
-  data15 <- create_missings2(
+  data15 <- create_missings(
     data = mplus_raw, tinterval = 15, id = "UserID", time = "timecont"
   )
   expect_equal(

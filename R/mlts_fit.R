@@ -15,7 +15,7 @@
 #' @param outcome_pred_btw Character.
 #' @param center_covs Logical. Should covariates be centered before inclusion
 #' in the model? Defaults to `TRUE`.
-#' @param time tba.
+#' @param time Character. The variable in `data` that contains the (continuous) time.
 #' @param tinterval The step interval for approximation for a continuous time
 #' dynamic model. The smaller the step interval, the better the approximation.
 #' @param beep tba.
@@ -28,38 +28,57 @@
 #' The default is 2.
 #' @param cores The number of cores to use when executing the Markov chains in parallel.
 #' The default is 2 (see \code{\link[rstan]{stan}}).
-#' @param monitor_person_pars data.frame. Data input.
-#' @param print_message logical. Print messages based on defined inputs (default = TRUE).
-#' @param print_warning logical. Print messages based on defined inputs (default = TRUE).
-#' @param fit_model logical. Set to FALSE to avoid fitting the model which may be
-#' helpful to inspect prepared data used for model estimation (default = T).
+#' @param monitor_person_pars Logical. Should person parameters (i.e., values of the
+#' latent variables) be stored? Default is FALSE.
+#' @param print_message Logical. Print messages based on defined inputs (default = TRUE).
+#' @param print_warning Logical. Print warnings based on defined inputs (default = TRUE).
+#' @param fit_model Logical. Set to FALSE to avoid fitting the model which may be
+#' helpful to inspect prepared data used for model estimation (default = TRUE).
 #' @param ... Additional arguments passed to \code{\link[rstan]{sampling}}.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
+#' @examples
+#' \donttest{
+#'  # build simple mlts model for two time-series variables
+#'  model <- mlts_model(q = 2)
+#'
+#'  # fit model with (artificial) dataset ts_data
+#'  fit <- mlts_fit(
+#'    model = model,
+#'    data = ts_data,
+#'    ts = c("Y1", "Y2"), # time-series variables
+#'    id = "ID", # identifier variable
+#'    tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#'  )
+#'
+#'  # inspect model summary
+#'  summary(fit)
+#' }
+#'
 mlts_fit <- function(model,
-                   data =NULL,
-                   id,
-                   ts,
-                   covariates = NULL,
-                   outcomes = NULL,
-                   outcome_pred_btw = NULL,
-                   center_covs = T,
-                   time = NULL,
-                   tinterval,
-                   beep = NULL,
-                   days = NULL,
-                   n_overnight_NAs,
-                   na.rm = F,
-                   iter = 500,
-                   chains = 2,
-                   cores = 2,
-                   monitor_person_pars = F,
-                   fit_model = T,
-                   print_message = T,
-                   print_warning = T,
-                   ...
+                     data =NULL,
+                     id,
+                     ts,
+                     covariates = NULL,
+                     outcomes = NULL,
+                     outcome_pred_btw = NULL,
+                     center_covs = T,
+                     time = NULL,
+                     tinterval,
+                     beep = NULL,
+                     days = NULL,
+                     n_overnight_NAs,
+                     na.rm = F,
+                     iter = 500,
+                     chains = 2,
+                     cores = 2,
+                     monitor_person_pars = F,
+                     fit_model = T,
+                     print_message = T,
+                     print_warning = T,
+                     ...
 ){
 
   # eval the model
