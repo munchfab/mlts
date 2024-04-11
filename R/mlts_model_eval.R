@@ -186,10 +186,7 @@ mlts_model_eval <- function(model){
   n_random = sum(model$isRandom, na.rm = T)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
-  # this doesn't recognize a fixed mean I think
   is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
-  # this should but I'm not sure if this is intended
-  #is_fixed = matrix(fix_pars$no[fix_pars$isRandom==0], nrow = 1, ncol = n_fixed)
   re_pars = model[model$Type=="Fix effect" & model$isRandom==1,]
   re_pars$par_no = 1:nrow(re_pars)
 
@@ -201,7 +198,17 @@ mlts_model_eval <- function(model){
                         nrow = 1, ncol = n_inno_covs)
   inno_cors = model[startsWith(model$Param, "r.zeta"),]
   n_inno_cors = nrow(inno_cors)
-
+  if(n_inno_covs == 1){
+   inno_cov_dir = fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),"Constraint"]
+   if(inno_cov_dir == "pos"){
+     inno_cov_load = c(1,1);
+   } else {
+     inno_cov_load = c(1,-1);
+     }
+  } else {
+    inno_cov_dir = NA
+    inno_cov_load = c(0,0)
+  }
 
   # REs as OUTCOME ============================================================
   RE.PREDS = model[model$Type == "RE prediction",]
@@ -362,6 +369,8 @@ mlts_model_eval <- function(model){
     n_inno_covs,
     n_inno_cov_fix,
     inno_cov_pos,
+    inno_cov_dir,
+    inno_cov_load,
     inno_cors,
     n_inno_cors,
 

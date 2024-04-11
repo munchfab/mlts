@@ -7,13 +7,12 @@
 #' @param outcomes tba.
 #' @param outcome_pred_btw tba.
 #' @param center_covs tba.
-#' @param std_outcome tba.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
 VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
-                       outcome_pred_btw = NULL, center_covs = T, std_outcome = T
+                       outcome_pred_btw = NULL, center_covs = T
 ){
 
 
@@ -21,7 +20,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   # data specific information: -------------------------------------------------
   N = length(unique(data$num_id))         # number of subjects
-  D = length(ts)                      # number of time-varying constructs
+  D = length(ts)                          # number of time-varying constructs
   N_obs = nrow(data)                      # total number of observations (obs)
   N_obs_id = data.frame(table(data$num_id))$Freq # number of obs per subject
 
@@ -66,9 +65,10 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   n_inno_cors = infos$n_inno_cors
   n_inno_cov_fix = infos$n_inno_cov_fix
   inno_cov_pos = infos$inno_cov_pos
+  inno_cov_load = infos$inno_cov_load
 
   # NEEDS TO BE UPDATED ----------------------------
-  n_obs_cov = ifelse(n_inno_covs == 0, 0, N_obs - N)
+  n_obs_cov = ifelse(n_inno_covs == 0, 0, N_obs - (N*infos$maxLag))
   # -----------------------------------------
 
 
@@ -154,7 +154,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     innos_rand, innos_pos, n_innos_fix,
     ## innovation covariances
     innos_fix_pos, n_obs_cov, n_obs_cov, inno_cov_pos,
-    n_inno_covs,n_inno_cors, n_inno_cov_fix,
+    n_inno_covs,n_inno_cors, n_inno_cov_fix, inno_cov_load,
 
     n_cov, n_cov_bs, n_cov_mat, W,
     n_out, n_out_bs, n_out_bs_max, n_out_bs_sum, n_out_b_pos, out, n_z, Z,

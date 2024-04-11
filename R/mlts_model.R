@@ -209,6 +209,12 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
     model = rbind(FE, RE, REcors)
   }
 
+  # TESTING WHAT HAPPENS IF WE ADD ADDITIONAL CONTRAINT COLUMN HERE
+  if(q == 2 & inno_covs_zero == F & fix_inno_covs == F){
+    model$Constraint[model$Type == "Fix effect" & grepl(pattern = "Covariance", model$Param_Label)] = inno_covs_dir
+  }
+
+
   # ADD DEFAULT PRIORS ========================================================
   model = mlts_model_priors(model = model, default = T)
 

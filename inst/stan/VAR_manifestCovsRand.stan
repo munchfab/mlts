@@ -63,6 +63,7 @@ data {
   int n_inno_covs; // number of potential innovation covs to include
   int n_obs_cov;   // total number of residuals
   int inno_cov_pos[1,n_inno_covs];
+  int<lower=-1,upper=1> inno_cov_load[D];
 }
 
 parameters {
@@ -193,14 +194,18 @@ model {
     for(d in 1:D){ // start loop over dimensions
       // build prediction matrix for specific dimensions
       {
-      matrix[(obs_id-maxLag),N_pred[d]] b_mat; // adjust for non-fully crossed models
+      matrix[(obs_id-maxLag),N_pred[d]+n_inno_covs] b_mat; // adjust for non-fully crossed models
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
           int lag_use = Lag_pred[d,nd];
           b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
       }
+      b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
 
       // use build predictor matrix to calculate latent time-series means
-      mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]) + to_vector(eta_cov_id[1,]);
+      vector[N_pred[d]+1] b_use;
+      b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+      b_use[N_pred[d]+1] = inno_cov_load[d];
+      mus[d,] =  b[pp,d] + b_mat * b_use;
       }
       // sampling statement
       y_merge[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
@@ -208,7 +213,7 @@ model {
     }
     // update index variables
     pos = pos + obs_id;
-    pos_cov = pos_cov + obs_id - 1;
+    pos_cov = pos_cov + obs_id - maxLag;
   }
 
   // outcome prediction: get expectations of outcome values

@@ -4,10 +4,10 @@
 \alias{mlts_param_labels}
 \title{Title}
 \usage{
-mlts_param_labels(VARmodel)
+mlts_param_labels(model)
 }
 \arguments{
-\item{VARmodel}{data frame.}
+\item{model}{data frame.}
 }
 \description{
 Title

@@ -15,8 +15,6 @@
 #' @param outcome_pred_btw Character.
 #' @param center_covs Logical. Should covariates be centered before inclusion
 #' in the model? Defaults to `TRUE`.
-#' @param std_outcome Logical. Should outcomes be standardized before inclusion
-#' in the model? Defaults to `TRUE`.
 #' @param time tba.
 #' @param tinterval The step interval for approximation for a continuous time
 #' dynamic model. The smaller the step interval, the better the approximation.
@@ -48,7 +46,6 @@ mlts_fit <- function(model,
                    outcomes = NULL,
                    outcome_pred_btw = NULL,
                    center_covs = T,
-                   std_outcome = T,
                    time = NULL,
                    tinterval,
                    beep = NULL,
@@ -164,7 +161,7 @@ mlts_fit <- function(model,
     standata <- VARprepare(model = model, data = data, ts = ts,
                           covariates = covariates, outcomes = outcomes,
                           outcome_pred_btw = outcome_pred_btw,
-                          center_covs = center_covs, std_outcome = std_outcome)
+                          center_covs = center_covs)
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
@@ -226,7 +223,7 @@ mlts_fit <- function(model,
     standata <- VARprepare(model = model, data = data, ts = ts,
                            covariates = covariates, outcomes = outcomes,
                            outcome_pred_btw = outcome_pred_btw,
-                           center_covs = center_covs, std_outcome = std_outcome)
+                           center_covs = center_covs)
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",

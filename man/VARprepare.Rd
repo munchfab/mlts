@@ -11,8 +11,7 @@ VARprepare(
   covariates = NULL,
   outcomes = NULL,
   outcome_pred_btw = NULL,
-  center_covs = T,
-  std_outcome = T
+  center_covs = T
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ VARprepare(
 \item{outcome_pred_btw}{tba.}
 
 \item{center_covs}{tba.}
-
-\item{std_outcome}{tba.}
 }
 \value{
 An object of class \code{data.frame}.

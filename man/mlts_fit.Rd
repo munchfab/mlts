@@ -13,7 +13,6 @@ mlts_fit(
   outcomes = NULL,
   outcome_pred_btw = NULL,
   center_covs = T,
-  std_outcome = T,
   time = NULL,
   tinterval,
   beep = NULL,
@@ -52,9 +51,6 @@ predicted by random effects.}
 \item{outcome_pred_btw}{Character.}
 
 \item{center_covs}{Logical. Should covariates be centered before inclusion
-in the model? Defaults to \code{TRUE}.}
-
-\item{std_outcome}{Logical. Should outcomes be standardized before inclusion
 in the model? Defaults to \code{TRUE}.}
 
 \item{time}{tba.}

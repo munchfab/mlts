@@ -1,58 +1,43 @@
 #' Title
 #'
-#' @param VARmodel data frame.
+#' @param model data frame.
 #' @export
 #'
-mlts_param_labels <- function(VARmodel){
+mlts_param_labels <- function(model){
 
   # eval model
-  infos = mlts_model_eval(VARmodel)
+  infos = mlts_model_eval(model)
 
-  # helper function to map names of parameters used in VARmodel with
+  # helper function to map names of parameters used in model with
   # parameter labels used in the stan models
-  VARmodel$Param_stan = NA
-#  VARmodel$Param_expr = VARmodel$Param
-  VARmodel$Par_no = 1: nrow(VARmodel)
+  model$Param_stan = NA
+#  model$Param_expr = model$Param
+  model$Par_no = 1: nrow(model)
 
-  # first add infos to VARmodel to extract variable names
+  # first add infos to model to extract variable names
   ##### FIXED EFFECT INTERCEPTS ================================================
-  FEints = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
+  FEints = model[model$Type=="Fix effect" & model$isRandom==1,]
   FEints$Param_stan = paste0("gammas[",1:nrow(FEints),"]")
-  # this doesn't add fixed intercept mu_1 (if its not random), so it doesnt
-  # show in summary
-  # FEints_random = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==1,]
-  # FEints_random$Param_stan = paste0("gammas[",1:nrow(FEints_random),"]")
-  # FEints_fixed <- VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==0,]
-  # FEints_fixed$Param_stan = paste0("b_fix[",1:nrow(FEints_fixed),"]")
-  # FEints <- rbind(FEints_random, FEints_fixed)
-  # FEints <- FEints[order(as.numeric(row.names(FEints))), ] # sort by row number
-
-  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "sigma2_", replacement = "sigma^2_", fixed = T)
-  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = "_", replacement = "[", fixed = T)
-  # FEints$Param_expr = paste0(FEints$Param_expr,"]")
-  # FEints$Param_expr = gsub(FEints$Param_expr, pattern = ".", replacement = "~", fixed = T)
 
   ##### CONSTANT DYNAMIC PARAMETERS ============================================
-  FEdyn = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==0 & VARmodel$Param_Label=="Dynamic",]
+  FEdyn = model[model$Type=="Fix effect" & model$isRandom==0 & model$Param_Label=="Dynamic",]
   if(nrow(FEdyn)>0){
-  FEdyn$Param_stan = paste0("b_fix[",1:nrow(FEdyn),"]")
-  # FEdyn$Param_expr = gsub(FEdyn$Param_expr, pattern = "_", replacement = "[", fixed = T)
-  # FEdyn$Param_expr = paste0(FEdyn$Param_expr,"]")
+    FEdyn$Param_stan = paste0("b_fix[",1:nrow(FEdyn),"]")
   }
 
   ##### CONSTANT INNOVATION VARIANCES ==========================================
-  FEsigma = VARmodel[VARmodel$Type=="Fix effect" & VARmodel$isRandom==0 & VARmodel$Param_Label=="Innovation Variance",]
+  FEsigma = model[model$Type=="Fix effect" & model$isRandom==0 & model$Param_Label=="Innovation Variance",]
   if(nrow(FEsigma)>0){
     FEsigma$Param_stan = paste0("sigma[",1:nrow(FEsigma),"]")
   }
 
   ##### RANDOM EFFECT SDs ======================================================
-  REsds = VARmodel[VARmodel$Type == "Random effect SD",]
+  REsds = model[model$Type == "Random effect SD",]
   REsds$Param_stan = paste0("sd_R[",1:nrow(REsds),"]")
 
 
   ##### RE CORRELATIONS ========================================================
-  REcors = VARmodel[VARmodel$Type == "RE correlation",]
+  REcors = model[model$Type == "RE correlation",]
   if(nrow(REcors > 0)){
     rand_pars = FEints$Param
     rand_pars_pos = 1:length(rand_pars)
@@ -70,7 +55,7 @@ mlts_param_labels <- function(VARmodel){
   }
 
   ###### INNOVATION COVARIANCE =================================================
-  Fix.Covs = VARmodel[startsWith(VARmodel$Param, prefix = "r.zeta"),]
+  Fix.Covs = model[startsWith(model$Param, prefix = "r.zeta"),]
   if(nrow(Fix.Covs)>0){
     Fix.Covs$Param_stan = paste0("bcorr_inn[",
                                  substr(Fix.Covs$Param, start = 8, 8),",",
@@ -78,7 +63,7 @@ mlts_param_labels <- function(VARmodel){
     }
 
   ###### RE on BETWEEN-LEVEL COVARIATES ========================================
-  REpred = VARmodel[VARmodel$Type == "RE prediction",]
+  REpred = model[model$Type == "RE prediction",]
   if(nrow(REpred)>0){
     infos$RE.PREDS$Param_stan = paste0("b_re_pred[",infos$RE.PREDS$re_pred_b_no,"]")
     REpred$Param_stan <- NULL
@@ -88,7 +73,7 @@ mlts_param_labels <- function(VARmodel){
 
   ###### OUTCOME PREDICTION ====================================================
   # get the order of parameters in stan model
-  OUTpred = VARmodel[VARmodel$Type == "Outcome prediction",]
+  OUTpred = model[model$Type == "Outcome prediction",]
   if(nrow(OUTpred) > 0){
     # regression parameter
     infos$OUT = infos$OUT[order(infos$OUT$out_var_no, infos$OUT$Pred_no),]
@@ -119,8 +104,6 @@ mlts_param_labels <- function(VARmodel){
       "Param" = paste0("alpha_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("alpha[",1:N_inds,"]")#,
       )
-    alphas = merge(x = alphas, y = VARmodel[VARmodel$Type=="Intercept",],
-                   by = "Param", all.x = T)
     loadB = data.frame(
       "Param" = paste0("lambdaB_",infos$indicators$q, ".",infos$indicators$p),
       "Param_stan" = paste0("loadB[",1:N_inds,"]")#,
@@ -138,13 +121,19 @@ mlts_param_labels <- function(VARmodel){
       "Param_stan" = paste0("sigmaW[",1:N_inds,"]")#,
       )
     mm.pars = rbind(alphas, loadB, sigmaB, loadW, sigmaW)
+
+
+    mm.pars = merge(x = mm.pars,
+                    y = model[model$Model=="Measurement",colnames(model) != "Param_stan"],
+                    by = "Param", all.y = T)
+
   }
 
   #### COMBINE
   par_tab = rbind(FEints, FEdyn, Fix.Covs, FEsigma, REsds, REcors, REpred, OUTpred)
 
   if(infos$isLatent == T){
-    par_tab = rbind(par_tab[,c("Param", "Param_stan")], mm.pars)
+    par_tab = plyr::rbind.fill(par_tab, mm.pars)
   }
 
   return(par_tab)
