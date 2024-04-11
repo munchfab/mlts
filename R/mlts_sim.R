@@ -287,7 +287,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
 
         if(infos$q == 2 & infos$n_inno_covs == 1){
-          inno_t = rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
+          inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
           y = y + inno_t
         }
 
