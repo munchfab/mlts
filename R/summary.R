@@ -86,16 +86,66 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   )
   call_end <- ")\n"
 
+  # for latent variabels: print number of indicators and latent variables
   call_p <- ifelse(
     infos$isLatent == TRUE,
     paste0(
       ", p = ", ifelse(
-        length(infos$p) == 1,
-        infos$p,
-        cat("c(", cat(infos$p, sep = ", "), ")", sep = "")
+        length(infos$p) > 1,
+        paste0("c(", paste(infos$p, collapse = ", "), ")"),
+        infos$p
       )
     ), ""
   )
+
+  if (infos$isLatent == TRUE) {
+    latents <- pop_pars[
+      startsWith(pop_pars$Param, "eta") | startsWith(pop_pars$Param, "mu"),
+      "Param"
+    ]
+    n_latents <- length(latents)
+    indicators <- rownames(object$standata$y)
+    # n_indicators <- length(indicators)
+    lat_ind <- data.frame(
+      latents = rep(latents, times = infos$p),
+      by = "=~",
+      indicators = indicators
+    )
+    mm <- aggregate(
+      indicators ~ latents + by, data = lat_ind,
+      FUN = function(x) {paste(x, collapse = " + ")}
+    )
+    mm_string <- do.call(paste, mm)
+    call_latents <- c(
+      paste0("Latent Variables: ", n_latents, "\n"),
+      paste0("  ", mm_string, collapse = "\n "),
+      "\n"
+    )
+  } else {
+    latents <- pop_pars[
+      startsWith(pop_pars$Param, "mu"),
+      "Param"
+    ]
+    n_latents <- length(latents)
+    indicators <- rownames(object$standata$y)
+    # n_indicators <- length(indicators)
+    lat_ind <- data.frame(
+      latents = rep(latents, times = infos$p),
+      by = "=~",
+      indicators = indicators
+    )
+    mm <- aggregate(
+      indicators ~ latents + by, data = lat_ind,
+      FUN = function(x) {paste(x, collapse = " + ")}
+    )
+    mm_string <- do.call(paste, mm)
+    call_latents <- c(
+      paste0("Latent Variables: ", n_latents, "\n"),
+      paste0("  ", mm_string, collapse = "\n "),
+      "\n"
+    )
+  }
+
   call_maxlag <- paste0(", max_lag = ", infos$maxLag)
   call_fix_dynamics <- ifelse(
     all(infos$fix_pars_dyn$isRandom == 0),
@@ -112,16 +162,26 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     ""
   )
   call_ranef_zero <- ifelse(
-    sum(infos$fix_pars[, "isRandom"] == 0) == 1,
+    # determine if there is exactly one random effect == 0
+    # apart from residual correlations (which are fixed by default)
+    sum(
+      infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param), "isRandom"] == 0
+    ) == 1,
     paste0(", ranef_zero = \"",
-           infos$fix_pars[infos$fix_pars$isRandom == 0, "Param"],
+           infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param) &
+                            infos$fix_pars$isRandom == 0, "Param"],
            "\""),
     ifelse(
-      sum(infos$fix_pars[, "isRandom"] == 0) > 1,
+      # determine if there are more than one random effects == 0
+      # apart from residual correlations (which are fixed by default)
+      sum(
+        infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param), "isRandom"] == 0
+      ) > 1,
       paste0(
         ", ranef_zero = c(",
         paste0(
-          "\"", infos$fix_pars[infos$fix_pars$isRandom == 0, "Param"], "\"",
+          "\"", infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param) &
+                                 infos$fix_pars$isRandom == 0, "Param"], "\"",
           collapse = ", "
         ),
         ")"
@@ -276,6 +336,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   # assemble everything
   cat(model_call)
+  cat(call_latents)
   cat(data_info)
   cat(convergence)
   if (nrow(fixef_params) > 0) {
