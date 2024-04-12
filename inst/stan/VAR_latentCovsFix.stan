@@ -74,6 +74,7 @@ data {
   matrix[n_random,2] prior_sd_R;
   real prior_LKJ;
   matrix[n_innos_fix,2] prior_sigma;
+  matrix[n_fixed,2] prior_b_fix;
   matrix[n_cov_bs,2] prior_b_re_pred;
   matrix[n_out,2] prior_alpha_out;
   matrix[n_out_bs_sum,2] prior_b_out;
@@ -197,7 +198,7 @@ model {
   }
 
   if(n_fixed > 0){
-    b_fix ~ normal(0,2);
+    b_fix ~ normal(prior_b_fix[,1],prior_b_fix[,2]);
   }
 
   // priors on measurement model parameter
