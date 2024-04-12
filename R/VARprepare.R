@@ -140,7 +140,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   prior_b_out = infos$prior_b_out
   prior_alpha_out = infos$prior_alpha_out
   prior_sigma_out = infos$prior_sigma_out
-
+  prior_b_fix = infos$prior_b_fix
 
 
   # combine all information
@@ -197,6 +197,12 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     standata$YB_free_pos <- as.array(infos$YB_free_pos)
     standata$mu_etaB_pos <- as.array(infos$mu_etaB_pos)
     standata$mu_is_etaB <- as.array(infos$mu_is_etaB)
+
+    standata$prior_alpha = infos$prior_alpha
+    standata$prior_loadB = infos$prior_loadB
+    standata$prior_loadW = infos$prior_loadW
+    standata$prior_sigmaB = infos$prior_sigmaB
+    standata$prior_sigmaW = infos$prior_sigmaW
   }
 
 

@@ -156,7 +156,20 @@ mlts_model_eval <- function(model){
     mu_is_etaB = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree), 0, 1)
     mu_etaB_pos = indicators$etaB_pos
 
-  } else {
+    # add priors
+    cols = c("prior_location", "prior_scale")
+    prior_alpha = matrix(ncol = 2, nrow = n_alphafree)
+    prior_alpha = model[model$Type == "Item intercepts" & model$Constraint == "free",cols]
+    prior_loadB = matrix(ncol = 2, nrow = n_loadBfree)
+    prior_loadB = model[model$Type == "Loading" & model$Level == "Between" & model$Constraint == "free",cols]
+    prior_loadW = matrix(ncol = 2, nrow = n_loadWfree)
+    prior_loadW = model[model$Type == "Loading" & model$Level == "Within" & model$Constraint == "free",cols]
+    prior_sigmaB = matrix(ncol = 2, nrow = n_sigmaBfree)
+    prior_sigmaB = model[model$Type == "Measurement Error SD" & model$Level == "Between" & model$Constraint == "free",cols]
+    prior_sigmaW = matrix(ncol = 2, nrow = n_sigmaWfree)
+    prior_sigmaW = model[model$Type == "Measurement Error SD" & model$Level == "Within" & model$Constraint == "free",cols]
+
+    } else {
     p <- 1
     indicators = NA
     n_loadBfree = 0
@@ -173,6 +186,11 @@ mlts_model_eval <- function(model){
     YB_free_pos = 0
     mu_is_etaB = 0
     mu_etaB_pos = 0
+    prior_alpha = 0
+    prior_loadB = 0
+    prior_loadW = 0
+    prior_sigmaB = 0
+    prior_sigmaW = 0
   }
 
   # which innovation variances as random effects?
@@ -298,6 +316,10 @@ mlts_model_eval <- function(model){
   prior_gamma = matrix(nrow = n_random, ncol = 2)
   prior_gamma <- model[model$Type=="Fix effect" & model$isRandom == 1, cols]
 
+  # constant dynamic parameters
+  prior_b_fix = matrix(nrow = n_fixed, ncol = 2)
+  prior_b_fix = model[model$Type=="Fix effect" & model$isRandom == 0 & model$Param_Label == "Dynamic", cols]
+
   # random effect SDs
   prior_sd_R = matrix(nrow = n_random, ncol = 2)
   prior_sd_R = model[model$Type=="Random effect SD", cols]
@@ -334,6 +356,8 @@ mlts_model_eval <- function(model){
       prior_sigma_out[i,1:2] = unlist(model[model$Param %in% c(paste0("sigma_",out_var[i])),cols])
     }
   }
+
+
 
   # END PRIOR SPECIFICATION ====================================================
 
@@ -388,7 +412,8 @@ mlts_model_eval <- function(model){
 
     # priors
     prior_gamma, prior_sd_R, prior_LKJ, prior_sigma, prior_b_re_pred,
-    prior_b_out, prior_alpha_out, prior_sigma_out
+    prior_b_out, prior_alpha_out, prior_sigma_out, prior_b_fix,
+    prior_alpha, prior_loadB, prior_loadW, prior_sigmaB, prior_sigmaW
   )
 
   return(modelinfos)

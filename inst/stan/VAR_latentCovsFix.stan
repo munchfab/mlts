@@ -79,10 +79,11 @@ data {
   matrix[n_out_bs_sum,2] prior_b_out;
   matrix[n_out,2] prior_sigma_out;
 
-  // - covariances of innovations:
-  // int<lower=1> n_inno_covs; // number of potential innovation covs to include
-  // int<lower=0,upper=1> inno_cov0;    // fixed to zero
-  // int<lower=0,upper=1> inno_cov_fix; // fixed to zero
+  matrix[n_alphafree,2] prior_alpha;
+  matrix[n_loadBfree,2] prior_loadB;
+  matrix[n_loadWfree,2] prior_loadW;
+  matrix[n_sigmaBfree,2] prior_sigmaB;
+  matrix[n_sigmaWfree,2] prior_sigmaW;
 }
 
 parameters {
@@ -200,11 +201,11 @@ model {
   }
 
   // priors on measurement model parameter
-  alpha_free ~ normal(0,10);
-  loadB_free ~ normal(0,2);
-  loadW_free ~ normal(0,2);
-  sigmaB_free ~ cauchy(0,2.5);
-  sigmaW_free ~ cauchy(0,2.5);
+  alpha_free ~ normal(prior_alpha[,1], prior_alpha[,2]);
+  loadB_free ~ normal(prior_loadB[,1], prior_loadB[,2]);
+  loadW_free ~ normal(prior_loadW[,1], prior_loadW[,2]);
+  sigmaB_free ~ cauchy(prior_sigmaB[,1], prior_sigmaB[,2]);
+  sigmaW_free ~ cauchy(prior_sigmaW[,1], prior_sigmaW[,2]);
 
   // indicator between-part
   for(i in 1:n_p){
