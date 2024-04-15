@@ -160,6 +160,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     n_out, n_out_bs, n_out_bs_max, n_out_bs_sum, n_out_b_pos, out, n_z, Z,
     # priors
     prior_LKJ, prior_gamma, prior_sd_R, prior_sigma, prior_b_re_pred,
+    prior_b_fix,
     prior_b_out, prior_alpha_out, prior_sigma_out
   )
 
