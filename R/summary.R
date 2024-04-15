@@ -98,53 +98,72 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     ), ""
   )
 
-  if (infos$isLatent == TRUE) {
-    latents <- pop_pars[
-      startsWith(pop_pars$Param, "eta") | startsWith(pop_pars$Param, "mu"),
-      "Param"
-    ]
-    n_latents <- length(latents)
-    indicators <- rownames(object$standata$y)
-    # n_indicators <- length(indicators)
-    lat_ind <- data.frame(
-      latents = rep(latents, times = infos$p),
-      by = "=~",
-      indicators = indicators
-    )
-    mm <- aggregate(
-      indicators ~ latents + by, data = lat_ind,
-      FUN = function(x) {paste(x, collapse = " + ")}
-    )
-    mm_string <- do.call(paste, mm)
-    call_latents <- c(
-      paste0("Latent Variables: ", n_latents, "\n"),
-      paste0("  ", mm_string, collapse = "\n "),
-      "\n"
-    )
-  } else {
-    latents <- pop_pars[
-      startsWith(pop_pars$Param, "mu"),
-      "Param"
-    ]
-    n_latents <- length(latents)
-    indicators <- rownames(object$standata$y)
-    # n_indicators <- length(indicators)
-    lat_ind <- data.frame(
-      latents = rep(latents, times = infos$p),
-      by = "=~",
-      indicators = indicators
-    )
-    mm <- aggregate(
-      indicators ~ latents + by, data = lat_ind,
-      FUN = function(x) {paste(x, collapse = " + ")}
-    )
-    mm_string <- do.call(paste, mm)
-    call_latents <- c(
-      paste0("Latent Variables: ", n_latents, "\n"),
-      paste0("  ", mm_string, collapse = "\n "),
-      "\n"
+  # print information on variables used for model estimation
+  if(infos$isLatent == F){
+    call_inds = c(
+      "Time series variables as indicated by parameter subscripts: \n",
+      unlist(lapply(1:infos$q, function(x){
+        paste0("  ", x, " --> ", object$standata$ts[x], "\n")
+      }))
     )
   }
+  if(infos$isLatent == T){
+    call_inds = c(
+      "Time series variables as indicated by parameter subscripts: \n",
+      unlist(lapply(1:infos$q, function(x){
+        paste0("  ", x, " --> ",
+               paste0(object$standata$ts[infos$indicators$q == x], collapse = " + "), "\n")
+      }))
+    )
+  }
+
+  # if (infos$isLatent == TRUE) {
+  #   latents <- pop_pars[
+  #     startsWith(pop_pars$Param, "eta") | startsWith(pop_pars$Param, "mu"),
+  #     "Param"
+  #   ]
+  #   n_latents <- length(latents)
+  #   indicators <- rownames(object$standata$y)
+  #   # n_indicators <- length(indicators)
+  #   lat_ind <- data.frame(
+  #     latents = rep(latents, times = infos$p),
+  #     by = "=~",
+  #     indicators = indicators
+  #   )
+  #   mm <- aggregate(
+  #     indicators ~ latents + by, data = lat_ind,
+  #     FUN = function(x) {paste(x, collapse = " + ")}
+  #   )
+  #   mm_string <- do.call(paste, mm)
+  #   call_latents <- c(
+  #     paste0("Latent Variables: ", n_latents, "\n"),
+  #     paste0("  ", mm_string, collapse = "\n "),
+  #     "\n"
+  #   )
+  # } else {
+  #   latents <- pop_pars[
+  #     startsWith(pop_pars$Param, "mu"),
+  #     "Param"
+  #   ]
+  #   n_latents <- length(latents)
+  #   indicators <- rownames(object$standata$y)
+  #   # n_indicators <- length(indicators)
+  #   lat_ind <- data.frame(
+  #     latents = rep(latents, times = infos$p),
+  #     by = "=~",
+  #     indicators = indicators
+  #   )
+  #   mm <- aggregate(
+  #     indicators ~ latents + by, data = lat_ind,
+  #     FUN = function(x) {paste(x, collapse = " + ")}
+  #   )
+  #   mm_string <- do.call(paste, mm)
+  #   call_latents <- c(
+  #     paste0("Latent Variables: ", n_latents, "\n"),
+  #     paste0("  ", mm_string, collapse = "\n "),
+  #     "\n"
+  #   )
+  # }
 
   call_maxlag <- paste0(", max_lag = ", infos$maxLag)
   call_fix_dynamics <- ifelse(
@@ -260,7 +279,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   conv = rstan::monitor(object$stanfit, print = F, probs = prob)
   convergence <- paste0(
     "Model convergence criteria: \n",
-    "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),digits), " (should be < 1.01)\n",
+    "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
     "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > 100 per chain) \n",
     "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > 100 per chain) \n",
     "  Number of divergent transitions: ", rstan::get_num_divergent(object$stanfit),
@@ -336,32 +355,14 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   # assemble everything
   cat(model_call)
-  cat(call_latents)
+ # cat(call_latents)
+  cat(call_inds)
   cat(data_info)
   cat(convergence)
   if (nrow(fixef_params) > 0) {
     cat("\nFixed Effects:\n")
     print(fixef_params, row.names = FALSE)
   }
-  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) == 0) {
-  #   cat("\nFixed Effects:\n")
-  #   print(fixef_params, row.names = FALSE)
-  # }
-  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) == 0) {
-  #   cat("\nFixed Effects:\n")
-  #   fixef_params <- rbind(fixef_params, ranef_preds)
-  #   print(fixef_params, row.names = FALSE)
-  # }
-  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) == 0 & nrow(outcomes) > 0) {
-  #   cat("\nFixed Effects:\n")
-  #   fixef_params <- rbind(fixef_params, outcomes)
-  #   print(fixef_params, row.names = FALSE)
-  # }
-  # if (nrow(fixef_params) > 0 & nrow(ranef_preds) > 0 & nrow(outcomes) > 0) {
-  #   cat("\nFixed Effects:\n")
-  #   fixef_params <- rbind(fixef_params, ranef_preds, outcomes)
-  #   print(fixef_params, row.names = FALSE)
-  # }
   if (nrow(ranef_sds) > 0) {
     cat("\nRandom Effects SDs:\n")
     print(ranef_sds, row.names = FALSE)
@@ -389,18 +390,5 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
       "sample size, and Rhat is the potential scale reduction factor\n",
       "on split chains (at convergence, Rhat = 1).",
       sep = "")
-
-  # this is not needed I think, it gets printed behind the cat() calls
-  # sum.table = rbind(
-  #   fixef_params,
-  #   ranef_sds,
-  #   ranef_corrs,
-  #   outcomes,
-  #   outcomes_sds,
-  #   ranef_preds,
-  #   mm_pars
-  # )
-  #
-  # return(sum.table)
 
 }
