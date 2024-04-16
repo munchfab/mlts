@@ -7,7 +7,7 @@ update_model_REcors <- function(model) {
   model <- model[model$Type != "RE correlation", ]
 
   # update random effect correlations
-  rand.pars <- (model[model$Type == "Fix effect" & model$isRandom == 1, "Param"])
+  rand.pars <- (model[model$Type == "Fixed effect" & model$isRandom == 1, "Param"])
   n_rand <- length(rand.pars)
   btw.cov_pars <- c()
   if (n_rand > 1) {

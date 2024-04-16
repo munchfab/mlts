@@ -6,11 +6,12 @@
 #' measured with the same number of indicators, a single value is sufficient.
 #' @param max_lag Integer. The maximum lag of the autoregressive effect to be
 #' included in the model. The maximum is 3. Defaults to 1.
-#' @param fix_inno_vars Logical. Fix all random effect variances (except those
-#' of individual traits) to zero.
-#' @param fix_dynamics Logical. Fix all random effect variances (except those
-#' of individual traits) to zero (constraining parameters to be equal across clusters).
-#' @param fix_inno_covs Logical. Set all innovation covariances to a constant value.
+#' @param fix_inno_vars Logical. Fix all random effect variances of innovation variances to zero
+#' (constraining parameters to be equal across clusters).
+#' @param fix_dynamics Logical. Fix all random effect variances of autoregressive and
+#' cross-lagged effects to zero (constraining parameters to be equal across clusters).
+#' @param fix_inno_covs Logical. Fix all random effect variances of innovation covariances to zero
+#' (constraining parameters to be equal across clusters).
 #' @param inno_covs_zero Logical. Set to TRUE to treat all innovations as independent.
 #' @param inno_covs_dir For bivariate VAR models with person-specific innovation covariances,
 #' a latent variable approach is applied by specifying an additional factor that loads onto
@@ -20,9 +21,10 @@
 #' the association between innovations across construct. Hence, if innovations at time 't' are
 #' assumed to be mainly positive across clusters, set the argument to `pos`, or `neg` respectively.
 #' @param fixef_zero Character. A character vector to index which fixed effects
-#' should be fixed to zero (Note: this also results in removing the random effect
-#' variance of the respective parameter).
-#' @param ranef_zero Logical. Set to `TRUE` to treat all innovations as independent.
+#' (referring to the parameter labels in `model$Param`) should be constrained to zero
+#' (Note: this also results in removing the random effect variance of the respective parameter).
+#' @param ranef_zero Character. A character vector to index which random effect variances
+#' (referring to the parameter labels in `model$Param`) should be constrained to zero.
 #' @param btw_factor Logical. If `TRUE` (the default), a common between-level factor
 #' is modeled across all indicator variables. If `FALSE`, instead of a between-level
 #' factor, indicator mean levels will be included as individual (random) effects drawn
@@ -41,10 +43,33 @@
 #' as predictor(s) of all random effects in `model` by entering a vector of unique variable
 #' names. Alternatively, to include between-level covariates or differing sets of
 #' between-level covariates as predictors of specific random effects, a named
-#' list (using the `param`-labels in `model`) can be entered (see details).
-#' @param out_pred_add_btw tba
+#' list (using the `param`-labels in `model`) can be entered (see details). Note that
+#' if a named list is provided, all character strings in the vector of each list
+#' (with independent variables) element that do not match random effect parameter names
+#' in `model` will be treated as additional between-level predictors.
+#' @param out_pred_add_btw A character vector. All inputs will be treated as
+#' betweeen-level covariates to be used as additional predictors of all outcomes specified
+#' in `out pred`.
 #' @return An object of class `data.frame` containing all model parameters.
 #' @export
+#'
+#' @examples
+#' \donttest{
+#'  # build simple mlts model for two time-series variables
+#'  model <- mlts_model(q = 2)
+#'
+#'  # fit model with (artificial) dataset ts_data
+#'  fit <- mlts_fit(
+#'    model = model,
+#'    data = ts_data,
+#'    ts = c("Y1", "Y2"), # time-series variables
+#'    id = "ID", # identifier variable
+#'    tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#'  )
+#'
+#'  # inspect model summary
+#'  summary(fit)
+#' }
 #'
 mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
