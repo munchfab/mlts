@@ -156,7 +156,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Model" = "Measurement",
         "Level" = "Between",
         "Type" = "Item intercepts",
-        "Param"= c(paste0("alpha_",i,".",etaB_inds)),
+        "Param"= c(paste0("alpha_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
         "Constraint" = c("= 0", rep("free", (N_etaB_inds-1)))
       )
@@ -166,7 +166,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Model" = "Measurement",
         "Level" = "Between",
         "Type" = "Loading",
-        "Param"= c(paste0("lambdaB_",i,".",etaB_inds)),
+        "Param"= c(paste0("lambdaB_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
         "Constraint" = c("= 1", rep("free", (N_etaB_inds-1))))
 
@@ -175,7 +175,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Model" = "Measurement",
         "Level" = "Between",
         "Type" = "Measurement Error SD",
-        "Param"= c(paste0("sigmaB_",i,".",etaB_inds)),
+        "Param"= c(paste0("sigmaB_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
         "Constraint" = c("= 0", rep("free", (N_etaB_inds-1)))
       )
