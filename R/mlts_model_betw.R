@@ -19,7 +19,16 @@
 #'
 mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL){
 
-
+  # print a warning, if specific outcome prediction model is introduced,
+  # and additional between-level covariates shoueld be entered:
+  if(is.list(out_pred) & !is.null(out_pred_add_btw)){
+    warning(
+      "If a list input is provided for `out_pred`, additional between-level
+      covariates to be used as outcome predictors entered via `out_pred_add_btw`
+      will be ignored. You can add those variables to the list of named
+      vectors in `out_pred`."
+      )
+  }
 
   ##### ACHTUNG AKTUELL IST ES NOCH MÖGLICH FIXED PARAMETERS IN DIE OUTCOME
   ##### PREDICTION ZU INTEGRIEREN

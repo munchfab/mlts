@@ -33,25 +33,40 @@ mlts_fit(
 \item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}} and related functions.}
 
 \item{data}{An object of class data.frame (or one that can be coerced to that
-class) containing data of all variables used in the model.}
+class) containing data of all variables used in the model. Alternatively,
+a list object with simulated data created by \code{mlts_sim} can be entered directly
+and allows for comparison of estimates and true population paramter values used
+in the data generation.}
 
 \item{id}{Character. The variable in \code{data} that identifies the person or observational
-unit.}
+unit. Not necessary when \code{data} is a list object of simulated data generated
+with \code{mlts_sim}.}
 
-\item{ts}{Character. The variable(s) in \code{data} that
-contain the time-series construct. If multiple variables are provided in a
-character vector, a vector autoregressive model is fit.}
+\item{ts}{Character. The variable(s) in \code{data} that contain the time-series
+construct(s). If multiple constructs are provided in the \code{model}, multiple entries
+are necessary. Note that the order of variable names provided in \code{ts} has to match
+the specification made in the \code{model}. E.g., if multiple constructs (e.g.,
+\code{mlts_model(q = 2)}) are provided the order of variables names provided in \code{ts}
+determines which construct is referred to as mu_1, phi(1)_11, etc..}
 
-\item{covariates}{Character. The covariate(s) in \code{data} used for prediction of
-random effects.}
+\item{covariates}{Named character vector. An optional named vector of
+characters to refer to predictors of random effects as specified in the \code{model}.
+Note that specifying \code{covariates} is only necessary if the respective
+variable name(s) in \code{data} differ from the variables names specified in \code{model}.}
 
-\item{outcomes}{Character. The outcome(s) in \code{data} that should be
-predicted by random effects.}
+\item{outcomes}{Named character vector. Similar to \code{covariates}, an optional named vector of
+characters to refer to outcome predicted by random effects as specified in the \code{model}.
+Note that specifying \code{outcomes} is only necessary if the respective
+variable name(s) in \code{data} differ from the outcome variable name(s) specified in \code{model}.}
 
 \item{outcome_pred_btw}{Character.}
 
-\item{center_covs}{Logical. Should covariates be centered before inclusion
-in the model? Defaults to \code{TRUE}.}
+\item{center_covs}{Logical. Between-level covariates used as predictors of random effects
+will be grand-mean centered before model fitting by default to allow interpretation
+of fixed effects intercepts as mean population effects for average covariate values.
+Setting \code{center_covs} to \code{FALSE} might be necessary when including categorical
+predictors into the set of \code{covariates}. Note that in this case, additional
+continuous covariates should be grand-mean centered prior to using \code{mlts_fit}.}
 
 \item{time}{Character. The variable in \code{data} that contains the (continuous) time.}
 

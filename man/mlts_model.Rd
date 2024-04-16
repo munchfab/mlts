@@ -5,6 +5,7 @@
 \title{Build a multilevel latent time series model}
 \usage{
 mlts_model(
+  class = c("VAR"),
   q,
   p = NULL,
   max_lag = c(1, 2, 3),
@@ -23,13 +24,18 @@ mlts_model(
 )
 }
 \arguments{
+\item{class}{Character. Indicating the model type to be specified. For now
+restricted to \code{VAR}, the default. Future package releases might include additional
+model types.}
+
 \item{q}{Integer. The number of time-varying constructs.}
 
 \item{p}{Integer. For multiple-indicator models, specify a vector of length
-\code{q} with the number of manifest indicators per construct.}
+\code{q} with the number of manifest indicators per construct. If all constructs are
+measured with the same number of indicators, a single value is sufficient.}
 
-\item{max_lag}{Integer. The maximum lag of the autoregressive effect. The maximum
-is 3.}
+\item{max_lag}{Integer. The maximum lag of the autoregressive effect to be
+included in the model. The maximum is 3. Defaults to 1.}
 
 \item{btw_factor}{Logical. If \code{TRUE} (the default), a common between-level factor
 is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
@@ -40,21 +46,31 @@ from a joint multivariate normal distribution.}
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
 
-\item{fix_dynamics}{Logical. Fix all random effect variances (except those
-of individual traits) to zero.}
+\item{fix_dynamics}{Logical. Fix all random effect variances of autoregressive and
+cross-lagged effects to zero (constraining parameters to be equal across clusters).}
 
-\item{fix_inno_vars}{Logical. Fix all random effect variances (except those
-of individual traits) to zero.}
+\item{fix_inno_vars}{Logical. Fix all random effect variances of innovation variances to zero
+(constraining parameters to be equal across clusters).}
 
-\item{fix_inno_covs}{Logical. Set all innovation covariances to a constant value.}
+\item{fix_inno_covs}{Logical. Fix all random effect variances of innovation covariances to zero
+(constraining parameters to be equal across clusters).}
 
 \item{inno_covs_zero}{Logical. Set to TRUE to treat all innovations as independent.}
 
-\item{fixef_zero}{Character. A character vector to index which fixed effects
-should be fixed to zero (Note: this also results in removing the random effect
-variance of the respective parameter).}
+\item{inno_covs_dir}{For bivariate VAR models with person-specific innovation covariances,
+a latent variable approach is applied by specifying an additional factor that loads onto
+the contemporaneous innovations of both constructs, capturing the shared variance of innovations,
+that is not predicted by the previous time points. The loading parameters of this latent factor,
+however, have to be restricted in accordance with researchers assumptions about the sign of
+the association between innovations across construct. Hence, if innovations at time 't' are
+assumed to be mainly positive across clusters, set the argument to \code{pos}, or \code{neg} respectively.}
 
-\item{ranef_zero}{Logical. Set to \code{TRUE} to treat all innovations as independent.}
+\item{fixef_zero}{Character. A character vector to index which fixed effects
+(referring to the parameter labels in \code{model$Param}) should be constrained to zero
+(Note: this also results in removing the random effect variance of the respective parameter).}
+
+\item{ranef_zero}{Character. A character vector to index which random effect variances
+(referring to the parameter labels in \code{model$Param}) should be constrained to zero.}
 
 \item{ranef_pred}{A character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
@@ -68,13 +84,72 @@ parameters in \code{model} will be ignored.}
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{model}) can be entered (see details).}
+list (using the \code{param}-labels in \code{model}) can be entered (see details). Note that
+if a named list is provided, all character strings in the vector of each list
+(with independent variables) element that do not match random effect parameter names
+in \code{model} will be treated as additional between-level predictors.}
 
-\item{out_pred_add_btw}{tba}
+\item{out_pred_add_btw}{A character vector. All inputs will be treated as
+betweeen-level covariates to be used as additional predictors of all outcomes specified
+in \verb{out pred}.}
 }
 \value{
 An object of class \code{data.frame} containing all model parameters.
 }
 \description{
 Build a multilevel latent time series model
+}
+\examples{
+\donttest{
+ # To illustrate the general model building procedure, starting with a simple
+ # two-level AR(1) model with person-specific individual means, AR effects, and innovation
+ # variances (the default option when using `mlts_model` and `q = 1`).
+ ar1 <- mlts_model(q = 1)
+
+ # All model parameters can be inspected by calling:
+ ar1
+
+ # The following model extensions/restrictions can be made (in that specific order):
+ # 1. Introducing additional parameter constraints, such as fixing specific
+ #    parameters to a constant value by setting the respective random effect
+ #    variances to zero, such as e.g. (log) innovation variances
+ ar1 <- mlts_model(model = ar1, ranef_zero = "ln.sigma2_1")
+ #    Note that, setting the argument `fix_inno_vars` to `TRUE` provides
+ #    a shortcut to fixing the innovation variances of all constructs (if `q >= 1`) to a constant.
+
+ # 2. Including a multiple indicator model, where the construct is measured by
+ #    multiple indicators (here, `p = 3` indicators)
+ ar1 <- mlts_model_measurement(
+          model = ar1,
+          q = 1,         # the number of time-varying constructs
+          p = 3,         # the number of manifest indicators
+          btw_factor = T # assuming a common between-level factor (the default)
+          )
+
+ # 3. Incorporating additional between-level variables. For example, inclusion of
+ #    an additional between-level variable ("cov1") as predictor of all
+ #    (`ranef_pred = "cov1"`) or a specific set of random effects
+ #    (`ranef_pred = list("phi(1)_11") = "cov1"`), an external outcome ("e.g., out1")
+ #    to be predicted by all (`out_pred = "out1"`) or specific random effects
+ #    (`out_pred = list("out1" = c("etaB_1", "phi(1)_11")`), using the latent
+ #    between-level factor trait scores (etaB_1) and individual first-order
+ #    autoregressive effects (phi(1)_11) as joint predictors of outcome "out1".
+ ar1 <- mlts_model_btw(
+          model = ar1,
+          ranef_pred = "cov1",
+          out_pred = list("out1" = c("etaB_1", "phi(1)_11")
+          )
+      Note that, the names of the random effect parameters must match the
+      parameter labels provided in `ar1$Param`, the result of the `mlts_model`
+      functions.
+
+ # Finally, a shorthand for specifying the above model would be:
+ ar1 <- mlts_model(
+          q = 1,
+          p = 3,
+          fix_inno_vars = T,
+          ranef_pred = "cov1",
+          out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
+          )
+ }
 }

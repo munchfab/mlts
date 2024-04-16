@@ -25,6 +25,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   object <- object
   model <- object$model
+  class <- object$model$class
   N_obs <- object$standata$N_obs
   N_ids <- object$standata$N
   # pop_pars <- object$pop.pars.summary

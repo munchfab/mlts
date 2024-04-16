@@ -1,5 +1,8 @@
 #' Build a multilevel latent time series model
 #'
+#' @param class Character. Indicating the model type to be specified. For now
+#' restricted to `VAR`, the default. Future package releases might include additional
+#' model types.
 #' @param q Integer. The number of time-varying constructs.
 #' @param p Integer. For multiple-indicator models, specify a vector of length
 #' `q` with the number of manifest indicators per construct. If all constructs are
@@ -55,23 +58,59 @@
 #'
 #' @examples
 #' \donttest{
-#'  # build simple mlts model for two time-series variables
-#'  model <- mlts_model(q = 2)
+#'  # To illustrate the general model building procedure, starting with a simple
+#'  # two-level AR(1) model with person-specific individual means, AR effects, and innovation
+#'  # variances (the default option when using `mlts_model` and `q = 1`).
+#'  ar1 <- mlts_model(q = 1)
 #'
-#'  # fit model with (artificial) dataset ts_data
-#'  fit <- mlts_fit(
-#'    model = model,
-#'    data = ts_data,
-#'    ts = c("Y1", "Y2"), # time-series variables
-#'    id = "ID", # identifier variable
-#'    tinterval = 1 # interval for approximation of continuous-time dynamic model,
-#'  )
+#'  # All model parameters can be inspected by calling:
+#'  ar1
 #'
-#'  # inspect model summary
-#'  summary(fit)
-#' }
+#'  # The following model extensions/restrictions can be made (in that specific order):
+#'  # 1. Introducing additional parameter constraints, such as fixing specific
+#'  #    parameters to a constant value by setting the respective random effect
+#'  #    variances to zero, such as e.g. (log) innovation variances
+#'  ar1 <- mlts_model(model = ar1, ranef_zero = "ln.sigma2_1")
+#'  #    Note that, setting the argument `fix_inno_vars` to `TRUE` provides
+#'  #    a shortcut to fixing the innovation variances of all constructs (if `q >= 1`) to a constant.
 #'
-mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
+#'  # 2. Including a multiple indicator model, where the construct is measured by
+#'  #    multiple indicators (here, `p = 3` indicators)
+#'  ar1 <- mlts_model_measurement(
+#'           model = ar1,
+#'           q = 1,         # the number of time-varying constructs
+#'           p = 3,         # the number of manifest indicators
+#'           btw_factor = T # assuming a common between-level factor (the default)
+#'           )
+#'
+#'  # 3. Incorporating additional between-level variables. For example, inclusion of
+#'  #    an additional between-level variable ("cov1") as predictor of all
+#'  #    (`ranef_pred = "cov1"`) or a specific set of random effects
+#'  #    (`ranef_pred = list("phi(1)_11") = "cov1"`), an external outcome ("e.g., out1")
+#'  #    to be predicted by all (`out_pred = "out1"`) or specific random effects
+#'  #    (`out_pred = list("out1" = c("etaB_1", "phi(1)_11")`), using the latent
+#'  #    between-level factor trait scores (etaB_1) and individual first-order
+#'  #    autoregressive effects (phi(1)_11) as joint predictors of outcome "out1".
+#'  ar1 <- mlts_model_btw(
+#'           model = ar1,
+#'           ranef_pred = "cov1",
+#'           out_pred = list("out1" = c("etaB_1", "phi(1)_11")
+#'           )
+#'       Note that, the names of the random effect parameters must match the
+#'       parameter labels provided in `ar1$Param`, the result of the `mlts_model`
+#'       functions.
+#'
+#'  # Finally, a shorthand for specifying the above model would be:
+#'  ar1 <- mlts_model(
+#'           q = 1,
+#'           p = 3,
+#'           fix_inno_vars = T,
+#'           ranef_pred = "cov1",
+#'           out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
+#'           )
+#'  }
+
+mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
                           fix_dynamics = F, fix_inno_vars = F,
                           fix_inno_covs = T, inno_covs_zero = F,
@@ -287,7 +326,13 @@ stop("Note: At this point, specifying a VAR(1) model with person-specific innova
                                out_pred_add_btw = out_pred_add_btw)
   }
 
-
   return(model)
 
+  # we should think about something like this:
+  # adding the class to model, or ideally as a specific class of data frame
+  # referring to the specific models (to come), however, just adding a class to the
+  # data frame resulted in turning it into a list object. The latter code lead to problems
+  # in the summary.
+  #return(cbind("class" = class, model))
 }
+

@@ -2,19 +2,34 @@
 #'
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}} and related functions.
 #' @param data An object of class data.frame (or one that can be coerced to that
-#' class) containing data of all variables used in the model.
+#' class) containing data of all variables used in the model. Alternatively,
+#' a list object with simulated data created by `mlts_sim` can be entered directly
+#' and allows for comparison of estimates and true population paramter values used
+#' in the data generation.
 #' @param id Character. The variable in `data` that identifies the person or observational
-#' unit.
-#' @param ts Character. The variable(s) in `data` that
-#' contain the time-series construct. If multiple variables are provided in a
-#' character vector, a vector autoregressive model is fit.
-#' @param covariates Character. The covariate(s) in `data` used for prediction of
-#' random effects.
-#' @param outcomes Character. The outcome(s) in `data` that should be
-#' predicted by random effects.
+#' unit. Not necessary when `data` is a list object of simulated data generated
+#' with `mlts_sim`.
+#' @param ts Character. The variable(s) in `data` that contain the time-series
+#' construct(s). If multiple constructs are provided in the `model`, multiple entries
+#' are necessary. Note that the order of variable names provided in `ts` has to match
+#' the specification made in the `model`. E.g., if multiple constructs (e.g.,
+#' `mlts_model(q = 2)`) are provided the order of variables names provided in `ts`
+#' determines which construct is referred to as mu_1, phi(1)_11, etc..
+#' @param covariates Named character vector. An optional named vector of
+#' characters to refer to predictors of random effects as specified in the `model`.
+#' Note that specifying `covariates` is only necessary if the respective
+#' variable name(s) in `data` differ from the variables names specified in `model`.
+#' @param outcomes Named character vector. Similar to `covariates`, an optional named vector of
+#' characters to refer to outcome predicted by random effects as specified in the `model`.
+#' Note that specifying `outcomes` is only necessary if the respective
+#' variable name(s) in `data` differ from the outcome variable name(s) specified in `model`.
 #' @param outcome_pred_btw Character.
-#' @param center_covs Logical. Should covariates be centered before inclusion
-#' in the model? Defaults to `TRUE`.
+#' @param center_covs Logical. Between-level covariates used as predictors of random effects
+#' will be grand-mean centered before model fitting by default to allow interpretation
+#' of fixed effects intercepts as mean population effects for average covariate values.
+#' Setting `center_covs` to `FALSE` might be necessary when including categorical
+#' predictors into the set of `covariates`. Note that in this case, additional
+#' continuous covariates should be grand-mean centered prior to using `mlts_fit`.
 #' @param time Character. The variable in `data` that contains the (continuous) time.
 #' @param tinterval The step interval for approximation for a continuous time
 #' dynamic model. The smaller the step interval, the better the approximation.

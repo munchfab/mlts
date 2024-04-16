@@ -30,12 +30,14 @@ mlts_plot(
 \item{fit}{An object of class \code{mlts.fit}}
 
 \item{type}{Type of plot.
-type = "fixef" (Default)
+type = "fe" (Default)
 Forest-plot of model coefficients.
-type = "ranef"
+type = "re"
 Plot of individual (random) effects
-type = "raneftab"
-(not yet implemented)}
+type = "re.cor"
+Combined plot depicting the distribution of individual parameter
+estimates (posterior summary statistics as provided by \code{bpe}), as
+well as bivariate scatter plots.}
 
 \item{bpe}{The Bayesian point estimate is, by default, the median of the
 posterior distribution (\code{bpe = "median"}). Set \code{bpe = "mean"} to use
