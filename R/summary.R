@@ -28,7 +28,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   N_obs <- object$standata$N_obs
   N_ids <- object$standata$N
   # pop_pars <- object$pop.pars.summary
-  chains <- object$stanfit@sim$chains
+  chains <- as.numeric(object$stanfit@sim$chains)
   iter <- object$stanfit@sim$iter
   thin <- object$stanfit@sim$thin
   date <- object$stanfit@date
@@ -280,8 +280,8 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   convergence <- paste0(
     "Model convergence criteria: \n",
     "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
-    "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > 100 per chain) \n",
-    "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > 100 per chain) \n",
+    "  Minimum Bulk ESS: ", min(conv$Bulk_ESS), " (should be > ", chains*100,", 100 per chain) \n",
+    "  Minimum Tail ESS: ", min(conv$Tail_ESS), " (should be > ", chains*100,", 100 per chain) \n",
     "  Number of divergent transitions: ", rstan::get_num_divergent(object$stanfit),
     " (should be 0) \n"
   )
@@ -301,9 +301,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # get random effects SD for printing
   ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(cols)]
   # drop sigma_ prefix in Param
-  ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- gsub(
-    "sigma_", "", ranef_sds$Param
-  )
+  ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- substr(x = ranef_sds$Param, start = 7, stop = 30)
   # colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
   colnames(ranef_sds) <- change_colnames(ranef_sds)
 
