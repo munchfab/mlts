@@ -86,6 +86,27 @@ mlts_fit <- function(model,
   # Get the parameter table
   par_labels <- mlts_param_labels(model)
 
+  # print information on indicators per dimension
+  # print information on variables used for model estimation
+  if(infos$isLatent == F){
+    call_inds = c(
+      "Time series variables as indicated by parameter subscripts: \n",
+      unlist(lapply(1:infos$q, function(x){
+        paste0("  ", x, " --> ", object$standata$ts[x], "\n")
+      }))
+    )
+  }
+  if(infos$isLatent == T){
+    call_inds = c(
+      "Time series variables as indicated by parameter subscripts: \n",
+      unlist(lapply(1:infos$q, function(x){
+        paste0("  ", x, " --> ",
+               paste0(object$standata$ts[infos$indicators$q == x], collapse = " + "), "\n")
+      }))
+    )
+  }
+  cat(call_inds)
+
   # simulated data used
   data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
@@ -281,6 +302,20 @@ mlts_fit <- function(model,
         } else {
           stanfit <- NULL
         }
+    } else if(standata$n_inno_covs > 0){
+      if(fit_model==T){
+        stanfit <- rstan::sampling(
+          stanmodels$VAR_latentCovsRand,
+          data = standata,
+          pars = pars,
+          iter = iter,
+          cores = cores,
+          chains = chains,
+          ...
+        )
+      } else {
+        stanfit <- NULL
+      }
     }
 
   }
