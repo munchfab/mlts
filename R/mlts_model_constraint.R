@@ -1,23 +1,63 @@
 #' Add parameter constraints to mlts model
 #'
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
-#' @param fix_dynamics logical. Fix all random effect variances (except those
-#' of individual traits) to zero.
-#' @param fix_inno_vars logical. Set all innovation variances to a constant value.
-#' @param fix_inno_covs logical. Set all innovation covariances to a constant value.
-#' @param inno_covs_zero logical. Set to TRUE to treat all innovations as independent.
-#' @param fixef_zero character. A character vector to index which fixed model parameters
-#' should be fixed to zero (Note: this results in removing the random effect
-#' variance of the respective parameter).
-#' @param ranef_zero character. A character vector to index which random effect
-#' parameters should be fixed to zero.
+#' @param fix_dynamics Logical. Fix all random effect variances of autoregressive and
+#' cross-lagged effects to zero (constraining parameters to be equal across clusters).
+#' @param fix_inno_vars Logical. Fix all random effect variances of innovation variances
+#' to zero (constraining parameters to be equal across clusters).
+#' @param fix_inno_covs Logical. Fix all random effect variances of innovation covariances
+#' to zero (constraining parameters to be equal across clusters).
+#' @param inno_covs_zero Logical. Set to `TRUE` to treat all innovations as independent.
+#' @param fixef_zero Character. A character vector to index which fixed effects
+#' (referring to the parameter labels in `model$Param`) should be constrained to zero
+#' (Note: this also results in removing the random effect variance of the respective parameter).
+#' @param ranef_zero Character. A character vector to index which random effect variances
+#' (referring to the parameter labels in `model$Param`) should be constrained to zero.
 #'
 #' @return An object of class `data.frame`.
 #' @export
 #'
-mlts_model_constraint <- function(model, fix_dynamics = F, fix_inno_vars = F,
-                                fix_inno_covs = F, inno_covs_zero = F,
-                                fixef_zero = NULL, ranef_zero = NULL
+#' @examples
+#' # simple autoregressive mlts model with q = 2 time-series constructs
+#' # and autoregressive max lag of second order
+#' ar_model <- mlts_model(q = 2, max_lag = 2)
+#'
+#' # to fix only specific parameters, provide a vector with names
+#' # referring to model parameters
+#' # e.g., fix the first-order autoregressive effect of the second
+#' # construct (by setting its variance to zero)
+#' ar_model1 <- mlts_model(model = ar_model, ranef_zero = "phi(1)_22")
+#' # Parameters fixed to zero (i.e., the variance of phi(1)_22) are
+#' # deleted from the model data frame
+#'
+#' # innovation variances can also be set to zero
+#' # e.g., fix first-order autoregressive effect and log innovation
+#' # variance of first construct
+#' ar_model2 <- mlts_model(
+#'   model = ar_model,
+#'   ranef_zero = c("phi(1)_22", "ln.sigma2_1")
+#' )
+#'
+#' # if all autoregressive and cross-lagged parameters should be fixed,
+#' # fix_dynamics = TRUE can be used
+#' ar_model3 <- mlts_model(model = ar_model, fix_dynamics = TRUE)
+#'
+#' # if all innovation variances should be fixed,
+#' # fix_inno_vars = TRUE can be used
+#' ar_model3 <- mlts_model(model = ar_model, fix_inno_vars = TRUE)
+#'
+#'
+#' # fixed effects can be set to zero by providing a vector with
+#' # parameter names to fixef_zero
+#' # e.g., fixing the cross-lagged effect of first order from the first
+#' # construct to the second construct to zero
+#' ar_model5 <- mlts_model(model = ar_model, fixef_zero = "phi(1)_21")
+#'
+#'
+
+mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = FALSE,
+                                  fix_inno_covs = FALSE, inno_covs_zero = FALSE,
+                                  fixef_zero = NULL, ranef_zero = NULL
 ){
 
   if(fix_dynamics == T){

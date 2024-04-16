@@ -49,13 +49,13 @@ At this point restricted to one factor per latent construct.}
 \item{fix_dynamics}{Logical. Fix all random effect variances of autoregressive and
 cross-lagged effects to zero (constraining parameters to be equal across clusters).}
 
-\item{fix_inno_vars}{Logical. Fix all random effect variances of innovation variances to zero
-(constraining parameters to be equal across clusters).}
+\item{fix_inno_vars}{Logical. Fix all random effect variances of innovation variances
+to zero (constraining parameters to be equal across clusters).}
 
-\item{fix_inno_covs}{Logical. Fix all random effect variances of innovation covariances to zero
-(constraining parameters to be equal across clusters).}
+\item{fix_inno_covs}{Logical. Fix all random effect variances of innovation covariances
+to zero (constraining parameters to be equal across clusters).}
 
-\item{inno_covs_zero}{Logical. Set to TRUE to treat all innovations as independent.}
+\item{inno_covs_zero}{Logical. Set to \code{TRUE} to treat all innovations as independent.}
 
 \item{inno_covs_dir}{For bivariate VAR models with person-specific innovation covariances,
 a latent variable approach is applied by specifying an additional factor that loads onto
@@ -76,7 +76,7 @@ assumed to be mainly positive across clusters, set the argument to \code{pos}, o
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{model}) can be entered (see details).
+list (using the labels in \code{model$Param}) can be entered (see examples).
 Note that if a named list is provided, all names that do not match random
 parameters in \code{model} will be ignored.}
 
@@ -84,14 +84,14 @@ parameters in \code{model} will be ignored.}
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{model}) can be entered (see details). Note that
+list (using the labels in \code{model$Param}) can be entered (see examples). Note that
 if a named list is provided, all character strings in the vector of each list
 (with independent variables) element that do not match random effect parameter names
-in \code{model} will be treated as additional between-level predictors.}
+in \code{model$Param} will be treated as additional between-level predictors.}
 
 \item{out_pred_add_btw}{A character vector. All inputs will be treated as
-betweeen-level covariates to be used as additional predictors of all outcomes specified
-in \verb{out pred}.}
+between-level covariates to be used as additional predictors of all outcomes specified
+in \code{out_pred}.}
 }
 \value{
 An object of class \code{data.frame} containing all model parameters.
@@ -102,8 +102,8 @@ Build a multilevel latent time series model
 \examples{
 \donttest{
  # To illustrate the general model building procedure, starting with a simple
- # two-level AR(1) model with person-specific individual means, AR effects, and innovation
- # variances (the default option when using `mlts_model` and `q = 1`).
+ # two-level AR(1) model with person-specific individual means, AR effects,
+ # and innovation variances (the default option when using mlts_model() and q = 1).
  ar1 <- mlts_model(q = 1)
 
  # All model parameters can be inspected by calling:
@@ -114,34 +114,35 @@ Build a multilevel latent time series model
  #    parameters to a constant value by setting the respective random effect
  #    variances to zero, such as e.g. (log) innovation variances
  ar1 <- mlts_model(model = ar1, ranef_zero = "ln.sigma2_1")
- #    Note that, setting the argument `fix_inno_vars` to `TRUE` provides
- #    a shortcut to fixing the innovation variances of all constructs (if `q >= 1`) to a constant.
+ #    Note that setting the argument `fix_inno_vars` to `TRUE` provides
+ #    a shortcut to fixing the innovation variances of all constructs
+ #    (if q >= 1) to a constant.
 
  # 2. Including a multiple indicator model, where the construct is measured by
- #    multiple indicators (here, `p = 3` indicators)
+ #    multiple indicators (here, p = 3 indicators)
  ar1 <- mlts_model_measurement(
           model = ar1,
           q = 1,         # the number of time-varying constructs
           p = 3,         # the number of manifest indicators
           btw_factor = T # assuming a common between-level factor (the default)
-          )
+        )
 
  # 3. Incorporating additional between-level variables. For example, inclusion of
  #    an additional between-level variable ("cov1") as predictor of all
- #    (`ranef_pred = "cov1"`) or a specific set of random effects
- #    (`ranef_pred = list("phi(1)_11") = "cov1"`), an external outcome ("e.g., out1")
- #    to be predicted by all (`out_pred = "out1"`) or specific random effects
- #    (`out_pred = list("out1" = c("etaB_1", "phi(1)_11")`), using the latent
+ #    (ranef_pred = "cov1") or a specific set of random effects
+ #    (ranef_pred = list("phi(1)_11") = "cov1"), an external outcome (e.g., "out1")
+ #    to be predicted by all (out_pred = "out1") or specific random effects
+ #    (out_pred = list("out1" = c("etaB_1", "phi(1)_11")), using the latent
  #    between-level factor trait scores (etaB_1) and individual first-order
  #    autoregressive effects (phi(1)_11) as joint predictors of outcome "out1".
- ar1 <- mlts_model_btw(
+ ar1 <- mlts_model_betw(
           model = ar1,
           ranef_pred = "cov1",
-          out_pred = list("out1" = c("etaB_1", "phi(1)_11")
-          )
-      Note that, the names of the random effect parameters must match the
-      parameter labels provided in `ar1$Param`, the result of the `mlts_model`
-      functions.
+          out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
+        )
+ #    Note that the names of the random effect parameters must match the
+ #    parameter labels provided in ar1$Param, the result of the
+ #    mlts_model()-functions.
 
  # Finally, a shorthand for specifying the above model would be:
  ar1 <- mlts_model(
@@ -150,6 +151,6 @@ Build a multilevel latent time series model
           fix_inno_vars = T,
           ranef_pred = "cov1",
           out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
-          )
- }
+        )
+}
 }

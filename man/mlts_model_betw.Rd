@@ -14,25 +14,56 @@ mlts_model_betw(
 \arguments{
 \item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 
-\item{ranef_pred}{character vector or a named list. Include between-level covariate(s)
+\item{ranef_pred}{A character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{model}) can be entered (see details).
+list (using the labels in \code{model$Param}) can be entered (see examples).
 Note that if a named list is provided, all names that do not match random
 parameters in \code{model} will be ignored.}
 
-\item{out_pred}{character vector or a named list. Include between-level covariate(s)
+\item{out_pred}{A character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
 names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
-list (using the \code{param}-labels in \code{model}) can be entered (see details).}
+list (using the labels in \code{model$Param}) can be entered (see examples). Note that
+if a named list is provided, all character strings in the vector of each list
+(with independent variables) element that do not match random effect parameter names
+in \code{model$Param} will be treated as additional between-level predictors.}
 
-\item{out_pred_add_btw}{tba}
+\item{out_pred_add_btw}{A character vector. All inputs will be treated as
+between-level covariates to be used as additional predictors of all outcomes specified
+in \code{out_pred}.}
 }
 \value{
 An object of class \code{data.frame}.
 }
 \description{
 Add between-level variables to mlts model
+}
+\examples{
+# simple autoregressive mlts model with q = 2 time-series constructs
+ar_model <- mlts_model(q = 2)
+
+# add between-level variables to predict all random parameters in the model
+ar_model1 <- mlts_model_betw(model = ar_model, ranef_pred = "x")
+
+# if only some of the random parameters should be predicted,
+# a named list can be provided of the format `list("parameter" = "covariate")`
+# e.g., to only predict the random intercept (trait) of the first construct
+ar_model2 <- mlts_model_betw(
+  model = ar_model, ranef_pred = list("mu_1" = "x")
+)
+
+# predict outcomes with (all) random parameters in the model
+ar_model3 <- mlts_model_betw(model = ar_model, out_pred = "y")
+
+# to use only specific random parameter, provide a named list
+# e.g., predict y by random intercept (trait) and autoregressive effect
+# of first construct
+ar_model4 <- mlts_model_betw(
+  model = ar_model, out_pred = list("y" = c("mu_1", "phi(1)_11"))
+)
+
+
 }
