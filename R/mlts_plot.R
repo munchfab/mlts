@@ -10,6 +10,10 @@
 #'                  Combined plot depicting the distribution of individual parameter
 #'                  estimates (posterior summary statistics as provided by `bpe`), as
 #'                  well as bivariate scatter plots.
+#' @param what Character. For `type = "fe"`, indicate which parameters should be
+#' included in the plot by setting `what` to "all" (the default), or one (or multiple)
+#' of "Fixed effect", "Random effect SD", "RE correlation", "Outcome prediction", "RE prediction",
+#' "Item intercepts", "Loading", or "Measurement Error SD".
 #' @param bpe The Bayesian point estimate is, by default, the median of the
 #' posterior distribution (`bpe = "median"`). Set `bpe = "mean"` to use
 #' the mean of the posterior distribution as point estimates.
@@ -17,17 +21,19 @@
 #' @param xlab Title for the x axis.
 #' @param ylab Title for the y axis.
 #' @param facet_ncol Number of facet columns (see `ggplot2::facet_grid`).
-#' @param dot_size Numeric, size of the dots that indicate the point estimates.
-#' @param dot_color Character vector, indicating the color of the point estimates.
-#' @param dot_shape Numeric, shape of the dots that indicate the point estimates.
-#' @param errorbar_color integer.
-#' @param errorbar_width integer.
-#' @param add_true integer.
-#' @param true_color integer.
-#' @param true_shape integer.
-#' @param true_size integer.
-#' @param hide_xaxis_text logical.
-#' @param par_labels integer.
+#' @param dot_size numeric, size of the dots that indicate the point estimates.
+#' @param dot_color character. indicating the color of the point estimates.
+#' @param dot_shape numeric. shape of the dots that indicate the point estimates.
+#' @param errorbar_color character. Color of error bars.
+#' @param errorbar_width integer. Width of error bars.
+#' @param add_true logical. If model was fitted with simulated data using `mlts_sim`,
+#' true population parameter values can be plotted as reference by setting the argument ot `TRUE`.
+#' @param true_color character. Color of points depicting true population parameter used in the data generation.
+#' @param true_shape integer. Shape of points depicting true population parameter used in the data generation.
+#' @param true_size integer. Size of points depicting true population parameter used in the data generation.
+#' @param hide_xaxis_text logical. Hide x-axis text if set to `TRUE`.
+#' @param par_labels character vector. User-specified labels for random effect parameters
+#' can be specified.
 #' @param labels_as_expressions logical.
 #' @return Returns a `ggplot`-object .
 #'
@@ -35,6 +41,9 @@
 #'
 #' @examples 1 + 1
 mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
+                      what = c("all", "Fixed effect", "Random effect SD", "RE correlation",
+                               "Outcome prediction", "RE prediction", "Item intercepts",
+                               "Loading", "Measurement Error SD"),
                       sort_est = NULL, xlab = NULL, ylab = NULL,
                       facet_ncol = 1, dot_size = 1, dot_color = "black", dot_shape = 1,
                       errorbar_color = "black", errorbar_width = 0.3,
@@ -42,6 +51,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                       hide_xaxis_text = T,
                       par_labels = NULL, labels_as_expressions = F){
 
+  what <- match.arg(what)
   type <- match.arg(type)
   bpe <- match.arg(bpe)
 
@@ -69,6 +79,10 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
       "Item intercepts", "Loading", "Measurement Error SD"
     ))
 
+    # subset data by what
+    if(what != "all"){
+      p.data <- p.data[p.data$Param_type %in% c(what),]
+    }
 
     # build general plot
     aes <- ggplot2::aes
