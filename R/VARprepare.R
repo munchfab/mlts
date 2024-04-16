@@ -50,7 +50,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
-  is_random = as.array(infos$is_random) # which parameters (in order of Fix effect parameters in model) to model as random effect
+  is_random = as.array(infos$is_random) # which parameters (in order of Fixed effect parameters in model) to model as random effect
   is_fixed = infos$is_fixed   # a matrix of n_fixed x 1, indicating which parameter to model as constant
   re_pars = infos$re_pars     # subset of model of random effect parameters
 

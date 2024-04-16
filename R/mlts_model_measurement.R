@@ -87,7 +87,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       etaB.fix = data.frame(
         "Model" = "Structural",
         "Level" = "Within",
-        "Type" = "Fix effect",
+        "Type" = "Fixed effect",
         "Param" = paste0("etaB_",i),
         "Param_Label" = "Trait (latent factor)",
         "isRandom" = 1,
@@ -107,9 +107,9 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       mus.fix = data.frame(
         "Model" = "Structural",
         "Level" = "Within",
-        "Type" = "Fix effect",
+        "Type" = "Fixed effect",
         "Param" = paste0("mu_",i,".",inds_means),
-        "Param_Label" = "Trait (indicator mean)",
+        "Param_Label" = "Trait (indicator-specific)",
         "isRandom" = 1,
         "Constraint"= c(NA)
       )
@@ -118,7 +118,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Level" = "Between",
         "Type" = "Random effect SD",
         "Param" = paste0("sigma_mu_",i,".",inds_means),
-        "Param_Label" = "Trait (indicator mean)",
+        "Param_Label" = "Trait (indicator-specific)",
         "isRandom" = 0,
         "Constraint"= c(NA)
       )
@@ -139,7 +139,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
     fix = mlts_model_priors(fix, default = T)    # add default priors
     rand = mlts_model_priors(rand, default = T)
 
-    row_to_repl = which(model$Param %in% c(paste0("mu_",i), paste0("etaB_",i)) & model$Type == "Fix effect")
+    row_to_repl = which(model$Param %in% c(paste0("mu_",i), paste0("etaB_",i)) & model$Type == "Fixed effect")
     model = replace_model_row(model, row_to_repl, fix)
     row_to_repl = which(model$Param %in% c(paste0("sigma_mu_",i),paste0("sigma_etaB_",i)) & model$Type == "Random effect SD")
     model = replace_model_row(model, row_to_repl, rand)

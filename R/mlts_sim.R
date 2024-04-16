@@ -54,8 +54,8 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = T)
 
-    # FIX EFFECTS ========
-    model.type = "Fix effect"
+    # Fixed effects ========
+    model.type = "Fixed effect"
     ## Mus
     n_traits = length(model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")])
     model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
@@ -143,7 +143,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   # start generating between-level model =======================================
 
   # FIXED EFFECTS
-  gammas = model$true.val[model$Type=="Fix effect" & model$isRandom==1]
+  gammas = model$true.val[model$Type=="Fixed effect" & model$isRandom==1]
 
   # BETWEEN-LEVEL
   # sample covariates and get expected values of individual parameters
@@ -204,11 +204,11 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   btw = matrix(NA, nrow = N, infos$n_pars)
   btw[,infos$is_random] = btw_random               # first add random pars
   if(infos$n_fixed>0){
-    btw[,infos$is_fixed[1,]] = rep(model$true.val[model$Type=="Fix effect"][infos$is_fixed[1,]], each=N)
+    btw[,infos$is_fixed[1,]] = rep(model$true.val[model$Type=="Fixed effect"][infos$is_fixed[1,]], each=N)
   }
   if(infos$n_innos_fix>0){
     for(i in infos$innos_fix_pos)
-      btw[,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fix effect" & model$Param_Label == "Innovation Variance"][i],times=N)
+      btw[,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fixed effect" & model$Param_Label == "Innovation Variance"][i],times=N)
   }
 
   #### WITHIN-LEVEL PROCESS ====================================================

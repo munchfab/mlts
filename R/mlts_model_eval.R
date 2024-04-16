@@ -25,7 +25,7 @@ mlts_model_eval <- function(model){
   isLatent = ifelse(isLatent>0, TRUE, FALSE)
 
   ## Dynamic model
-  fix_pars = model[model$Type == "Fix effect",]
+  fix_pars = model[model$Type == "Fixed effect",]
   # extract the number of (latent constructs)
   constructs = lapply(fix_pars$Param[startsWith(fix_pars$Param_Label, "Trait")], function(x){
     substr(strsplit(x, split = c("_"))[[1]][2], start = 1, stop = 1)
@@ -108,7 +108,7 @@ mlts_model_eval <- function(model){
     # get between-level fixed effect infos
     # base decision on the presence of indicator-specific mean values
     fixefs = model[model$Level == "Within" & startsWith(model$Param, "mu_"),]
-    ind_means = extract_indicator_info(fixefs, level = "Within", type = "Fix effect")
+    ind_means = extract_indicator_info(fixefs, level = "Within", type = "Fixed effect")
 
     if(nrow(ind_means)>0){
       ind_means$mu_isFree = 1
@@ -200,18 +200,18 @@ mlts_model_eval <- function(model){
   innos_fix_pos = cumsum(1 - innos_rand)
 
 
-  n_pars = sum((model$Type == "Fix effect" & !startsWith(model$Param, "r.zeta")))
+  n_pars = sum((model$Type == "Fixed effect" & !startsWith(model$Param, "r.zeta")))
   n_random = sum(model$isRandom, na.rm = T)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
   is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
-  re_pars = model[model$Type=="Fix effect" & model$isRandom==1,]
+  re_pars = model[model$Type=="Fixed effect" & model$isRandom==1,]
   re_pars$par_no = 1:nrow(re_pars)
 
 
   # number of innovation covariances to include
   n_inno_covs = nrow(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"),])
-  n_inno_cov_fix = sum((model$Type == "Fix effect" & startsWith(model$Param, "r.zeta")))
+  n_inno_cov_fix = sum((model$Type == "Fixed effect" & startsWith(model$Param, "r.zeta")))
   inno_cov_pos = matrix(fix_pars[grepl(fix_pars$Param_Label, pattern="Covariance"), "no"],
                         nrow = 1, ncol = n_inno_covs)
   inno_cors = model[startsWith(model$Param, "r.zeta"),]
@@ -314,11 +314,11 @@ mlts_model_eval <- function(model){
   cols = c("prior_location", "prior_scale")
   # fixed effects (intercepts)
   prior_gamma = matrix(nrow = n_random, ncol = 2)
-  prior_gamma <- model[model$Type=="Fix effect" & model$isRandom == 1, cols]
+  prior_gamma <- model[model$Type=="Fixed effect" & model$isRandom == 1, cols]
 
   # constant dynamic parameters
   prior_b_fix = matrix(nrow = n_fixed, ncol = 2)
-  prior_b_fix = model[model$Type=="Fix effect" & model$isRandom == 0 & model$Param_Label == "Dynamic", cols]
+  prior_b_fix = model[model$Type=="Fixed effect" & model$isRandom == 0 & model$Param_Label == "Dynamic", cols]
 
   # random effect SDs
   prior_sd_R = matrix(nrow = n_random, ncol = 2)
@@ -331,7 +331,7 @@ mlts_model_eval <- function(model){
       prior_LKJ = unique(model$prior_location[model$Type=="RE correlation"])
     }
 
-  # add fix effect prior of constant innovation variance (as SD)
+  # add Fixed effect prior of constant innovation variance (as SD)
   prior_sigma = matrix(ncol = 2, nrow = n_innos_fix)
   if(n_innos_fix>0){
     prior_sigma = model[model$Param_Label=="Innovation Variance",cols]

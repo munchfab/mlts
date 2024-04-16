@@ -2,12 +2,14 @@
 #'
 #' @param fit An object of class `mlts.fit`
 #' @param type Type of plot.
-#'             type = "fixef" (Default)
+#'             type = "fe" (Default)
 #'                  Forest-plot of model coefficients.
-#'             type = "ranef"
+#'             type = "re"
 #'                  Plot of individual (random) effects
-#'             type = "raneftab"
-#'                  (not yet implemented)
+#'             type = "re.cor"
+#'                  Combined plot depicting the distribution of individual parameter
+#'                  estimates (posterior summary statistics as provided by `bpe`), as
+#'                  well as bivariate scatter plots.
 #' @param bpe The Bayesian point estimate is, by default, the median of the
 #' posterior distribution (`bpe = "median"`). Set `bpe = "mean"` to use
 #' the mean of the posterior distribution as point estimates.
@@ -62,7 +64,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     p.data$Param_type <- fit$model$Type
     # order parameter type
     p.data$Param_type <- factor(p.data$Param_type, levels = c(
-      "Fix effect", "Random effect SD", "RE correlation",
+      "Fixed effect", "Random effect SD", "RE correlation",
       "Outcome prediction", "RE prediction",
       "Item intercepts", "Loading", "Measurement Error SD"
     ))

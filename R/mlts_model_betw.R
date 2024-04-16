@@ -26,8 +26,8 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
 
 
   # get number of random effects in model
-  n_random = nrow(model[model$Type == "Fix effect" & model$isRandom == 1,])
-  pars_random = model[model$Type == "Fix effect" & model$isRandom == 1,"Param"]
+  n_random = nrow(model[model$Type == "Fixed effect" & model$isRandom == 1,])
+  pars_random = model[model$Type == "Fixed effect" & model$isRandom == 1,"Param"]
 
   # offer different input options:
   ## Wenn input einzelner character oder vector mit charactern ist, verwende

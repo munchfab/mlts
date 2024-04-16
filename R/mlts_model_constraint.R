@@ -40,7 +40,7 @@ mlts_model_constraint <- function(model, fix_dynamics = F, fix_inno_vars = F,
     model = model[!(model$Type == "Random effect SD" &
                             model$Param_Label == "Log Innovation Variance"),]
     # adjust labels of fixed effects
-    model[(model$Type == "Fix effect" &
+    model[(model$Type == "Fixed effect" &
                 model$Param_Label == "Log Innovation Variance"), "Param_Label"] = "Innovation Variance"
     # adjust params
     model$Param[grepl(model$Param, pattern = "ln.sigma2_")] = gsub(
@@ -59,7 +59,7 @@ mlts_model_constraint <- function(model, fix_dynamics = F, fix_inno_vars = F,
                             model$Param_Label == "Log Innovation Covariance"),]
 
     # adjust labels of fixed effects
-    model$Param_Label[(model$Type == "Fix effect" &
+    model$Param_Label[(model$Type == "Fixed effect" &
                             model$Param_Label == "Log Innovation Covariance")] = "Innovation correlation"
 
     # adjust params
@@ -83,9 +83,9 @@ mlts_model_constraint <- function(model, fix_dynamics = F, fix_inno_vars = F,
   # remove random effect SDs of constant parameters
   if(!is.null(ranef_zero)){
     # update identifier column
-    model$isRandom[model$Type=="Fix effect" & model$Param %in% c(ranef_zero)] = 0
+    model$isRandom[model$Type=="Fixed effect" & model$Param %in% c(ranef_zero)] = 0
 
-    isFixed = paste0("sigma_", model$Param[model$Type == "Fix effect" & model$isRandom == 0])
+    isFixed = paste0("sigma_", model$Param[model$Type == "Fixed effect" & model$isRandom == 0])
     model = model[!(model$Type == "Random effect SD" & model$Param %in% isFixed),]
 
     # adjust parameter labels for constant innovation variances

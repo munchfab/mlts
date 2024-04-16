@@ -17,15 +17,15 @@ mlts_model_priors <- function(model, default = F){
 
     # STRUCTURAL MODEL =========================================================
     ## Fixed effects
-    model[model$Type=="Fix effect" & startsWith(model$Param_Label,prefix = "Trait"),cols] = data.frame("normal", 0, 10)
-    model[model$Type=="Fix effect" & model$Param_Label=="Dynamic", cols] = data.frame("normal", 0, 2)
-    model[model$Type=="Fix effect" & model$Param_Label == "Log Innovation Variance",cols] = data.frame("normal", 0, 10)
-    model[model$Type=="Fix effect" & model$Param_Label == "Innovation Variance",cols] = data.frame("cauchy", 0, 2.5)
+    model[model$Type=="Fixed effect" & startsWith(model$Param_Label,prefix = "Trait"),cols] = data.frame("normal", 0, 10)
+    model[model$Type=="Fixed effect" & model$Param_Label=="Dynamic", cols] = data.frame("normal", 0, 2)
+    model[model$Type=="Fixed effect" & model$Param_Label == "Log Innovation Variance",cols] = data.frame("normal", 0, 10)
+    model[model$Type=="Fixed effect" & model$Param_Label == "Innovation Variance",cols] = data.frame("cauchy", 0, 2.5)
 
     # innovation covariance - if random:
-    model[model$Type=="Fix effect" & model$Param_Label == "Log Innovation Covariance",cols] = data.frame("normal",0,10)
+    model[model$Type=="Fixed effect" & model$Param_Label == "Log Innovation Covariance",cols] = data.frame("normal",0,10)
     # innovation covariance - if constant:
-    model[model$Type=="Fix effect" & model$Param_Label == "Innovation correlation",cols] = data.frame("LKJ",1,NA)
+    model[model$Type=="Fixed effect" & model$Param_Label == "Innovation correlation",cols] = data.frame("LKJ",1,NA)
 
     ## Random effects
     model[model$Type=="Random effect SD",cols] = data.frame("cauchy", 0, 2.5)

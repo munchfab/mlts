@@ -16,17 +16,17 @@ mlts_param_labels <- function(model){
 
   # first add infos to model to extract variable names
   ##### FIXED EFFECT INTERCEPTS ================================================
-  FEints = model[model$Type=="Fix effect" & model$isRandom==1,]
+  FEints = model[model$Type=="Fixed effect" & model$isRandom==1,]
   FEints$Param_stan = paste0("gammas[",1:nrow(FEints),"]")
 
   ##### CONSTANT DYNAMIC PARAMETERS ============================================
-  FEdyn = model[model$Type=="Fix effect" & model$isRandom==0 & model$Param_Label=="Dynamic",]
+  FEdyn = model[model$Type=="Fixed effect" & model$isRandom==0 & model$Param_Label=="Dynamic",]
   if(nrow(FEdyn)>0){
     FEdyn$Param_stan = paste0("b_fix[",1:nrow(FEdyn),"]")
   }
 
   ##### CONSTANT INNOVATION VARIANCES ==========================================
-  FEsigma = model[model$Type=="Fix effect" & model$isRandom==0 & model$Param_Label=="Innovation Variance",]
+  FEsigma = model[model$Type=="Fixed effect" & model$isRandom==0 & model$Param_Label=="Innovation Variance",]
   if(nrow(FEsigma)>0){
     FEsigma$Param_stan = paste0("sigma[",1:nrow(FEsigma),"]")
   }

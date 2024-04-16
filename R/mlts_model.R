@@ -2,15 +2,23 @@
 #'
 #' @param q Integer. The number of time-varying constructs.
 #' @param p Integer. For multiple-indicator models, specify a vector of length
-#' `q` with the number of manifest indicators per construct.
-#' @param max_lag Integer. The maximum lag of the autoregressive effect. The maximum
-#' is 3.
+#' `q` with the number of manifest indicators per construct. If all constructs are
+#' measured with the same number of indicators, a single value is sufficient.
+#' @param max_lag Integer. The maximum lag of the autoregressive effect to be
+#' included in the model. The maximum is 3. Defaults to 1.
 #' @param fix_inno_vars Logical. Fix all random effect variances (except those
 #' of individual traits) to zero.
 #' @param fix_dynamics Logical. Fix all random effect variances (except those
-#' of individual traits) to zero.
+#' of individual traits) to zero (constraining parameters to be equal across clusters).
 #' @param fix_inno_covs Logical. Set all innovation covariances to a constant value.
 #' @param inno_covs_zero Logical. Set to TRUE to treat all innovations as independent.
+#' @param inno_covs_dir For bivariate VAR models with person-specific innovation covariances,
+#' a latent variable approach is applied by specifying an additional factor that loads onto
+#' the contemporaneous innovations of both constructs, capturing the shared variance of innovations,
+#' that is not predicted by the previous time points. The loading parameters of this latent factor,
+#' however, have to be restricted in accordance with researchers assumptions about the sign of
+#' the association between innovations across construct. Hence, if innovations at time 't' are
+#' assumed to be mainly positive across clusters, set the argument to `pos`, or `neg` respectively.
 #' @param fixef_zero Character. A character vector to index which fixed effects
 #' should be fixed to zero (Note: this also results in removing the random effect
 #' variance of the respective parameter).
@@ -121,7 +129,7 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
     FE = data.frame(
       "Model" = "Structural",
       "Level" = "Within",
-      "Type" = "Fix effect",
+      "Type" = "Fixed effect",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -154,7 +162,7 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
     FE = data.frame(
       "Model" = "Structural",
       "Level" = "Within",
-      "Type" = "Fix effect",
+      "Type" = "Fixed effect",
       "Param" = pars,
       "Param_Label" = c(
         rep("Trait", n_mus),
@@ -211,7 +219,7 @@ mlts_model <- function(q, p = NULL, max_lag = c(1,2,3),
 
   # TESTING WHAT HAPPENS IF WE ADD ADDITIONAL CONTRAINT COLUMN HERE
   if(q == 2 & inno_covs_zero == F & fix_inno_covs == F){
-    model$Constraint[model$Type == "Fix effect" & grepl(pattern = "Covariance", model$Param_Label)] = inno_covs_dir
+    model$Constraint[model$Type == "Fixed effect" & grepl(pattern = "Covariance", model$Param_Label)] = inno_covs_dir
   }
 
 
