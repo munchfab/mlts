@@ -92,7 +92,7 @@ mlts_fit <- function(model,
     call_inds = c(
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
-        paste0("  ", x, " --> ", object$standata$ts[x], "\n")
+        paste0("  ", x, " --> ", ts[x], "\n")
       }))
     )
   }
@@ -101,7 +101,7 @@ mlts_fit <- function(model,
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
         paste0("  ", x, " --> ",
-               paste0(object$standata$ts[infos$indicators$q == x], collapse = " + "), "\n")
+               paste0(ts[infos$indicators$q == x], collapse = " + "), "\n")
       }))
     )
   }
