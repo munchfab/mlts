@@ -516,7 +516,7 @@ mlts_model_paths <- function(model, file = NULL,
   # within-model caption
   wm_caption <- paste0(
     "% caption\n\\node  [above = 1em, align = center]  at  ",
-    "(current bounding box.north)  {Within-model.};"
+    "(current bounding box.north)  {Within-level model.};"
   )
 
   # draw nodes for q time-series constructs
@@ -957,7 +957,7 @@ mlts_model_paths <- function(model, file = NULL,
   # between-model caption
   bm_caption <- paste0(
     "% caption\n\\node  [above = 1em, align = center]  at  ",
-    "(current bounding box.north)  {Between-model.};"
+    "(current bounding box.north)  {Between-level model.};"
   )
 
   # get random effects from within-model fixed effects
