@@ -1,9 +1,19 @@
-#' Title
+#' Evaluate User Input from mlts model
 #'
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #'
-#' @return An object of class `data.frame`.
+#' @return A `list`-object with details of the mlts model object.
 #' @export
+#'
+#' @details
+#' Primarily for internal use.
+#'
+#' @examples
+#' # fit simple autoregressive mlts model
+#' ar_model <- mlts_model(q = 1)
+#'
+#' # evaluate model infos
+#' infos <- mlts_model_eval(ar_model)
 #'
 mlts_model_eval <- function(model){
 

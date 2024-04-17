@@ -62,7 +62,7 @@ a latent variable approach is applied by specifying an additional factor that lo
 the contemporaneous innovations of both constructs, capturing the shared variance of innovations,
 that is not predicted by the previous time points. The loading parameters of this latent factor,
 however, have to be restricted in accordance with researchers assumptions about the sign of
-the association between innovations across construct. Hence, if innovations at time 't' are
+the association between innovations across construct. Hence, if innovations at time $t$ are
 assumed to be mainly positive across clusters, set the argument to \code{pos}, or \code{neg} respectively.}
 
 \item{fixef_zero}{Character. A character vector to index which fixed effects
@@ -113,7 +113,7 @@ Build a multilevel latent time series model
  # 1. Introducing additional parameter constraints, such as fixing specific
  #    parameters to a constant value by setting the respective random effect
  #    variances to zero, such as e.g. (log) innovation variances
- ar1 <- mlts_model(model = ar1, ranef_zero = "ln.sigma2_1")
+ ar1 <- mlts_model_constraint(model = ar1, ranef_zero = "ln.sigma2_1")
  #    Note that setting the argument `fix_inno_vars` to `TRUE` provides
  #    a shortcut to fixing the innovation variances of all constructs
  #    (if q >= 1) to a constant.

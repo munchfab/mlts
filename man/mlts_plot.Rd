@@ -8,6 +8,9 @@ mlts_plot(
   fit,
   type = c("fe", "re", "re.cor"),
   bpe = c("median", "mean"),
+  what = c("all", "Fixed effect", "Random effect SD", "RE correlation",
+    "Outcome prediction", "RE prediction", "Item intercepts", "Loading",
+    "Measurement Error SD"),
   sort_est = NULL,
   xlab = NULL,
   ylab = NULL,
@@ -43,6 +46,11 @@ well as bivariate scatter plots.}
 posterior distribution (\code{bpe = "median"}). Set \code{bpe = "mean"} to use
 the mean of the posterior distribution as point estimates.}
 
+\item{what}{Character. For \code{type = "fe"}, indicate which parameters should be
+included in the plot by setting \code{what} to "all" (the default), or one (or multiple)
+of "Fixed effect", "Random effect SD", "RE correlation", "Outcome prediction", "RE prediction",
+"Item intercepts", "Loading", or "Measurement Error SD".}
+
 \item{sort_est}{Add parameter label for sorting of random effects.}
 
 \item{xlab}{Title for the x axis.}
@@ -51,27 +59,29 @@ the mean of the posterior distribution as point estimates.}
 
 \item{facet_ncol}{Number of facet columns (see \code{ggplot2::facet_grid}).}
 
-\item{dot_size}{Numeric, size of the dots that indicate the point estimates.}
+\item{dot_size}{numeric, size of the dots that indicate the point estimates.}
 
-\item{dot_color}{Character vector, indicating the color of the point estimates.}
+\item{dot_color}{character. indicating the color of the point estimates.}
 
-\item{dot_shape}{Numeric, shape of the dots that indicate the point estimates.}
+\item{dot_shape}{numeric. shape of the dots that indicate the point estimates.}
 
-\item{errorbar_color}{integer.}
+\item{errorbar_color}{character. Color of error bars.}
 
-\item{errorbar_width}{integer.}
+\item{errorbar_width}{integer. Width of error bars.}
 
-\item{add_true}{integer.}
+\item{add_true}{logical. If model was fitted with simulated data using \code{mlts_sim},
+true population parameter values can be plotted as reference by setting the argument ot \code{TRUE}.}
 
-\item{true_color}{integer.}
+\item{true_color}{character. Color of points depicting true population parameter used in the data generation.}
 
-\item{true_shape}{integer.}
+\item{true_shape}{integer. Shape of points depicting true population parameter used in the data generation.}
 
-\item{true_size}{integer.}
+\item{true_size}{integer. Size of points depicting true population parameter used in the data generation.}
 
-\item{hide_xaxis_text}{logical.}
+\item{hide_xaxis_text}{logical. Hide x-axis text if set to \code{TRUE}.}
 
-\item{par_labels}{integer.}
+\item{par_labels}{character vector. User-specified labels for random effect parameters
+can be specified.}
 
 \item{labels_as_expressions}{logical.}
 }

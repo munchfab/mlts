@@ -12,7 +12,7 @@ mlts_model_betw(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
+\item{model}{\code{data.frame}. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{ranef_pred}{A character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable

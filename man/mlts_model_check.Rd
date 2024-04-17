@@ -7,9 +7,9 @@
 mlts_model_check(model, data, ts, covariates, outcomes)
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{\code{data.frame}. Output of model-Functions.}
 
-\item{data}{data.frame. Data input.}
+\item{data}{\code{data.frame}. Data input.}
 
 \item{ts}{tba}
 

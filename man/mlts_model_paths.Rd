@@ -45,9 +45,11 @@ An RMarkdown file that is automatically rendered to a pdf document.
 Create Path Diagrams from mlts model object
 }
 \examples{
-# build a simple VAR mlts model with two time-series variables
-model <- mlts_model(q = 2)
+\donttest{
+# build a simple vector-autoregressive mlts model with two time-series variables
+var_model <- mlts_model(q = 2)
 
 # create a pathmodel from the specified model
-mlts_model_paths(model = model)
+mlts_model_paths(model = var_model)
+}
 }

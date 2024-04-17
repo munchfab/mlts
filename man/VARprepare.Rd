@@ -2,7 +2,7 @@
 % Please edit documentation in R/VARprepare.R
 \name{VARprepare}
 \alias{VARprepare}
-\title{Title}
+\title{Prepare data for Stan}
 \usage{
 VARprepare(
   model,
@@ -15,23 +15,50 @@ VARprepare(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of model-Functions.}
+\item{model}{\code{data.frame}. Output of model-Functions.}
 
-\item{data}{data.frame. Data input.}
+\item{data}{An object of class \code{data.frame} (or one that can be coerced
+to that class) in long format.}
 
-\item{ts}{tba.}
+\item{ts}{Character. The variable(s) in \code{data} that
+contain the time-series construct. If multiple variables are provided in a
+character vector, a vector autoregressive model is fit.}
 
-\item{covariates}{tba.}
+\item{covariates}{Named character vector. An optional named vector of
+characters to refer to predictors of random effects as specified in the \code{model}.
+Note that specifying \code{covariates} is only necessary if the respective
+variable name(s) in \code{data} differ from the variables names specified in \code{model}.}
 
-\item{outcomes}{tba.}
+\item{outcomes}{Named character vector. Similar to \code{covariates}, an optional named vector of
+characters to refer to outcome predicted by random effects as specified in the \code{model}.
+Note that specifying \code{outcomes} is only necessary if the respective
+variable name(s) in \code{data} differ from the outcome variable name(s) specified in \code{model}}
 
 \item{outcome_pred_btw}{tba.}
 
 \item{center_covs}{tba.}
 }
 \value{
-An object of class \code{data.frame}.
+A \code{list} object that can be passed to \code{\link[rstan]{sampling}}.
 }
 \description{
-Title
+Prepare data for Stan
+}
+\details{
+For internal use only.
+}
+\examples{
+\donttest{
+# build simple vector-autoregressive model
+var_model <- mlts_model(q = 2)
+
+# pass data and model to VARprepare()
+stan_list <- VARprepare(
+  model = var_model,
+  data = ts_data,
+  ts = c("Y1", "Y2")
+)
+}
+
+
 }

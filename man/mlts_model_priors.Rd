@@ -7,9 +7,9 @@
 mlts_model_priors(model, default = F)
 }
 \arguments{
-\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
+\item{model}{\code{data.frame}. Output of \code{\link[mlts]{mlts_model}}.}
 
-\item{default}{logical. If set to \code{TRUE}, default prior specifications are
+\item{default}{Logical. If set to \code{TRUE}, default prior specifications are
 added.}
 }
 \value{

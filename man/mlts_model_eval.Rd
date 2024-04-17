@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_model_eval.R
 \name{mlts_model_eval}
 \alias{mlts_model_eval}
-\title{Title}
+\title{Evaluate User Input from mlts model}
 \usage{
 mlts_model_eval(model)
 }
@@ -10,8 +10,19 @@ mlts_model_eval(model)
 \item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
 }
 \value{
-An object of class \code{data.frame}.
+A \code{list}-object with details of the mlts model object.
 }
 \description{
-Title
+Evaluate User Input from mlts model
+}
+\details{
+Primarily for internal use.
+}
+\examples{
+# fit simple autoregressive mlts model
+ar_model <- mlts_model(q = 1)
+
+# evaluate model infos
+infos <- mlts_model_eval(ar_model)
+
 }

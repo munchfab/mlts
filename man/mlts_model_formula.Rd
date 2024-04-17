@@ -19,7 +19,7 @@ mlts_model_formula(
 \item{file}{An optional string containing the name of the file and file path.
 Has to end with .pdf file format.}
 
-\item{keep_tex}{lnical. Should the TeX file be kept (additional to the
+\item{keep_tex}{Logical. Should the TeX file be kept (additional to the
 Rmd file)? Defaults to \code{FALSE}.}
 
 \item{ts}{To be included in future releases.
@@ -41,9 +41,12 @@ An RMarkdown file that is automatically rendered to a pdf document.
 Create TeX Model Formula from mlts model object
 }
 \examples{
-# build a simple VAR mlts model with two time-series variables
-model <- mlts_model(q = 2)
+\donttest{
+# build a simple vector-autoregressive mlts model with two time-series variables
+var_model <- mlts_model(q = 2)
 
 # create formula from the specified model
-mlts_model_formula(model = model)
+mlts_model_formula(model = var_model)
+}
+
 }

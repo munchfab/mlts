@@ -1,15 +1,41 @@
-#' Title
+#' Prepare data for Stan
 #'
-#' @param model data.frame. Output of model-Functions.
-#' @param data data.frame. Data input.
-#' @param ts tba.
-#' @param covariates tba.
-#' @param outcomes tba.
+#' @param model `data.frame`. Output of model-Functions.
+#' @param data An object of class `data.frame` (or one that can be coerced
+#' to that class) in long format.
+#' @param ts Character. The variable(s) in `data` that
+#' contain the time-series construct. If multiple variables are provided in a
+#' character vector, a vector autoregressive model is fit.
+#' @param covariates Named character vector. An optional named vector of
+#' characters to refer to predictors of random effects as specified in the `model`.
+#' Note that specifying `covariates` is only necessary if the respective
+#' variable name(s) in `data` differ from the variables names specified in `model`.
+#' @param outcomes Named character vector. Similar to `covariates`, an optional named vector of
+#' characters to refer to outcome predicted by random effects as specified in the `model`.
+#' Note that specifying `outcomes` is only necessary if the respective
+#' variable name(s) in `data` differ from the outcome variable name(s) specified in `model`
 #' @param outcome_pred_btw tba.
 #' @param center_covs tba.
 #'
-#' @return An object of class `data.frame`.
+#' @return A `list` object that can be passed to \code{\link[rstan]{sampling}}.
 #' @export
+#'
+#' @details
+#' For internal use only.
+#'
+#' @examples
+#' \donttest{
+#' # build simple vector-autoregressive model
+#' var_model <- mlts_model(q = 2)
+#'
+#' # pass data and model to VARprepare()
+#' stan_list <- VARprepare(
+#'   model = var_model,
+#'   data = ts_data,
+#'   ts = c("Y1", "Y2")
+#' )
+#' }
+#'
 #'
 VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
                        outcome_pred_btw = NULL, center_covs = T

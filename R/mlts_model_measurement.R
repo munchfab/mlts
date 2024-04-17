@@ -1,7 +1,8 @@
 #' Add measurement model structure to mlts model
 #'
 #' Add (or replace) a measurement model of an existing `model`-object. As default
-#' option, a multiple-indicator model will be included assuming a common between-level factor.
+#' option, a multiple-indicator model will be included assuming a common
+#' between-level factor.
 #'
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param q integer. The number of time-varying constructs.
@@ -16,6 +17,8 @@
 #' At this point restricted to one factor per latent construct.
 #' @return An object of class `data.frame`.
 #' @details Update a `model`-object.
+#' @export
+#'
 #' @examples
 #' # build a manifest two-level AR(1) model
 #' model <- mlts_model(q = 1)
@@ -32,7 +35,6 @@
 #'               btw_model = list(""))
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
-#' @export
 #'
 mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL){
 

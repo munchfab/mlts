@@ -1,7 +1,7 @@
 #' Helper function to run a series of user input checks and print detailed warnings
 #'
-#' @param model data.frame. Output of model-Functions.
-#' @param data data.frame. Data input.
+#' @param model `data.frame`. Output of model-Functions.
+#' @param data `data.frame`. Data input.
 #' @param ts tba
 #' @param covariates tba
 #' @param outcomes tba.

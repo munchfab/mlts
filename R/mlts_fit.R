@@ -1,7 +1,7 @@
 #' Fit Bayesian Multilevel Manifest or Latent Time-Series Models
 #'
-#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}} and related functions.
-#' @param data An object of class data.frame (or one that can be coerced to that
+#' @param model `data.frame`. Output of \code{\link[mlts]{mlts_model}} and related functions.
+#' @param data An object of class `data.frame` (or one that can be coerced to that
 #' class) containing data of all variables used in the model. Alternatively,
 #' a list object with simulated data created by `mlts_sim` can be entered directly
 #' and allows for comparison of estimates and true population paramter values used
@@ -33,10 +33,17 @@
 #' @param time Character. The variable in `data` that contains the (continuous) time.
 #' @param tinterval The step interval for approximation for a continuous time
 #' dynamic model. The smaller the step interval, the better the approximation.
-#' @param beep tba.
-#' @param days tba.
-#' @param n_overnight_NAs tba.
-#' @param na.rm tba.
+#' @param beep Character. The variable in `data` that contains the running
+#' beep from 1 to TP for each person.
+#' @param days Optional. If a running beep identifier is provided via the `beep`
+#' argument and observations are nested within days (or similar grouping unit),
+#' the variable in `data` that contains the day identifier can be added to correct
+#' for overnight lags (see Details).
+#' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last
+#' observation of each day (if `day` is provided).
+#' @param na.rm logical. As default option missing values remain in the data and
+#' will be imputed during model estimation. Set to `TRUE` to remove all rows with
+#' missing values in variables given in `ts`.
 #' @param iter A positive integer specifying the number of iterations for each
 #' chain (including 50% used as warmup). The default is 500.
 #' @param chains A positive integer specifying the number of Markov chains.
@@ -56,20 +63,20 @@
 #'
 #' @examples
 #' \donttest{
-#'  # build simple mlts model for two time-series variables
-#'  model <- mlts_model(q = 2)
+#' # build simple vector-autoregressive mlts model for two time-series variables
+#' var_model <- mlts_model(q = 2)
 #'
-#'  # fit model with (artificial) dataset ts_data
-#'  fit <- mlts_fit(
-#'    model = model,
-#'    data = ts_data,
-#'    ts = c("Y1", "Y2"), # time-series variables
-#'    id = "ID", # identifier variable
-#'    tinterval = 1 # interval for approximation of continuous-time dynamic model,
-#'  )
+#' # fit model with (artificial) dataset ts_data
+#' fit <- mlts_fit(
+#'   model = var_model,
+#'   data = ts_data,
+#'   ts = c("Y1", "Y2"), # time-series variables
+#'   id = "ID", # identifier variable
+#'   tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#' )
 #'
-#'  # inspect model summary
-#'  summary(fit)
+#' # inspect model summary
+#' summary(fit)
 #' }
 #'
 mlts_fit <- function(model,

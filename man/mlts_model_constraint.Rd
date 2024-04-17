@@ -15,7 +15,7 @@ mlts_model_constraint(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
+\item{model}{\code{data.frame}. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{fix_dynamics}{Logical. Fix all random effect variances of autoregressive and
 cross-lagged effects to zero (constraining parameters to be equal across clusters).}
@@ -42,40 +42,43 @@ An object of class \code{data.frame}.
 Add parameter constraints to mlts model
 }
 \examples{
-# simple autoregressive mlts model with q = 2 time-series constructs
+# simple vector-autoregressive mlts model with q = 2 time-series constructs
 # and autoregressive max lag of second order
-ar_model <- mlts_model(q = 2, max_lag = 2)
+var_model <- mlts_model(q = 2, max_lag = 2)
 
 # to fix only specific parameters, provide a vector with names
 # referring to model parameters
 # e.g., fix the first-order autoregressive effect of the second
 # construct (by setting its variance to zero)
-ar_model1 <- mlts_model(model = ar_model, ranef_zero = "phi(1)_22")
+var_model1 <- mlts_model_constraint(
+  model = var_model, ranef_zero = "phi(1)_22"
+)
 # Parameters fixed to zero (i.e., the variance of phi(1)_22) are
 # deleted from the model data frame
 
 # innovation variances can also be set to zero
 # e.g., fix first-order autoregressive effect and log innovation
 # variance of first construct
-ar_model2 <- mlts_model(
-  model = ar_model,
+var_model2 <- mlts_model_constraint(
+  model = var_model,
   ranef_zero = c("phi(1)_22", "ln.sigma2_1")
 )
 
 # if all autoregressive and cross-lagged parameters should be fixed,
 # fix_dynamics = TRUE can be used
-ar_model3 <- mlts_model(model = ar_model, fix_dynamics = TRUE)
+var_model3 <- mlts_model_constraint(model = var_model, fix_dynamics = TRUE)
 
 # if all innovation variances should be fixed,
 # fix_inno_vars = TRUE can be used
-ar_model3 <- mlts_model(model = ar_model, fix_inno_vars = TRUE)
+var_model3 <- mlts_model_constraint(model = var_model, fix_inno_vars = TRUE)
 
 
 # fixed effects can be set to zero by providing a vector with
 # parameter names to fixef_zero
 # e.g., fixing the cross-lagged effect of first order from the first
 # construct to the second construct to zero
-ar_model5 <- mlts_model(model = ar_model, fixef_zero = "phi(1)_21")
-
+var_model5 <- mlts_model_constraint(
+  model = var_model, fixef_zero = "phi(1)_21"
+)
 
 }

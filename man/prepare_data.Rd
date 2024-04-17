@@ -14,8 +14,8 @@ prepare_data(
   days = NULL,
   n_overnight_NAs,
   na.rm = FALSE,
-  outcomes = NULL,
   covariates = NULL,
+  outcomes = NULL,
   outcome_pred_btw = NULL
 )
 }
@@ -38,28 +38,48 @@ dynamic model. The smaller the step interval, the better the approximation.}
 \item{beep}{Character. The variable in \code{data} that contains the running
 beep from 1 to TP for each person.}
 
-\item{days}{Optional. If a running beep identifier is provided via the \code{beep} argument and
-observations are nested within days (or similar grouping unit), the variable
-in \code{data} that contains the day identifier can be added to correct for overnight lags (see Details).}
+\item{days}{Optional. If a running beep identifier is provided via the \code{beep}
+argument and observations are nested within days (or similar grouping unit),
+the variable in \code{data} that contains the day identifier can be added to correct
+for overnight lags (see Details).}
 
-\item{n_overnight_NAs}{Optional. The number of \code{NA} rows to add after the last observation of each day (if \code{day} is provided).}
+\item{n_overnight_NAs}{Optional. The number of \code{NA} rows to add after the last
+observation of each day (if \code{day} is provided).}
 
 \item{na.rm}{logical. As default option missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
 missing values in variables given in \code{ts}.}
 
-\item{outcomes}{character.}
+\item{covariates}{Named character vector. An optional named vector of
+characters to refer to predictors of random effects as specified in the \code{model}.
+Note that specifying \code{covariates} is only necessary if the respective
+variable name(s) in \code{data} differ from the variables names specified in \code{model}.}
 
-\item{covariates}{character.}
+\item{outcomes}{Named character vector. Similar to \code{covariates}, an optional named vector of
+characters to refer to outcome predicted by random effects as specified in the \code{model}.
+Note that specifying \code{outcomes} is only necessary if the respective
+variable name(s) in \code{data} differ from the outcome variable name(s) specified in \code{model}.}
 
 \item{outcome_pred_btw}{character.}
 }
 \value{
-A \code{list} that can be passed to \code{stan()}.
+A \code{data.frame} that can be passed to \code{\link[mlts]{mlts_fit}}.
 }
 \description{
 Prepare data for Stan
 }
 \examples{
-1 + 1
+\donttest{
+# prepare data for vector-autoregressive model
+data <- prepare_data(
+  ts = c("Y1", "Y2"),
+  data = ts_data,
+  id = "ID",
+  time = "time",
+  tinterval = 1,
+)
+
+# further examples with overnight lags
+
+}
 }

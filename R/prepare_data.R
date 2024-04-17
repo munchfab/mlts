@@ -12,24 +12,45 @@
 #' dynamic model. The smaller the step interval, the better the approximation.
 #' @param beep Character. The variable in `data` that contains the running
 #' beep from 1 to TP for each person.
-#' @param days Optional. If a running beep identifier is provided via the `beep` argument and
-#' observations are nested within days (or similar grouping unit), the variable
-#' in `data` that contains the day identifier can be added to correct for overnight lags (see Details).
-#' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last observation of each day (if `day` is provided).
+#' @param days Optional. If a running beep identifier is provided via the `beep`
+#' argument and observations are nested within days (or similar grouping unit),
+#' the variable in `data` that contains the day identifier can be added to correct
+#' for overnight lags (see Details).
+#' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last
+#' observation of each day (if `day` is provided).
 #' @param na.rm logical. As default option missing values remain in the data and
 #' will be imputed during model estimation. Set to `TRUE` to remove all rows with
 #' missing values in variables given in `ts`.
-#' @param outcomes character.
-#' @param covariates character.
+#' @param covariates Named character vector. An optional named vector of
+#' characters to refer to predictors of random effects as specified in the `model`.
+#' Note that specifying `covariates` is only necessary if the respective
+#' variable name(s) in `data` differ from the variables names specified in `model`.
+#' @param outcomes Named character vector. Similar to `covariates`, an optional named vector of
+#' characters to refer to outcome predicted by random effects as specified in the `model`.
+#' Note that specifying `outcomes` is only necessary if the respective
+#' variable name(s) in `data` differ from the outcome variable name(s) specified in `model`.
 #' @param outcome_pred_btw character.
 #'
-#' @return A `list` that can be passed to `stan()`.
+#' @return A `data.frame` that can be passed to \code{\link[mlts]{mlts_fit}}.
 #' @export
 #'
-#' @examples 1 + 1
+#' @examples
+#' \donttest{
+#' # prepare data for vector-autoregressive model
+#' data <- prepare_data(
+#'   ts = c("Y1", "Y2"),
+#'   data = ts_data,
+#'   id = "ID",
+#'   time = "time",
+#'   tinterval = 1,
+#' )
+#'
+#' # further examples with overnight lags
+#'
+#' }
 prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days = NULL,
-                         n_overnight_NAs, na.rm = FALSE, outcomes = NULL,
-                         covariates = NULL, outcome_pred_btw = NULL){
+                         n_overnight_NAs, na.rm = FALSE, covariates = NULL,
+                         outcomes = NULL, outcome_pred_btw = NULL){
 
 
   # create a subset of the data with fixed variable names

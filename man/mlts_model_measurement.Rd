@@ -28,7 +28,8 @@ An object of class \code{data.frame}.
 }
 \description{
 Add (or replace) a measurement model of an existing \code{model}-object. As default
-option, a multiple-indicator model will be included assuming a common between-level factor.
+option, a multiple-indicator model will be included assuming a common
+between-level factor.
 }
 \details{
 Update a \code{model}-object.
@@ -49,4 +50,5 @@ model <- mlts_model_measurement(
               btw_model = list(""))
 # Which models a common latent factor on the between-level for the first three
 # indicators and a random indicator mean for the fourth indicator.
+
 }

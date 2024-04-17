@@ -2,13 +2,17 @@
 % Please edit documentation in R/mlts_param_labels.R
 \name{mlts_param_labels}
 \alias{mlts_param_labels}
-\title{Title}
+\title{Convert parameter labels from mlts model to Stan labels and vice versa}
 \usage{
 mlts_param_labels(model)
 }
 \arguments{
-\item{model}{data frame.}
+\item{model}{\verb{data frame}. Output of \code{\link[mlts]{mlts_model}} and
+related functions.}
 }
 \description{
-Title
+Convert parameter labels from mlts model to Stan labels and vice versa
+}
+\details{
+For internal use only.
 }

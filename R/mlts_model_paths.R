@@ -20,11 +20,13 @@
 #' @export
 #'
 #' @examples
-#' # build a simple VAR mlts model with two time-series variables
-#' model <- mlts_model(q = 2)
+#' \donttest{
+#' # build a simple vector-autoregressive mlts model with two time-series variables
+#' var_model <- mlts_model(q = 2)
 #'
 #' # create a pathmodel from the specified model
-#' mlts_model_paths(model = model)
+#' mlts_model_paths(model = var_model)
+#' }
 mlts_model_paths <- function(model, file = NULL,
                              add_png = FALSE, keep_tex = FALSE,
                              ts = NULL, covariates = NULL,
