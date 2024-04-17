@@ -200,13 +200,19 @@ mlts_model_paths <- function(model, file = NULL,
               "\\node  [coordinate]  (c)  at ($(y11t) !0.5! (y1", i, "t)$)  {};"
             )
             # label last error on between level
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps1", i, "b)  [below right = 1em of y1",
-              i, "t]  {\\scriptsize$\\varepsilon^b_{1", i, "}$};"
+            epsb_vec <- c(epsb_vec, ifelse(
+              all(infos$indicators$btw_factor == 1),
+              paste0(
+                "\\node  [error]  (eps1", i, "b)  [below right = 1em of y1",
+                i, "t]  {\\scriptsize$\\varepsilon^b_{1", i, "}$};"
+              ), ""
             ))
           } else {
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps1", i, "b)  [below right = .75em of y1", i, "t]  {};"
+            epsb_vec <- c(epsb_vec, ifelse(
+              all(infos$indicators$btw_factor == 1),
+              paste0(
+                "\\node  [error]  (eps1", i, "b)  [below right = .75em of y1", i, "t]  {};"
+              ), ""
             ))
           }
         }
@@ -216,7 +222,7 @@ mlts_model_paths <- function(model, file = NULL,
             {\\scriptsize", ifelse(
               # label path with constraint if necessary
               model[model$Param == paste0("lambdaW_1.", i), "Constraint"] == "= 1",
-              "$1$}", paste0("$\\lambda^w_{", i, "}$}")
+              "$1$}", paste0("$\\lambda^w_{1", i, "}$}")
             ), "  (y1", i, "t.north);"
         ))
         blat_paths_vec <- c(blat_paths_vec, paste0(
@@ -229,15 +235,18 @@ mlts_model_paths <- function(model, file = NULL,
           ),  "{", ifelse(
             # label path with constraint if necessary
             model[model$Param == paste0("lambdaB_1.", i), "Constraint"] == "= 1",
-            "\\scriptsize $1$", paste0("\\scriptsize $\\lambda^b_{", i, "}$")
+            "\\scriptsize $1$", paste0("\\scriptsize $\\lambda^b_{1", i, "}$")
           ), "}  (y1", i, "t.south);"
         ))
         epswt_paths_vec <- c(epswt_paths_vec, paste0(
           "\\draw  [path]  (eps1", i, "wt)  to node  []  {}  (y1", i, "t.north west);"
         ))
         if (i != 1) {
-          epsb_paths_vec <- c(epsb_paths_vec, paste0(
-            "\\draw  [path]  (eps1", i, "b)  to node  []  {}  (y1", i, "t.south east);"
+          epsb_paths_vec <- c(epsb_paths_vec, ifelse(
+            all(infos$indicators$btw_factor == 1),
+            paste0(
+              "\\draw  [path]  (eps1", i, "b)  to node  []  {}  (y1", i, "t.south east);"
+            ), ""
           ))
         }
       }
@@ -383,12 +392,18 @@ mlts_model_paths <- function(model, file = NULL,
             epswt_paths_vec <- c(epswt_paths_vec, paste0(
               "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
             ))
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, j, "b)  [below right = 1em of y",
-              i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, "}$};"
+            epsb_vec <- c(epsb_vec, ifelse(
+              all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1),
+              paste0(
+                "\\node  [error]  (eps", i, j, "b)  [below right = 1em of y",
+                i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, "}$};"
+              ), ""
             ))
-            epsb_paths_vec <- c(epsb_paths_vec, paste0(
-              "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south east);"
+            epsb_paths_vec <- c(epsb_paths_vec, ifelse(
+              all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1),
+              paste0(
+                "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south east);"
+              ), ""
             ))
             # last indicator of last construct
             ind_vec <- c(ind_vec, paste0(
@@ -410,8 +425,11 @@ mlts_model_paths <- function(model, file = NULL,
             epswt_vec <- c(epswt_vec, paste0(
               "\\node  [error]  (eps", i, j, "wt)  [above left = .75em of y", i, j, "t]  {};"
             ))
-            epsb_vec <- c(epsb_vec, paste0(
-              "\\node  [error]  (eps", i, j, "b)  [below right = .75em of y", i, j, "t]  {};"
+            epsb_vec <- c(epsb_vec, ifelse(
+              all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1),
+              paste0(
+                "\\node  [error]  (eps", i, j, "b)  [below right = .75em of y", i, j, "t]  {};"
+              ), ""
             ))
             if (j == infos$p[i]) {
               # place coordinates between first and last indicator variables
@@ -424,8 +442,12 @@ mlts_model_paths <- function(model, file = NULL,
             epswt_paths_vec <- c(epswt_paths_vec, paste0(
               "\\draw  [path]  (eps", i, j, "wt)  to node  []  {}  (y", i, j, "t.north west);"
             ))
-            epsb_paths_vec <- c(epsb_paths_vec, paste0(
-              "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y", i, j, "t.south east);"
+            epsb_paths_vec <- c(epsb_paths_vec, ifelse(
+              all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1),
+              paste0(
+                "\\draw  [path]  (eps", i, j, "b)  to node  []  {}  (y",
+                i, j, "t.south east);"
+              ), ""
             ))
           }
           # draw paths
@@ -772,7 +794,11 @@ mlts_model_paths <- function(model, file = NULL,
   phi <- paste(phi_vec, collapse = "\n")
 
   # do the same for innovation variances
-  all_sigmas <- model[grepl("ln.sigma2|sigma_", model$Param) & grepl("Fix", model$Type), ]
+  # all_sigmas <- model[grepl("ln.sigma2|sigma_", model$Param) & grepl("Fix", model$Type), ]
+  all_sigmas <- model[
+    startsWith(model$Param, "ln.sigma2") | startsWith(model$Param, "sigma_") &
+      grepl("Fix", model$Type),
+  ]
   n_sigma <- nrow(all_sigmas)
   sigma_vec <- c()
   for (i in 1:n_sigma) {
@@ -784,54 +810,109 @@ mlts_model_paths <- function(model, file = NULL,
           all_sigmas[i, "isRandom"] == 1,
           ", postaction = random]", "]"
         ),
-        "  (zeta", i, "t.120)  to node  []  {$\\sigma", ifelse(
+        "  (zeta", i, "t.30)  to node  []  {$\\sigma", ifelse(
           # if ln.sigma present, use variance, else standard deviation (?)
           grepl("ln", all_sigmas$Param[i]),
           "^2", ""
         ),
-        "_{\\zeta_{", i, "}}$}  (zeta", i, "t.60);"
+        "_{\\zeta_{", i, "}}$}  (zeta", i, "t.330);"
       )
     )
   }
   # paste sigmas in one string
   sigma <- paste(sigma_vec, collapse = "\n")
   # do the same for innovation covariances
-  all_psis <- model[grepl("ln.sigma_|r.zeta", model$Param) & grepl("Fix", model$Type), ]
+  # all_psis <- model[grepl("ln.sigma_|r.zeta", model$Param) & grepl("Fix", model$Type), ]
+  all_psis <- model[
+    startsWith(model$Param, "ln.sigma_") | startsWith(model$Param, "r.zeta") &
+      grepl("Fix", model$Type),
+  ]
   # n_psi <- nrow(all_psis)
   psi_vec <- c()
+  # if (nrow(all_psis) >= 1) {
+  #   if (infos$q == 1) { # is this needed?
+  #     psi_vec <- paste0(
+  #       "\\draw  [cov", ifelse(
+  #         # decorate with dot on path if parameter is random
+  #         all_psis[all_psis$Param == "ln.sigma_12", "isRandom"] == 1,
+  #         ", postaction = random]", "]"
+  #       ),
+  #       "  (zeta1t.0)  to node  []  {$\\psi_{12}$}  (zeta2t.0);"
+  #     )
+  #   } else {
+  #     for (i in 1:(infos$q - 1)) {
+  #       for (j in (i + 1):infos$q) {
+  #         if (any(grepl("ln.sigma", all_psis$Param)) == TRUE) {
+  #           psi_vec <- c(
+  #             psi_vec, paste0(
+  #               "\\draw  [cov", ifelse(
+  #                 # decorate with dot on path if parameter is random
+  #                 all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
+  #                 ", postaction = random]", "]"
+  #               ),
+  #               "  (zeta", i, "t.0)  to node  []  {$\\psi_{", i, j, "}$}  (zeta", j, "t.0);"
+  #             )
+  #           )
+  #         } else {
+  #           psi_vec <- c(
+  #             psi_vec, paste0(
+  #               "\\draw  [cov]",
+  #               "  (zeta", i, "t.0)  to node  []  {$\\psi_{", i, j,
+  #               "}$}  (zeta", j, "t.0);"
+  #             )
+  #           )
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
   if (nrow(all_psis) >= 1) {
-    if (infos$q == 1) {
-      psi_vec <- paste0(
-        "\\draw  [cov", ifelse(
-          # decorate with dot on path if parameter is random
-          all_psis[all_psis$Param == "ln.sigma_12", "isRandom"] == 1,
-          ", postaction = random]", "]"
-        ),
-        "  (zeta1t.0)  to node  []  {$\\psi_{12}$}  (zeta2t.0);"
-      )
-    } else {
-      for (i in 1:(infos$q - 1)) {
-        for (j in (i + 1):infos$q) {
-          if (any(grepl("ln.sigma", all_psis$Param)) == TRUE) {
-            psi_vec <- c(
-              psi_vec, paste0(
-                "\\draw  [cov", ifelse(
-                  # decorate with dot on path if parameter is random
-                  all_psis[all_psis$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
-                  ", postaction = random]", "]"
-                ),
-                "  (zeta", i, "t.0)  to node  []  {$\\psi_{", i, j, "}$}  (zeta", j, "t.0);"
-              )
+    for (i in 1:(infos$q - 1)) {
+      for (j in (i + 1):infos$q) {
+        # if random innovation covariance is specified (only for q == 2),
+        # draw additional factor for innovation covariance
+        if (any(grepl("ln.sigma", all_psis$Param)) == TRUE) {
+          psi_vec <- c(
+            psi_vec,
+            paste0(
+              "\\node  [coordinate]  (cetainno", i, j,
+              ")  at  ($(zeta", i, "t) !0.5! (zeta", j, "t)$)  {};"
+            ),
+            paste0(
+              "\\node  [latent]  (etainno", i, j,
+              ")  at  (cetainno", i, j,
+              ")  {$\\eta_{\\zeta_{", i, j, "}}$};"
+            ),
+            paste0(
+              "\\draw  [path]",
+              "  (etainno", i, j, ")  to node  ",
+              "[fill = white, anchor = center]  {\\scriptsize$",
+              infos$inno_cov_load[i],
+              "$}  (", ifelse(infos$isLatent == TRUE, "eta", "y"),
+              i, "wt);"
+            ),
+            paste0(
+              "\\draw  [path]",
+              "  (etainno", i, j, ")  to node  ",
+              "[fill = white, anchor = center]  {\\scriptsize$",
+              infos$inno_cov_load[j],
+              "$}  (", ifelse(infos$isLatent == TRUE, "eta", "y"),
+              j, "wt);"
+            ),
+            paste0(
+              "\\draw  [var, postaction = random]",
+              "  (etainno", i, j, ".30)  to node  []  {$\\psi",
+              "_{", i, j, "}$}  (etainno", i, j, ".330);"
             )
-          } else {
-            psi_vec <- c(
-              psi_vec, paste0(
-                "\\draw  [cov]",
-                "  (zeta", i, "t.0)  to node  []  {$\\psi_{", i, j,
-                "}$}  (zeta", j, "t.0);"
-              )
+          )
+        } else {
+          psi_vec <- c(
+            psi_vec, paste0(
+              "\\draw  [cov]",
+              "  (zeta", i, "t.320)  to node  []  {$\\psi_{", i, j,
+              "}$}  (zeta", j, "t.40);"
             )
-          }
+          )
         }
       }
     }
@@ -886,7 +967,11 @@ mlts_model_paths <- function(model, file = NULL,
           "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\2\\3}$", gsub(
             # replace rzeta with psi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(lnsigma|psi)_(\\d+)", "$\\\\psi_{\\2}$" ,all_bpars$Param
+            "(psi)_(\\d+)", "$\\\\psi_{\\2}$", gsub(
+              # replace lnsigma12 (random innovation covariance)
+              # with ln(psi)
+              "(lnsigma)_(\\d+)", "ln($\\\\psi_{\\2}$)", all_bpars$Param
+            )
           )
         )
       )
