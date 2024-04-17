@@ -86,9 +86,9 @@ mlts_model_formula <- function(model, file = NULL,
     between_vec <- c()
     within_vec <- c()
     for (i in 1:infos$q) {
-      ts_vec <- c(ts_vec, paste0("y_{", i, ", t} \\\\"))
-      between_vec <- c(between_vec, paste0("\\mu_{", i, "} \\\\"))
-      within_vec <- c(within_vec, paste0("y_{", i, ", t}^w \\\\"))
+      ts_vec <- c(ts_vec, paste0("y_{", i, ", it} \\\\"))
+      between_vec <- c(between_vec, paste0("\\mu_{", i, ",i} \\\\"))
+      within_vec <- c(within_vec, paste0("y_{", i, ", it}^w \\\\"))
     }
 
     # paste together
@@ -121,11 +121,11 @@ mlts_model_formula <- function(model, file = NULL,
     lam_b_mat <- matrix(0, ncol = infos$q, nrow = sum(infos$p)) # between-model loadings
     int_b_vec <- c() # between-model intercepts
     for (i in 1:infos$q) {
-      lat_w_vec <- c(lat_w_vec, paste0("\\eta^w_{", i, ", t} \\\\"))
+      lat_w_vec <- c(lat_w_vec, paste0("\\eta^w_{", i, ", it} \\\\"))
       lam_w_list[[i]] <- matrix(ncol = infos$q, nrow = infos$p[i], data = 0)
       if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
         # if common between-factor is modeled, use eta
-        lat_b_vec <- c(lat_b_vec, paste0("\\eta^b_{", i, "} \\\\"))
+        lat_b_vec <- c(lat_b_vec, paste0("\\eta^b_{", i, ",i} \\\\"))
         # and use loading matrix
         lam_b_list[[i]] <- matrix(ncol = infos$q, nrow = infos$p[i], data = 0)
       } else {
@@ -136,23 +136,23 @@ mlts_model_formula <- function(model, file = NULL,
       }
       for (j in 1:infos$p[i]) {
         # decomposition to within- and between-parts
-        ts_vec <- c(ts_vec, paste0("y_{", i, j, ", t} \\\\"))
-        ts_w_vec <- c(ts_w_vec, paste0("y_{", i, j, ", t}^w \\\\"))
-        ts_b_vec <- c(ts_b_vec, paste0("\\mu_{", i, j, "} \\\\"))
-        eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", t}^w \\\\"))
+        ts_vec <- c(ts_vec, paste0("y_{", i, j, ", it} \\\\"))
+        ts_w_vec <- c(ts_w_vec, paste0("y_{", i, j, ", it}^w \\\\"))
+        ts_b_vec <- c(ts_b_vec, paste0("\\mu_{", i, j, ",i} \\\\"))
+        eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", it}^w \\\\"))
         # if common between-factor is modeled, build between-level formula
         if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
           # if common between-factor is modeled, use eta
           int_b_vec <- c(int_b_vec, ifelse(
             j == 1,
             "0 \\\\", # first indicator intercept fixed to zero
-            paste0("\\alpha_{", i, j, "}^b \\\\")
+            paste0("\\alpha_{", i, j, ",i}^b \\\\")
           ))
           # and residual vector
           eps_b_vec <- c(eps_b_vec, ifelse(
             j == 1,
             "0 \\\\", # first residual fixed to zero
-            paste0("\\varepsilon_{", i, j, "}^b \\\\")
+            paste0("\\varepsilon_{", i, j, ",i}^b \\\\")
           ))
         } else {
           # if no common between-factor is modeled, don't add formula
@@ -250,13 +250,20 @@ mlts_model_formula <- function(model, file = NULL,
       )
     }
 
+    eps_dist_w <- ",\\\\ \n\\text{with}~
+    \\varepsilon^w_{it} \\sim \\mathit{N}(0, \\sigma^2_{\\varepsilon^w_{it}}) \\\\"
+
+    eps_dist_b <- ",\\\\ \n\\text{with}~
+    \\varepsilon^b_{i} \\sim \\mathit{N}(0, \\sigma^2_{\\varepsilon^b_{i}})"
+
     # decomposition formula with within- and between-level measurement model
     dcf <- paste(
       begin_math,
       dcf_lhs, "=", dcf_rhs, "\\\\",
-      dcf_lhs_w, "=", dcf_rhs_w, "\\\\",
+      dcf_lhs_w, "=", dcf_rhs_w,
+      eps_dist_w,
       if (!is.null(lat_b_vec)) {
-        paste(dcf_lhs_b, "=", dcf_rhs_b, "\\\\")
+        paste(dcf_lhs_b, "=", dcf_rhs_b, eps_dist_b)
       },
       end_math
     )
@@ -275,7 +282,7 @@ mlts_model_formula <- function(model, file = NULL,
   # within-model ##############################################################
 
   # caption
-  wmf_caption <- "Within-model."
+  wmf_caption <- "Within-level model."
 
   # initiate empty dv vector
   dvs_vec <- c()
@@ -283,8 +290,8 @@ mlts_model_formula <- function(model, file = NULL,
   for (i in 1:infos$q) {
     dvs_vec <- c(dvs_vec, ifelse(
       infos$isLatent == T,
-      paste0("\\eta_{", i, ", t}^w \\\\"),
-      paste0("y_{", i, ", t}^w \\\\")
+      paste0("\\eta_{", i, ", it}^w \\\\"),
+      paste0("y_{", i, ", it}^w \\\\")
     ))
   }
   dvs <- paste(dvs_vec, collapse = "\n")
@@ -332,13 +339,25 @@ mlts_model_formula <- function(model, file = NULL,
             # linebreak after last cell in row
             phi_mat_vec <- c(
               phi_mat_vec, paste0(
-                "\\phi_{", j, i, "(", k, ")", "} \\\\"
+                "\\phi_{(", k, ")", i, j, ifelse(
+                  all_phis[
+                    all_phis$Param == paste0("phi(", k, ")_", i, j), "isRandom"
+                  ] == 1,
+                  ",i", ""
+                ),
+                "} \\\\"
               )
             )
           } else {
             phi_mat_vec <- c(
               phi_mat_vec, paste0(
-                "\\phi_{", j, i, "(", k, ")", "} & "
+                "\\phi_{(", k, ")", i, j, ifelse(
+                  all_phis[
+                    all_phis$Param == paste0("phi(", k, ")_", i, j), "isRandom"
+                  ] == 1,
+                  ",i", ""
+                ),
+                "} & "
               )
             )
           }
@@ -369,7 +388,7 @@ mlts_model_formula <- function(model, file = NULL,
       ts_vec <- c(
         ts_vec, paste0(
           ifelse(infos$isLatent == T, "\\eta_{", "y_{"),
-          i, ", t - ", j, "}^w \\\\"
+          i, ",i(t - ", j, ")}^w \\\\"
         )
       )
     }
@@ -380,7 +399,7 @@ mlts_model_formula <- function(model, file = NULL,
   innos_vec <- c()
   # innovations loop
   for (i in 1:infos$q) {
-    innos_vec <- c(innos_vec, paste0("\\zeta_{", i, ", t} \\\\"))
+    innos_vec <- c(innos_vec, paste0("\\zeta_{", i, ", it} \\\\"))
   }
   innos <- paste(innos_vec, collapse = "\n")
 
@@ -392,8 +411,35 @@ mlts_model_formula <- function(model, file = NULL,
     collapse = "\n"
   )
 
-  inno_dist <- ",\\\\ \n\\text{with}~
-  \\zeta_{i} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi})"
+  if (infos$q == 1) {
+    inno_dist <- paste0(
+      ",\\\\ \n\\text{with}~",
+      "\\zeta_{it} \\sim \\mathit{N}(0, \\sigma^2_{\\zeta_{it}})"
+    )
+  } else if (infos$q > 1 & infos$n_inno_covs == 0) {
+    inno_dist <- paste0(
+      ",\\\\ \n\\text{with}~",
+      "\\zeta_{it} \\sim \\mathit{N}(\\mathbf{0}, \\mathbf{\\sigma^2_{\\zeta_{it}}}",
+      ifelse(
+        # add i index if there are random elements in sigmas
+        any(model[
+          grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
+        ] == 1),
+        "_i", ""
+      ), ")"
+    )
+  } else {
+    inno_dist <- paste0(
+      ",\\\\ \n\\text{with}~",
+      "\\zeta_{it} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi}", ifelse(
+        # add i index if there are random elements in PSI
+        any(model[
+          grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
+        ] == 1),
+        "_i", ""
+      ), ")"
+    )
+  }
 
   # within-model formula
   wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, inno_dist, end_math)
@@ -409,7 +455,7 @@ mlts_model_formula <- function(model, file = NULL,
   # between-model #############################################################
 
   # caption
-  bmf_caption <- "Between-model."
+  bmf_caption <- "Between-level model."
 
   all_bpars <- model[grepl("Fix", model$Type), ]
   # replace dots with nothing
