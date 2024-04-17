@@ -137,8 +137,8 @@ mlts_model_paths <- function(model, file = NULL,
     dc <- "
     % draw decomposition
     \\node  [manifest]  (y1t)  {$y_{1,t}$};
-    \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
-    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
+    \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,it}^w$};
+    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1,i}$};
 
     % draw paths
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
@@ -148,16 +148,16 @@ mlts_model_paths <- function(model, file = NULL,
       # initiate empty vectors to store tikz nodes
       ind_vec <- c() # indicator variables
       # latent variables (within and between)
-      wlat <- "\\node  [latent]  (eta1wt)  [above = 4em of c]  {$\\eta^w_{1,t}$};"
+      wlat <- "\\node  [latent]  (eta1wt)  [above = 4em of c]  {$\\eta^w_{1,it}$};"
       if (all(infos$indicators$btw_factor == 1)) {
-        blat <- "\\node  [latent]  (eta1b)  [below = 4em of c]  {$\\eta^b_{1}$};"
+        blat <- "\\node  [latent]  (eta1b)  [below = 4em of c]  {$\\eta^b_{1,i}$};"
       } else {
         blat_vec <- c()
         for (i in 1:infos$p) {
           blat_vec[i] <- paste0(
             "\\node  [latent, minimum width = 3em]  (mu1", i,
             ")  [below = 4em of y1", i, "t]  ",
-            "{$\\mu_{1", i, "}$};"
+            "{$\\mu_{1", i, ",i}$};"
           )
         }
         blat <- paste(blat_vec, collapse = "\n")
@@ -172,12 +172,12 @@ mlts_model_paths <- function(model, file = NULL,
         if (i == 1) {
           # first indicator variable
           ind_vec <- c(ind_vec, paste0(
-            "\\node  [manifest]  (y1", i, "t)  {$y_{1", i, ",t}$};"
+            "\\node  [manifest]  (y1", i, "t)  {$y_{1", i, ",it}$};"
           ))
           # first error (labeled)
           epswt_vec <- c(epswt_vec, paste0(
             "\\node  [error]  (eps1", i, "wt)  [above left = 1em of y1",
-            i, "t]  {\\scriptsize$\\varepsilon^w_{1", i, ",t}$};"
+            i, "t]  {\\scriptsize$\\varepsilon^w_{1", i, ",it}$};"
           ))
           # epsb_vec <- c(epsb_vec, paste0(
           #   "\\node  [error]  (eps", i, "b)  [below left = 1em of y",
@@ -187,7 +187,7 @@ mlts_model_paths <- function(model, file = NULL,
           # all other indicators
           ind_vec <- c(ind_vec, paste0(
             "\\node  [manifest]  (y1", i, "t)  [right = 1.5em of y1",
-            i - 1, "t]  {$y_{1", i, ",t}$};"
+            i - 1, "t]  {$y_{1", i, ",it}$};"
           ))
           # residuals
           epswt_vec <- c(epswt_vec, paste0(
@@ -204,7 +204,7 @@ mlts_model_paths <- function(model, file = NULL,
               all(infos$indicators$btw_factor == 1),
               paste0(
                 "\\node  [error]  (eps1", i, "b)  [below right = 1em of y1",
-                i, "t]  {\\scriptsize$\\varepsilon^b_{1", i, "}$};"
+                i, "t]  {\\scriptsize$\\varepsilon^b_{1", i, ",i}$};"
               ), ""
             ))
           } else {
@@ -267,21 +267,21 @@ mlts_model_paths <- function(model, file = NULL,
     "
     % draw decomposition
     \\node  [manifest]  (y1t)  {$y_{1,t}$};
-    \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,t}^w$};
-    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1}$};
+    \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,it}^w$};
+    \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1,i}$};
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [manifest]  (y\\i t)  [right = 2.5em of y\\lasti t]  {$y_{\\i,t}$};
+    \\node  [manifest]  (y\\i t)  [right = 2.5em of y\\lasti t]  {$y_{\\i,it}$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [latent]  (y\\i wt)  [above = 2.5em of y\\i t]  {$y_{\\i,t}^w$};
+    \\node  [latent]  (y\\i wt)  [above = 2.5em of y\\i t]  {$y_{\\i,it}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ...,",
     infos$q, "}
-    \\node  [latent]  (mu\\i)  [below = 2.5em of y\\i t]  {$\\mu_{\\i}$};
+    \\node  [latent]  (mu\\i)  [below = 2.5em of y\\i t]  {$\\mu_{\\i,i}$};
 
     % draw paths
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
@@ -307,13 +307,13 @@ mlts_model_paths <- function(model, file = NULL,
       for (i in 1:infos$q) {
         wlat_vec <- c(wlat_vec, paste0(
           "\\node  [latent]  (etaw", i, "t)  [above = 4em of c", i,
-          "]  {$\\eta^w_{", i, ",t}$};"
+          "]  {$\\eta^w_{", i, ",it}$};"
         ))
         if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
           # if common between-factor is modeled, use eta
           blat_vec <- c(blat_vec, paste0(
             "\\node  [latent]  (etab", i, ")  [below = 4em of c", i,
-            "]  {$\\eta^b_{", i, "}$};"
+            "]  {$\\eta^b_{", i, ",i}$};"
           ))
         } else {
           # if no between-factor is modeled, use mu
@@ -321,7 +321,7 @@ mlts_model_paths <- function(model, file = NULL,
             blat_vec <- c(blat_vec, paste0(
               "\\node  [latent, minimum width = 3em]  (mu", i, j,
               ")  [below = 3em of y", i, j,
-              "t]  {$\\mu_{", i, j, "}$};"
+              "t]  {$\\mu_{", i, j, ",i}$};"
             ))
           }
         }
@@ -336,7 +336,7 @@ mlts_model_paths <- function(model, file = NULL,
           if (i == 1 & j == 1) {
             # first indicator variable
             ind_vec <- c(ind_vec, paste0(
-              "\\node  [manifest]  (y", i, j, "t)  {$y_{", i, j, ",t}$};"
+              "\\node  [manifest]  (y", i, j, "t)  {$y_{", i, j, ",it}$};"
             ))
             # first error (labeled)
             if (infos$p[i] == 1) {
@@ -347,7 +347,7 @@ mlts_model_paths <- function(model, file = NULL,
             } else {
               epswt_vec <- c(epswt_vec, paste0(
                 "\\node  [error]  (eps", i, j, "wt)  [above left = 1em of y",
-                i, j, "t]  {\\scriptsize$\\varepsilon^w_{", i, j, ",t}$};"
+                i, j, "t]  {\\scriptsize$\\varepsilon^w_{", i, j, ",it}$};"
               ))
               # epsb_vec <- c(epsb_vec, paste0(
               #   "\\node  [error]  (eps", i, j, "b)  [below right = 1em of y",
@@ -364,7 +364,7 @@ mlts_model_paths <- function(model, file = NULL,
             # first indicator variable of next construct
             ind_vec <- c(ind_vec, paste0(
               "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
-              i - 1, infos$p[i - 1], "t]  {$y_{", i, j, ",t}$};"
+              i - 1, infos$p[i - 1], "t]  {$y_{", i, j, ",it}$};"
             ))
             if (infos$p[i] == 1) {
               epswt_vec <- epswt_vec
@@ -396,7 +396,7 @@ mlts_model_paths <- function(model, file = NULL,
               all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1),
               paste0(
                 "\\node  [error]  (eps", i, j, "b)  [below right = 1em of y",
-                i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, "}$};"
+                i, j, "t]  {\\scriptsize$\\varepsilon^b_{", i, j, ",i}$};"
               ), ""
             ))
             epsb_paths_vec <- c(epsb_paths_vec, ifelse(
@@ -408,7 +408,7 @@ mlts_model_paths <- function(model, file = NULL,
             # last indicator of last construct
             ind_vec <- c(ind_vec, paste0(
               "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
-              i, j - 1, "t]  {$y_{", i, j, ",t}$};"
+              i, j - 1, "t]  {$y_{", i, j, ",it}$};"
             ))
             # place coordinates between first and last indicator variables
             # of construct i
@@ -420,7 +420,7 @@ mlts_model_paths <- function(model, file = NULL,
             # all other indicators
             ind_vec <- c(ind_vec, paste0(
               "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
-              i, j - 1, "t]  {$y_{", i, j, ",t}$};"
+              i, j - 1, "t]  {$y_{", i, j, ",it}$};"
             ))
             epswt_vec <- c(epswt_vec, paste0(
               "\\node  [error]  (eps", i, j, "wt)  [above left = .75em of y", i, j, "t]  {};"
@@ -523,9 +523,9 @@ mlts_model_paths <- function(model, file = NULL,
   if (infos$q == 1) {
     wm <- paste0(
       "% draw within-level structural model
-      \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
-      \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,t}^w$};
-      \\node  [latent]  (zeta1t)  [right = 2.5em of y1wt]  {$\\zeta_{1,t}$};",
+      \\node  [latent]  (y1wt-1)  {$y_{1,i(t-1)}^w$};
+      \\node  [latent]  (y1wt)  [right = 5em of y1wt-1]  {$y_{1,it}^w$};
+      \\node  [latent]  (zeta1t)  [right = 2.5em of y1wt]  {$\\zeta_{1,it}$};",
 
       ifelse(
         infos$maxLag != 1,
@@ -534,7 +534,7 @@ mlts_model_paths <- function(model, file = NULL,
           infos$maxLag, "}
         \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
           infos$q, "}
-        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};"
+        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,i(t-\\j)}^w$};"
         ),
         paste0("")
       ),
@@ -546,9 +546,9 @@ mlts_model_paths <- function(model, file = NULL,
     if (infos$p > 1) {
       wm <- paste0(
         "% draw within-level structural model
-        \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
-        \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
-        \\node  [latent]  (zeta1t)  [right = 2.5em of eta1wt]  {$\\zeta_{1,t}$};",
+        \\node  [latent]  (eta1wt-1)  {$\\eta_{1,i(t-1)}^w$};
+        \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,it}^w$};
+        \\node  [latent]  (zeta1t)  [right = 2.5em of eta1wt]  {$\\zeta_{1,it}$};",
 
         ifelse(
         infos$maxLag != 1,
@@ -557,7 +557,7 @@ mlts_model_paths <- function(model, file = NULL,
             infos$maxLag, "}
           \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
             infos$q, "}
-          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};"
+          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,i(t-\\j)}^w$};"
           ),
           paste0("")
         ),
@@ -571,14 +571,14 @@ mlts_model_paths <- function(model, file = NULL,
     wm <- paste0(
     "
     % draw within-level structural model
-    \\node  [latent]  (y1wt-1)  {$y_{1,t-1}^w$};
-    \\node  [latent]  (y1wt)  [right =5em of y1wt-1]  {$y_{1,t}^w$};
-    \\node  [latent]  (zeta1t)  [right =2.5em of y1wt]  {$\\zeta_{1,t}$};
+    \\node  [latent]  (y1wt-1)  {$y_{1,i(t-1)}^w$};
+    \\node  [latent]  (y1wt)  [right =5em of y1wt-1]  {$y_{1,it}^w$};
+    \\node  [latent]  (zeta1t)  [right =2.5em of y1wt]  {$\\zeta_{1,it}$};
 
     % draw nodes
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
       infos$q, "}
-    \\node  [latent]  (y\\i wt-1)  [below = 5em of y\\lasti wt-1]  {$y_{\\i ,t-1}^w$};",
+    \\node  [latent]  (y\\i wt-1)  [below = 5em of y\\lasti wt-1]  {$y_{\\i ,i(t-1)}^w$};",
 
     ifelse(
       infos$maxLag != 1,
@@ -587,18 +587,18 @@ mlts_model_paths <- function(model, file = NULL,
           infos$maxLag, "}
         \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
           infos$q, "}
-        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,t-\\j}^w$};"
+        \\node  [latent]  (y\\i wt-\\j)  [left = 5em of y\\i wt-\\lastj]  {$y_{\\i ,i(t-\\j)}^w$};"
       ),
       paste0("")
     ),
 
     "\\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [latent]  (y\\i wt)  [below = 5em of y\\lasti wt]  {$y_{\\i ,t}^w$};
+    \\node  [latent]  (y\\i wt)  [below = 5em of y\\lasti wt]  {$y_{\\i ,it}^w$};
 
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
     infos$q, "}
-    \\node  [latent]  (zeta\\i t)  [below = 5em of zeta\\lasti t]  {$\\zeta_{\\i ,t}$};
+    \\node  [latent]  (zeta\\i t)  [below = 5em of zeta\\lasti t]  {$\\zeta_{\\i ,it}$};
 
     % draw paths from residuals to yiwt
     \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
@@ -609,14 +609,14 @@ mlts_model_paths <- function(model, file = NULL,
       wm <- paste0(
       "
       % draw within-level structural model
-      \\node  [latent]  (eta1wt-1)  {$\\eta_{1,t-1}^w$};
-      \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,t}^w$};
-      \\node  [latent]  (zeta1t)  [right = 2.5em of eta1wt]  {$\\zeta_{1,t}$};
+      \\node  [latent]  (eta1wt-1)  {$\\eta_{1,i(t-1)}^w$};
+      \\node  [latent]  (eta1wt)  [right = 5em of eta1wt-1]  {$\\eta_{1,it}^w$};
+      \\node  [latent]  (zeta1t)  [right = 2.5em of eta1wt]  {$\\zeta_{1,it}$};
 
       % draw nodes
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
         infos$q, "}
-      \\node  [latent]  (eta\\i wt-1)  [below = 5em of eta\\lasti wt-1]  {$\\eta_{\\i ,t-1}^w$};",
+      \\node  [latent]  (eta\\i wt-1)  [below = 5em of eta\\lasti wt-1]  {$\\eta_{\\i ,i(t-1)}^w$};",
 
       ifelse(
         infos$maxLag != 1,
@@ -625,18 +625,18 @@ mlts_model_paths <- function(model, file = NULL,
             infos$maxLag, "}
           \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ..., ",
             infos$q, "}
-          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,t-\\j}^w$};"
+          \\node  [latent]  (eta\\i wt-\\j)  [left = 5em of eta\\i wt-\\lastj]  {$\\eta_{\\i ,i(t-\\j)}^w$};"
         ),
         paste0("")
       ),
 
       "\\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
         infos$q, "}
-      \\node  [latent]  (eta\\i wt)  [below = 5em of eta\\lasti wt]  {$\\eta_{\\i ,t}^w$};
+      \\node  [latent]  (eta\\i wt)  [below = 5em of eta\\lasti wt]  {$\\eta_{\\i ,it}^w$};
 
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {2, ..., ",
         infos$q, "}
-      \\node  [latent]  (zeta\\i t)  [below = 5em of zeta\\lasti t]  {$\\zeta_{\\i ,t}$};
+      \\node  [latent]  (zeta\\i t)  [below = 5em of zeta\\lasti t]  {$\\zeta_{\\i ,it}$};
 
       % draw paths from residuals to etaiwt
       \\foreach \\i [remember = \\i as \\lasti (initially 1)] in {1, ...,",
@@ -648,9 +648,18 @@ mlts_model_paths <- function(model, file = NULL,
 
   # store number of phi-parameters for loops
   all_phis <- model[grepl("phi", model$Param) & grepl("Fix", model$Type), ]
-  all_phis$names <- gsub(
-    # replace underscore digit with latex subscript
-    "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\2\\3}$", all_phis$Param
+  all_phis$names <- ifelse(
+    all_phis$isRandom == 1,
+    # add i index if parameter is random
+    gsub(
+      # replace underscore digit with latex subscript
+      "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\2\\3,i}$", all_phis$Param
+    ),
+    # else don't
+    gsub(
+      # replace underscore digit with latex subscript
+      "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\2\\3}$", all_phis$Param
+    )
   )
   # generate path start and end
   all_phis$from <- gsub(
@@ -815,7 +824,10 @@ mlts_model_paths <- function(model, file = NULL,
           grepl("ln", all_sigmas$Param[i]),
           "^2", ""
         ),
-        "_{\\zeta_{", i, "}}$}  (zeta", i, "t.330);"
+        "_{\\zeta_{", i, "}", ifelse(
+          # add i index if parameter is random
+          all_sigmas$isRandom[i] == 1, ",i", ""
+        ), "}$}  (zeta", i, "t.330);"
       )
     )
   }
@@ -902,7 +914,7 @@ mlts_model_paths <- function(model, file = NULL,
             paste0(
               "\\draw  [var, postaction = random]",
               "  (etainno", i, j, ".30)  to node  []  {$\\psi",
-              "_{", i, j, "}$}  (etainno", i, j, ".330);"
+              "_{", i, j, ",i}$}  (etainno", i, j, ".330);"
             )
           )
         } else {
@@ -976,6 +988,12 @@ mlts_model_paths <- function(model, file = NULL,
         )
       )
     )
+  )
+  # add i index to names if parameter is random
+  all_bpars$names <- ifelse(
+    all_bpars$isRandom == 1,
+    gsub("}\\$", ",i}\\$", all_bpars$names),
+    all_bpars$names
   )
   # delete rounded brackets from parameters (not allowed in tikz)
   # has to be done after all_bpars$names are generated!
