@@ -122,9 +122,10 @@ Build a multilevel latent time series model
  #    multiple indicators (here, p = 3 indicators)
  ar1 <- mlts_model_measurement(
           model = ar1,
-          q = 1,         # the number of time-varying constructs
-          p = 3,         # the number of manifest indicators
-          btw_factor = T # assuming a common between-level factor (the default)
+          q = 1, # the number of time-varying constructs
+          p = 3, # the number of manifest indicators
+          # assuming a common between-level factor (the default)
+          btw_factor = TRUE
         )
 
  # 3. Incorporating additional between-level variables. For example, inclusion of
@@ -148,7 +149,7 @@ Build a multilevel latent time series model
  ar1 <- mlts_model(
           q = 1,
           p = 3,
-          fix_inno_vars = T,
+          fix_inno_vars = TRUE,
           ranef_pred = "cov1",
           out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
         )

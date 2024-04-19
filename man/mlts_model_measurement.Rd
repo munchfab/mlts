@@ -50,5 +50,4 @@ model <- mlts_model_measurement(
               btw_model = list(""))
 # Which models a common latent factor on the between-level for the first three
 # indicators and a random indicator mean for the fourth indicator.
-
 }
