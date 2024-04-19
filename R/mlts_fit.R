@@ -189,8 +189,8 @@ mlts_fit <- function(model,
     if(sum(!(infos$n_z_vars %in% colnames(data)))>0){
       # not all variables found in the data
       stop("Not all additional between-level variables used in the outcome prediction
-      model as specified in the model can be found in the data. You may need to rename the variable(s) in
-      the data or provide the name(s) via the `outcome_pred_btw` argument.")
+      model as specified in the model can be found in the data. You may need to rename
+      the variable(s) in the data or provide the name(s) via the `outcome_pred_btw` argument.")
 
     } else {
       # create the necessary input to the outcomes-argument
@@ -232,7 +232,7 @@ mlts_fit <- function(model,
       pars = c(pars, "b_free")
     }
 
-    if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
+    if(standata$n_inno_cors == 0){
       if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_manifest,
@@ -261,21 +261,6 @@ mlts_fit <- function(model,
       } else {
         stanfit <- NULL
       }
-    } else if(standata$n_inno_covs > 0){
-      if(fit_model==T){
-        stanfit <- rstan::sampling(
-          stanmodels$VAR_manifestCovsRand,
-          data = standata,
-          pars = pars,
-          iter = iter,
-          cores = cores,
-          chains = chains,
-          ...
-        )
-      } else {
-        stanfit <- NULL
-      }
-
     }
   }
 
@@ -295,7 +280,7 @@ mlts_fit <- function(model,
       pars = c(pars, "b_free")
     }
 
-    if(standata$n_inno_covs == 0 & standata$n_inno_cors == 0){
+    if(standata$n_inno_cors == 0){
       if(fit_model==T){
         stanfit <- rstan::sampling(
           stanmodels$VAR_latent,
@@ -324,20 +309,6 @@ mlts_fit <- function(model,
         } else {
           stanfit <- NULL
         }
-    } else if(standata$n_inno_covs > 0){
-      if(fit_model==T){
-        stanfit <- rstan::sampling(
-          stanmodels$VAR_latentCovsRand,
-          data = standata,
-          pars = pars,
-          iter = iter,
-          cores = cores,
-          chains = chains,
-          ...
-        )
-      } else {
-        stanfit <- NULL
-      }
     }
 
   }

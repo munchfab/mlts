@@ -61,10 +61,10 @@ data {
   matrix[n_out,2] prior_sigma_out;
 
   // - covariances of innovations:
-  // int<lower=1> n_inno_covs; // number of potential innovation covs to include
-  // int<lower=0,upper=1> inno_cov0;    // fixed to zero
-  // int<lower=0,upper=1> inno_cov_fix; // fixed to zero
-
+  int n_inno_covs; // number of potential innovation covs to include
+  int n_obs_cov;   // total number of residuals
+  int inno_cov_pos[1,n_inno_covs];
+  int<lower=-1,upper=1> inno_cov_load[2];
 }
 
 
@@ -80,13 +80,14 @@ parameters {
   vector[n_out] alpha_out;               // outcome precition intercepts
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
-
+  vector[n_obs_cov] eta_cov[n_inno_covs];
 }
 
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
   vector<lower = 0>[N] sd_noise[D];
+  vector<lower = 0>[N] sd_inncov[n_inno_covs];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
  // REs regressed on covariates
@@ -117,11 +118,18 @@ transformed parameters {
       sd_noise[i,] = sqrt(exp(b[,innos_pos[i]]));
     }
   }
+  // transform log innovation covarainces
+  if(n_inno_covs > 0){
+      for(i in 1:n_inno_covs){
+        sd_inncov[i,1:N] = sqrt(exp(to_vector(b[,inno_cov_pos[1,i]])));
+      }
+    }
  }
 
 model {
   int pos = 1;       // initialize position indicator
   int p_miss = 1;    // running counter variable to index positions on y_impute
+  int pos_cov = 1;   // covariance position
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   vector[N_obs] y_merge[D];
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
@@ -168,6 +176,14 @@ model {
       b_free[pp, 1:n_random] ~ multi_normal_cholesky(bmu[pp, 1 : n_random], SIGMA);
     }
 
+    vector[obs_id-maxLag] eta_cov_id[n_inno_covs];
+    if(n_inno_covs>0){
+      for(i in 1:n_inno_covs){
+          eta_cov_id[i,] = segment(eta_cov[i,], pos_cov, (obs_id-maxLag));
+          eta_cov_id[i,] ~ normal(0, sd_inncov[i,pp]);
+      }
+    }
+
     // local variable declaration: array of predicted values
     {
     vector[obs_id-maxLag] mus[D];
@@ -182,24 +198,32 @@ model {
     for(d in 1:D){ // start loop over dimensions
       // build prediction matrix for specific dimensions
       {
-      matrix[(obs_id-maxLag),N_pred[d]] b_mat; // adjust for non-fully crossed models
+      matrix[(obs_id-maxLag),N_pred[d]+n_inno_covs] b_mat; // adjust for non-fully crossed models
 
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
           int lag_use = Lag_pred[d,nd];
           b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
       }
-
-      // use build predictor matrix to calculate latent time-series means
-      mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+      if(n_inno_covs>0){
+          b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
+          // use build predictor matrix to calculate latent time-series means
+          vector[N_pred[d]+1] b_use;
+          b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+          b_use[N_pred[d]+1] = inno_cov_load[d];
+          mus[d,] =  b[pp,d] + b_mat * b_use;
+        } else{
+          mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+        }
+      }
 
       // sampling statement
       y_merge[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
       }
      }
-    }
     // update index variables
     pos = pos + obs_id;
-  }
+    pos_cov = pos_cov + obs_id - maxLag;
+  } // end loop over subjects
 
   // outcome prediction: get expectations of outcome values
   if(n_out > 0){
@@ -211,7 +235,7 @@ model {
       k = k + n_bs; // update index
     }
   }
-  }
+}
 
 
 generated quantities{

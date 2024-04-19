@@ -71,7 +71,13 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     # order fix effects
     p.data$Param <- factor(p.data$Param, levels = rev(p.data$Param))
     # add parameter type used for facets
-    p.data$Param_type <- fit$model$Type
+    p.data$Param_type <- p.data$Type
+
+    # subset data by what
+    if(what != "all"){
+      p.data <- p.data[p.data$Type %in% c(what),]
+    }
+
     # order parameter type
     p.data$Param_type <- factor(p.data$Param_type, levels = c(
       "Fixed effect", "Random effect SD", "RE correlation",
@@ -79,10 +85,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
       "Item intercepts", "Loading", "Measurement Error SD"
     ))
 
-    # subset data by what
-    if(what != "all"){
-      p.data <- p.data[p.data$Param_type %in% c(what),]
-    }
+
 
     # build general plot
     aes <- ggplot2::aes

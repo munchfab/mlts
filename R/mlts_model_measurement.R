@@ -35,8 +35,23 @@
 #'               btw_model = list(""))
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
+#' @export
 #'
 mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL){
+
+  if(1 %in% p){
+    message(
+      "Note: Constructs with a single indicator (p = 1), are assumed to be free \n",
+      "      of measurement error. For the respective variable(s), the following \n",
+      "      constraints are assumed: item intercept = 0, loading parameters = 1, and \n",
+      "      and measurement error variances = 0.")
+  }
+
+  if(2 %in% p){
+    message(
+      "Note: For constructs with two indicators (p = 2), additional constraints \n",
+      "      may be necessary, e.g. fixing loading parameters of both indicators to 1.")
+  }
 
   if(length(p) == 1){
     p = rep(p, times = q)
@@ -217,6 +232,11 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       "Param_Label" = c(""),
       "Constraint" = "free"
     )
+
+    if(p[i] == 1){ # for single-indicator constructs:
+      errVarW$Constraint = "= 0"
+    }
+
     mm.pars[[i]] = dplyr::bind_rows(loadsW, errVarW)
   }
 

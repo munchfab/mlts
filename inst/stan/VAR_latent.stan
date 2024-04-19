@@ -2,8 +2,11 @@
 data {
   int<lower=1> N; 	        // number of observational units
   int<lower=1> D;           // number of latent constructs
+  int<lower=1> D_np[D];     // number of indicators per construct
   int<lower=1> n_p; 	      // number of manifest indicators
   int D_perP[n_p];          // indicate dimension per indicator
+  int is_SI[n_p];           // indicate if single-indicator per construct
+  int D_pos_is_SI[D];       // indicate position of single-indicator per construct
   int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
@@ -26,6 +29,13 @@ data {
   int n_innos_fix;
   int innos_fix_pos[D];
   int innos_pos[D];
+
+  // - covariances of innovations:
+  int n_inno_covs; // number of potential innovation covs to include
+  int n_obs_cov;   // total number of residuals
+  int inno_cov_pos[1,n_inno_covs];
+  int<lower=-1,upper=1> inno_cov_load[2];
+
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
@@ -52,6 +62,7 @@ data {
   vector[N] out[n_out];        // outcome
 
   // indexing information on constraints
+  int n_etaW_free;
   int n_loadBfree;
   int n_loadWfree;
   int n_alphafree;
@@ -100,6 +111,7 @@ parameters {
   vector[n_out] alpha_out;               // outcome precition intercepts
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
+  vector[n_obs_cov] eta_cov[n_inno_covs];
 
   // measurement model parameters
   vector[n_loadBfree] loadB_free;
@@ -107,7 +119,7 @@ parameters {
   vector[n_alphafree] alpha_free;
   vector<lower=0>[n_sigmaBfree] sigmaB_free;
   vector<lower=0>[n_sigmaWfree] sigmaW_free;
-  vector[N_obs] etaW[D];
+  vector[N_obs] etaW_free[n_etaW_free];
   vector[N] YB_free[n_YB_free];
 }
 
@@ -115,6 +127,7 @@ transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
   vector<lower = 0>[N] sd_noise[D];
+  vector<lower = 0>[N] sd_inncov[n_inno_covs];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -152,6 +165,12 @@ transformed parameters {
     }
   }
 
+  // transform log innovation covarainces
+  if(n_inno_covs > 0){
+  for(i in 1:n_inno_covs){
+    sd_inncov[i,1:N] = sqrt(exp(to_vector(b[,inno_cov_pos[1,i]])));
+    }
+ }
 
   // replace values for parameters to estimate
   loadB[pos_loadBfree] = loadB_free;
@@ -163,6 +182,7 @@ transformed parameters {
 
 model {
   int pos = 1;       // initialize position indicator
+  int pos_cov = 1;   // covariance position
   int p_miss = 1;    // running counter variable to index positions on y_impute
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
@@ -219,6 +239,16 @@ model {
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
+    int pos_etaW_free = 1;    // running counter variable to index positition on etaW_free
+    vector[obs_id] etaW_id[D];
+    for(d in 1:D){
+      if(D_np[d] == 1){
+        etaW_id[d,] = segment(y_merge[D_pos_is_SI[d],], pos, obs_id) - YB[D_pos_is_SI[d],pp];
+      } else {
+        etaW_id[d,] = segment(etaW_free[pos_etaW_free,],pos, obs_id);
+        pos_etaW_free = pos_etaW_free + 1;
+      }
+    }
 
     // individual parameters from (multivariate) normal distribution
     if(n_random == 1){
@@ -228,30 +258,53 @@ model {
     }
 
     // dynamic process
-//    {
     vector[obs_id-maxLag] mus[D];
+    vector[obs_id-maxLag] eta_cov_id[n_inno_covs];
+    if(n_inno_covs > 0){
+       for(i in 1:n_inno_covs){
+          eta_cov_id[i,] = segment(eta_cov[i,], pos_cov, (obs_id-maxLag));
+          eta_cov_id[i,] ~ normal(0, sd_inncov[i,pp]);
+          }
+      }
+
     for(d in 1:D){ // start loop over dimensions
 
       // build prediction matrix for specific dimensions
-      matrix[(obs_id-maxLag),N_pred[d]] b_mat;  // adjust for non-fully crossed models
+      matrix[(obs_id-maxLag),(N_pred[d]+n_inno_covs)] b_mat;  // adjust for non-fully crossed models
+      vector[N_pred[d]+n_inno_covs] b_use;
+      b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
 
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
         int lag_use = Lag_pred[d,nd];
-        b_mat[,nd] = etaW[D_pred[d, nd],(pos+maxLag-lag_use):(pos+-1+obs_id-lag_use)];
-      }
+        b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+        }
+
+      if(n_inno_covs>0){
+         b_use[N_pred[d]+1] = inno_cov_load[d];
+         b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
+        }
 
       // use build predictor matrix to calculate latent time-series means
-      mus[d,] = b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-      etaW[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+      if(D_np[d] == 1){
+        mus[d,] =  YB[D_pos_is_SI[d],pp] + b_mat * b_use;
+        y_merge[D_pos_is_SI[d],(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+      } else {
+        mus[d,] = b_mat * b_use;
+        etaW_id[d,(1+maxLag):obs_id] ~ normal(mus[d,], sd_noise[d,pp]);
       }
- //   }
+    }
 
     // expected indicator scores
     for(i in 1:n_p){
-      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW[D_perP[i],pos:(pos-1+obs_id)];
+      if(is_SI[i] == 0){
+      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW_id[D_perP[i],];
+      } else {
+      Ymus[i,(pos):(pos-1+obs_id)] = rep_vector(0, obs_id);
+      }
     }
-
+    // update index variables
     pos = pos + obs_id;
+    pos_cov = pos_cov + obs_id - maxLag;
     } // end loop over subjects
 
     // sampling statements
@@ -259,8 +312,10 @@ model {
       if(mu_is_etaB[i] == 0){
         YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
       }
+      if(is_SI[i] == 0){
         y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
       }
+    }
 
   // outcome prediction: get expectations of outcome values
   if(n_out > 0){
