@@ -132,10 +132,10 @@ mlts_fit <- function(model,
   # simulated data used
   data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
-  # check if data is class "VARsimData"
+  # check if data is class "mlts_simdata"
   if(data.simulated == T){
     message("Simulated data provided:",
-    "\nTrue scores used in the simulation will be added to the returned object.")
+    "\nTrue scores used in the data generation will be added to the returned object.")
 
     par_labels <- merge(x = par_labels, data$model[,c("Param", "true.val")],
                        by = "Param", sort = F)

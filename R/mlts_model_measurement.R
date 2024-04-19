@@ -43,7 +43,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
     message(
       "Note: Constructs with a single indicator (p = 1), are assumed to be free \n",
       "      of measurement error. For the respective variable(s), the following \n",
-      "      constraints are assumed: item intercept = 0, loading parameters = 1, and \n",
+      "      constraints are used: item intercept = 0, loading parameters = 1, and \n",
       "      and measurement error variances = 0.")
   }
 
@@ -56,11 +56,12 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
   if(length(p) == 1){
     p = rep(p, times = q)
     if (q > 1) {
-      warning("Note: The number of indicators is assumed to be ", p[1],
-              " for each latent variable. If this is not intended, please",
-              " specify a vector of length q containing the number of",
-              " indicators for each latent construct",
-              " (see Vignettes for examples).")
+      warning(
+        "Note: The number of indicators is assumed to be ", p[1], "\n",
+        "      for each latent variable. If this is not intended, please \n",
+        "      specify a vector of length q containing the number of \n",
+        "      indicators for each latent construct \n",
+        "      (see Vignettes for examples).")
     }
   }
 
