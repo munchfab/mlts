@@ -2,8 +2,11 @@
 data {
   int<lower=1> N; 	        // number of observational units
   int<lower=1> D;           // number of latent constructs
+  int<lower=1> D_np[D];     // number of indicators per construct
   int<lower=1> n_p; 	      // number of manifest indicators
   int D_perP[n_p];          // indicate dimension per indicator
+  int is_SI[n_p];           // indicate if single-indicator per construct
+  int D_pos_is_SI[D];       // indicate position of single-indicator per construct
   int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
@@ -52,6 +55,7 @@ data {
   vector[N] out[n_out];        // outcome
 
   // indexing information on constraints
+  int n_etaW_free;
   int n_loadBfree;
   int n_loadWfree;
   int n_alphafree;
@@ -79,7 +83,6 @@ data {
   matrix[n_out,2] prior_alpha_out;
   matrix[n_out_bs_sum,2] prior_b_out;
   matrix[n_out,2] prior_sigma_out;
-
   matrix[n_alphafree,2] prior_alpha;
   matrix[n_loadBfree,2] prior_loadB;
   matrix[n_loadWfree,2] prior_loadW;
@@ -107,7 +110,7 @@ parameters {
   vector[n_alphafree] alpha_free;
   vector<lower=0>[n_sigmaBfree] sigmaB_free;
   vector<lower=0>[n_sigmaWfree] sigmaW_free;
-  vector[N_obs] etaW[D];
+  vector[N_obs] etaW_free[n_etaW_free];
   vector[N] YB_free[n_YB_free];
 }
 
@@ -220,7 +223,17 @@ model {
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
+    int pos_etaW_free = 1;    // running counter variable to index positition on etaW_free
     vector[D] etaW_use[obs_id - maxLag];
+    vector[obs_id] etaW_id[D];
+    for(d in 1:D){
+      if(D_np[d] == 1){
+        etaW_id[d,] = segment(y_merge[D_pos_is_SI[d],], pos, obs_id) - YB[D_pos_is_SI[d],pp];
+      } else {
+        etaW_id[d,] = segment(etaW_free[pos_etaW_free,],pos, obs_id);
+        pos_etaW_free = pos_etaW_free + 1;
+      }
+    }
 
     // individual parameters from (multivariate) normal distribution
     if(n_random == 1){
@@ -238,13 +251,14 @@ model {
 
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
         int lag_use = Lag_pred[d,nd];
-        b_mat[,nd] = etaW[D_pred[d, nd],(pos+maxLag-lag_use):(pos+-1+obs_id-lag_use)];
+        b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
       }
 
       // use build predictor matrix to calculate latent time-series means
       mus[,d] = to_array_1d(b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]));
-      etaW_use[,d] = to_array_1d(segment(etaW[d,], (pos+maxLag), (obs_id-maxLag)));
-      }
+      etaW_use[,d] = to_array_1d(segment(etaW_id[d,], (1+maxLag), (obs_id-maxLag)));
+    }
+
     // sampling statement
     if(n_innos_fix == D){
       etaW_use ~ multi_normal_cholesky(mus, SIGMA_inno);
@@ -254,7 +268,11 @@ model {
 
     // expected indicator scores
     for(i in 1:n_p){
-      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW[D_perP[i],pos:(pos-1+obs_id)];
+      if(is_SI[i] == 0){
+      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW_id[D_perP[i],];
+      } else {
+      Ymus[i,(pos):(pos-1+obs_id)] = rep_vector(0, obs_id);
+      }
     }
 
     pos = pos + obs_id;
@@ -264,8 +282,10 @@ model {
     for(i in 1:n_p){
       if(mu_is_etaB[i] == 0){
         YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
-      }
+        }
+      if(is_SI[i] == 0){
         y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
+        }
       }
 
   // outcome prediction: get expectations of outcome values

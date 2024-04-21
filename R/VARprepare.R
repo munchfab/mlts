@@ -199,7 +199,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     standata$D_np = as.array(infos$p)
     standata$n_p = nrow(infos$indicators)
     standata$is_SI = as.array(unlist(lapply(X = 1:nrow(infos$indicators), FUN = function(x){
-      ifelse(sum(infos$indicators$q == x) == 1, 1, 0)
+      ifelse(sum(infos$indicators$q == infos$indicators$q[x]) == 1, 1, 0)
       })))
     standata$D_pos_is_SI = as.array(unlist(lapply(X = 1:standata$D, FUN = function(x){
       ifelse(infos$p[x] == 1, which(infos$indicators$q == x), 0)
