@@ -85,12 +85,9 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     ## Fixed innovation variance
     model$true.val[model$Type==model.type & model$Param_Label=="Innovation Variance"] = 0.75
 
-    ###### NEEDS UPDATING ----
     ## Log innovation covariance
     model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = -0.3
     model$true.val[model$Type==model.type & model$Param_Label=="Innovation correlation"] = -0.15
-    ###### ----
-
 
     # RANDOM EFFECT SDs ==========
     model.type = "Random effect SD"
@@ -123,6 +120,10 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     model$true.val[model$Type == model.type] = sample(
       c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = T,
       size = sum(model$Type == model.type))
+    # scale true values for AR and CL as predictor
+    model$true.val[model$Type == model.type & grepl(pattern = "phi",model$Param)] <-
+      model$true.val[model$Type == model.type & grepl(pattern = "phi",model$Param)] * 5
+
     model$true.val[model$Type == model.type & model$Param_Label == "intercept"] = 0
     model$true.val[model$Type == model.type & model$Param_Label == "Residual SD"] = 0.5
 
