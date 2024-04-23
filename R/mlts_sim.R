@@ -215,8 +215,8 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   # prepare data frame
   NT = TP + burn.in
   within = data.frame(
-    "ID" = rep(1:N, each = NT),
-    "time" = rep(1:NT, times = N)
+    "ID" = rep(1:N, each = TP),
+    "time" = rep(1:TP, times = N)
   )
   q = infos$q   # number of constructs
   y_cols = paste0("Y",1:q)   # prepare columns
@@ -230,6 +230,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   for(i in 1:N){
     # build person-specific transition matrix
     transition = matrix(nrow = q, ncol = q*infos$maxLag, data = 0)
+    y = matrix(nrow = NT, ncol = q)
 
     # build person-specific prediction error matrix
     innoVars.i = btw[i,infos$innos_pos]
@@ -266,34 +267,33 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
     for(t in 1:NT){
       # use means as starting values
-      if(within[within$ID==i & within$time == t,"time"] <= infos$maxLag){
+      if(t <= infos$maxLag){
         init = mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat)
-        within[within$ID==i & within$time == t,y_cols] = init
+        y[t,] = init
       } else {
         y_lag = c()
-        y_lag = within[within$ID==i & within$time == t-1,y_cols]
+        y_lag = as.vector(y[t-1,1:q])
         if(infos$maxLag>1){
           for(ll in 2:infos$maxLag){
-            y_lag = cbind(y_lag,within[within$ID==i & within$time == t-ll,y_cols])
+            y_lag = c(y_lag, as.vector(y[t-ll,1:q]))
           }
         }
 
         if(q > 1 | infos$maxLag > 1){
-          y = as.matrix(y_lag) %*% t(transition) # get expected values
+          y[t,1:q] = y_lag %*% t(transition) # get expected values
         } else {
-          y = y_lag * transition
+          y[t,] = y_lag * transition
         }
-        y = y + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat) # add error
+        y[t,] = y[t,] + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat) # add error
 
 
         if(infos$q == 2 & infos$n_inno_covs == 1){
           inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
-          y = y + inno_t
+          y[t,] = y[t,] + inno_t
         }
-
-        within[within$ID==i & within$time==t, y_cols] = y
       }
     }
+    within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
 
     # add trait scores (for manifest indicators)
     if(infos$isLatent == F){
@@ -303,9 +303,9 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     }
   }
 
-  # remove burn.in
-  within$time = within$time - burn.in
-  within = within[within$time>0,]
+  # # remove burn.in
+  # within$time = within$time - burn.in
+  # within = within[within$time>0,]
   # --------
 
 
