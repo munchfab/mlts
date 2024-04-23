@@ -51,7 +51,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                       hide_xaxis_text = T,
                       par_labels = NULL, labels_as_expressions = F){
 
-  what <- match.arg(what)
+  what <- match.arg(what, several.ok = T)
   type <- match.arg(type)
   bpe <- match.arg(bpe)
 
@@ -74,7 +74,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     p.data$Param_type <- p.data$Type
 
     # subset data by what
-    if(what != "all"){
+    if(!("all" %in% what)){
       p.data <- p.data[p.data$Type %in% c(what),]
     }
 
