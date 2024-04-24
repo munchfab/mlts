@@ -414,24 +414,30 @@ mlts_model_formula <- function(model, file = NULL,
   if (infos$q == 1) {
     inno_dist <- paste0(
       ",\\\\ \n\\text{with}~",
-      "\\zeta_{it} \\sim \\mathit{N}(0, \\sigma^2_{\\zeta_{it}})"
+      "\\zeta_{1,it} \\sim \\mathit{N}(0, \\sigma^2_{\\zeta_{1}", ifelse(
+        model[model$Param == "ln.sigma2_1", "isRandom"] == 1,
+        ",i", ""
+      ),"})"
     )
-  } else if (infos$q > 1 & infos$n_inno_covs == 0) {
+    psi_mat_vec <- NULL
+  } else if (infos$q > 1 & infos$n_inno_cors == 0) {
     inno_dist <- paste0(
       ",\\\\ \n\\text{with}~",
-      "\\zeta_{it} \\sim \\mathit{N}(\\mathbf{0}, \\mathbf{\\sigma^2_{\\zeta_{it}}}",
+      "\\zeta_{it} \\sim \\mathit{N}(\\mathbf{0}, \\sigma^2_{\\zeta_{i}",
       ifelse(
         # add i index if there are random elements in sigmas
         any(model[
           grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
         ] == 1),
-        "_i", ""
-      ), ")"
+        ",i", ""
+      ), "})"
     )
+    psi_mat_vec <- NULL
   } else {
     inno_dist <- paste0(
       ",\\\\ \n\\text{with}~",
-      "\\zeta_{it} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi}", ifelse(
+      "\\zeta_{it} \\sim \\mathit{MVN}(\\mathbf{0}, \\mathbf{\\Psi}",
+      ifelse(
         # add i index if there are random elements in PSI
         any(model[
           grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
@@ -439,10 +445,73 @@ mlts_model_formula <- function(model, file = NULL,
         "_i", ""
       ), ")"
     )
+      # psi matrix
+    psi_mat_vec <- c()
+    for (i in 1:infos$q) {
+      for (j in 1:infos$q) {
+        if (i == j) {
+          if (j == infos$q) {
+            psi_mat_vec <- c(psi_mat_vec, paste0(
+              "\\sigma^2_{\\zeta_{", i, ifelse(
+                model[model$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
+                ",i", ""
+              ), "}} \\\\"
+            ))
+          } else {
+            psi_mat_vec <- c(psi_mat_vec, paste0(
+              "\\sigma^2_{\\zeta_{", i, ifelse(
+                model[model$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
+                ",i", ""
+              ), "}} &"
+            ))
+          }
+        } else if (i > j) {
+          psi_mat_vec <- c(psi_mat_vec, paste0(" & "))
+        } else {
+          if (j == infos$q) {
+            psi_mat_vec <- c(psi_mat_vec, paste0(
+              "\\psi_{", i, j, ifelse(
+                model[model$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
+                ",i", ""
+              ), "} \\\\"
+            ))
+          } else {
+            psi_mat_vec <- c(psi_mat_vec, paste0(
+              "\\psi_{", i, j, ifelse(
+                model[model$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
+                ",i", ""
+              ), "} &"
+            ))
+          }
+        }
+      }
+    }
+
+    # paste together
+    psi_mat <- paste(psi_mat_vec, collapse = "\n")
+    PSI <- paste(
+      ", \\\\ \n\\text{and}~\\mathbf{\\Psi}", ifelse(
+        # add i index if there are random elements in PSI
+        any(model[
+          grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
+        ] == 1),
+        "_i", ""
+      ), " = ",
+      paste(begin_bmatrix, psi_mat, end_bmatrix, collapse = "\n"),
+      collapse = "\n"
+    )
   }
 
   # within-model formula
-  wmf <- paste(begin_math, wmf_lhs, "=", wmf_rhs, inno_dist, end_math)
+  wmf <- paste(
+    begin_math,
+    wmf_lhs, "=", wmf_rhs,
+    inno_dist,
+    if (!is.null(psi_mat_vec)) {
+      paste(PSI)
+    },
+    end_math
+  )
 
   # with caption
   within_model <- paste(begin_center, wmf_caption, end_center, wmf)
@@ -465,13 +534,13 @@ mlts_model_formula <- function(model, file = NULL,
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
-      # replace lnsigma with ln(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
+      # replace lnsigma with ln(sigma_zeta)
+      "(lnsigma2)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
           # replace underscore digit with latex subscript for phis
           "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
-            # replace rzeta with pi in case of fixed
+            # replace rzeta with psi in case of fixed
             # innovation covariance (ugly fix but ok)
             "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", all_bpars$Param
           )
@@ -489,12 +558,16 @@ mlts_model_formula <- function(model, file = NULL,
   all_bpars$names2 <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2,i}", gsub(
-      # replace lnsigma with ln(pi)
-      "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2},i})", gsub(
+      # replace lnsigma with ln(sigma_zeta)
+      "(lnsigma2)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2},i})", gsub(
         # replace uppercase B for between-level latent variables
         "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_{\\3,i}", gsub(
           # replace underscore digit with latex subscript for phis
-          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3,i}", all_bpars$Param
+          "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3,i}", gsub(
+            # replace rzeta with psi in case of fixed
+            # innovation covariance (ugly fix but ok)
+            "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2, i}", all_bpars$Param
+          )
         )
       )
     )
@@ -557,11 +630,15 @@ mlts_model_formula <- function(model, file = NULL,
       # replace underscore digit with latex subscript
       "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
         # replace lnsigma with ln(pi)
-        "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\pi_{\\2})", gsub(
+        "(lnsigma2)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
           # replace uppercase B for between-level latent variables
           "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
             # replace underscore digit with latex subscript for phis
-            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", re_preds$dv
+            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
+              # replace rzeta with psi in case of fixed
+              # innovation covariance (ugly fix but ok)
+              "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", re_preds$dv
+            )
           )
         )
       )
@@ -627,12 +704,16 @@ mlts_model_formula <- function(model, file = NULL,
     out$names <- gsub(
       # replace underscore digit with latex subscript
       "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
-        # replace lnsigma with ln(pi)
-        "(lnsigma2|lnsigma)_(\\d+)", "\\\\ln(\\\\pi_{\\2})", gsub(
+        # replace lnsigma with ln(sigma_zeta)
+        "(lnsigma2)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
           # replace uppercase B for between-level latent variables
           "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
             # replace underscore digit with latex subscript for phis
-            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\3;\\2}", out$pred
+            "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
+              # replace rzeta with psi in case of fixed
+              # innovation covariance (ugly fix but ok)
+              "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", out$pred
+            )
           )
         )
       )
