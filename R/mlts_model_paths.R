@@ -893,7 +893,7 @@ mlts_model_paths <- function(model, file = NULL,
             paste0(
               "\\node  [latent]  (etainno", i, j,
               ")  at  (cetainno", i, j,
-              ")  {$\\eta_{\\zeta_{", i, j, "}}$};"
+              ")  {$\\eta_{\\zeta_{", i, j, "}, it}$};"
             ),
             paste0(
               "\\draw  [path]",
@@ -913,16 +913,16 @@ mlts_model_paths <- function(model, file = NULL,
             ),
             paste0(
               "\\draw  [var, postaction = random]",
-              "  (etainno", i, j, ".30)  to node  []  {$\\psi",
-              "_{", i, j, ",i}$}  (etainno", i, j, ".330);"
+              "  (etainno", i, j, ".30)  to node  []  {$\\sigma",
+              "_{\\zeta_{", i, j, "},i}$}  (etainno", i, j, ".330);"
             )
           )
         } else {
           psi_vec <- c(
             psi_vec, paste0(
               "\\draw  [cov]",
-              "  (zeta", i, "t.320)  to node  []  {$\\psi_{", i, j,
-              "}$}  (zeta", j, "t.40);"
+              "  (zeta", i, "t.320)  to node  []  {$\\sigma_{\\zeta_{", i, j,
+              "}}$}  (zeta", j, "t.40);"
             )
           )
         }
@@ -967,22 +967,22 @@ mlts_model_paths <- function(model, file = NULL,
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
   # replace rzeta with psi (ugly fix but ok)
-  all_bpars$Param <- gsub("rzeta", "psi", all_bpars$Param)
+  all_bpars$Param <- gsub("rzeta", "sigma", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "$\\\\\\1_{\\2}$", gsub(
       # replace lnsigma with ln(sigma^2)
       "(lnsigma2)_(\\d+)", "ln($\\\\sigma^2_{\\\\zeta_{\\2}}$)", gsub(
         # replace uppercase B for between-level latent variables
-        "(\\w+)(B)_(\\d)", "$\\\\\\1^{b}_\\3$", gsub(
+        "(\\w+)(B)_(\\d)", "$\\\\\\1^{b}_{\\3}$", gsub(
           # replace underscore digit with latex subscript for phis
           "(\\w+)(\\(\\d\\))_(\\d+)", "$\\\\\\1_{\\2\\3}$", gsub(
             # replace rzeta with psi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(psi)_(\\d+)", "$\\\\psi_{\\2}$", gsub(
+            "(sigma)_(\\d+)", "$\\\\sigma_{\\\\zeta_{\\2}}$", gsub(
               # replace lnsigma12 (random innovation covariance)
               # with ln(psi)
-              "(lnsigma)_(\\d+)", "ln($\\\\psi_{\\2}$)", all_bpars$Param
+              "(lnsigma)_(\\d+)", "ln($\\\\sigma_{\\\\zeta_{\\2}}$)", all_bpars$Param
             )
           )
         )
@@ -1076,7 +1076,9 @@ mlts_model_paths <- function(model, file = NULL,
       function(x) gsub("\\.|\\(|\\)", "", x)
     )
     # get additional nodes to draw
-    pred_nodes <- c(infos$n_cov_vars, infos$out_var)
+    pred_nodes <- c(infos$n_cov_vars, infos$out_var, infos$n_z_vars)
+    # delete duplicate nodes
+    pred_nodes <- pred_nodes[!duplicated(pred_nodes) == TRUE]
     # delete emtpy entries
     pred_nodes <- pred_nodes[!is.na(pred_nodes)]
     # replace special characters

@@ -403,10 +403,25 @@ mlts_model_formula <- function(model, file = NULL,
   }
   innos <- paste(innos_vec, collapse = "\n")
 
+  # if innovation covariances are random: add eta factor to model
+  if (any(model[startsWith(model$Param, "ln.sigma_"), "isRandom"] == 1)) {
+    # eta loading matrix
+    eta_load <- paste(infos$inno_cov_load, collapse = " \\\\\n")
+    # eta matrix
+    eta_inno <- "\\eta_{\\zeta_{12}, it}"
+  }
+
   # create right hand side formula
   wmf_rhs <- paste(
     begin_bmatrix, phi_mat, end_bmatrix,
     begin_bmatrix, ts, end_bmatrix, "+",
+    if (any(model[startsWith(model$Param, "ln.sigma_"), "isRandom"] == 1)) {
+      paste(
+        begin_bmatrix, eta_load, end_bmatrix,
+        begin_bmatrix, eta_inno, end_bmatrix, "+",
+        collapse = "\n"
+      )
+    },
     begin_bmatrix, innos, end_bmatrix,
     collapse = "\n"
   )
@@ -420,10 +435,10 @@ mlts_model_formula <- function(model, file = NULL,
       ),"})"
     )
     psi_mat_vec <- NULL
-  } else if (infos$q > 1 & infos$n_inno_cors == 0) {
+  } else if (infos$q > 1 & infos$n_inno_cors > 0) {
     inno_dist <- paste0(
       ",\\\\ \n\\text{with}~",
-      "\\zeta_{it} \\sim \\mathit{N}(\\mathbf{0}, \\sigma^2_{\\zeta_{i}",
+      "\\zeta_{k,it} \\sim \\mathit{N}(\\mathbf{0}, \\sigma^2_{\\zeta_{k}",
       ifelse(
         # add i index if there are random elements in sigmas
         any(model[
@@ -431,6 +446,23 @@ mlts_model_formula <- function(model, file = NULL,
         ] == 1),
         ",i", ""
       ), "})"
+    )
+    psi_mat_vec <- NULL
+  } else if (!is.null(infos$inno_cov_load)) {
+    # in case of random innovation covariance, include eta distribution
+    # together with innovation distribution
+    inno_dist <- paste0(
+      ", \\\\ \n\\text{with}~",
+      "\\zeta_{k,it} \\sim \\mathit{N}(\\mathbf{0}, \\sigma^2_{\\zeta_{k}",
+      ifelse(
+        # add i index if there are random elements in sigmas
+        any(model[
+          grepl("Fix", model$Type) & grepl("sigma", model$Param), "isRandom"
+        ] == 1),
+        ",i", ""
+      ), "})",
+      ", \\\\ \n\\text{and}~\\eta_{\\zeta_{12},it} \\sim \\mathit{N}(",
+      "0, \\sigma_{\\zeta_{12}, i})"
     )
     psi_mat_vec <- NULL
   } else {
@@ -452,17 +484,17 @@ mlts_model_formula <- function(model, file = NULL,
         if (i == j) {
           if (j == infos$q) {
             psi_mat_vec <- c(psi_mat_vec, paste0(
-              "\\sigma^2_{\\zeta_{", i, ifelse(
+              "\\sigma^2_{\\zeta_{", i, "}", ifelse(
                 model[model$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
                 ",i", ""
-              ), "}} \\\\"
+              ), "} \\\\"
             ))
           } else {
             psi_mat_vec <- c(psi_mat_vec, paste0(
-              "\\sigma^2_{\\zeta_{", i, ifelse(
+              "\\sigma^2_{\\zeta_{", i, "}", ifelse(
                 model[model$Param == paste0("ln.sigma2_", i), "isRandom"] == 1,
                 ",i", ""
-              ), "}} &"
+              ), "} &"
             ))
           }
         } else if (i > j) {
@@ -470,14 +502,14 @@ mlts_model_formula <- function(model, file = NULL,
         } else {
           if (j == infos$q) {
             psi_mat_vec <- c(psi_mat_vec, paste0(
-              "\\psi_{", i, j, ifelse(
+              "\\sigma_{\\zeta_{", i, j, "}", ifelse(
                 model[model$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
                 ",i", ""
               ), "} \\\\"
             ))
           } else {
             psi_mat_vec <- c(psi_mat_vec, paste0(
-              "\\psi_{", i, j, ifelse(
+              "\\sigma_{\\zeta_{", i, j, "}", ifelse(
                 model[model$Param == paste0("ln.sigma_", i, j), "isRandom"] == 1,
                 ",i", ""
               ), "} &"
@@ -530,19 +562,23 @@ mlts_model_formula <- function(model, file = NULL,
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
   # replace rzeta with psi (ugly fix but ok)
-  all_bpars$Param <- gsub("rzeta", "psi", all_bpars$Param)
+  all_bpars$Param <- gsub("rzeta", "sigma", all_bpars$Param)
   all_bpars$names <- gsub(
     # replace underscore digit with latex subscript
     "(\\w+)_(\\d+)", "\\\\\\1_{\\2}", gsub(
       # replace lnsigma with ln(sigma_zeta)
       "(lnsigma2)_(\\d+)", "\\\\ln(\\\\sigma^2_{\\\\zeta_{\\2}})", gsub(
         # replace uppercase B for between-level latent variables
-        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_\\3", gsub(
+        "(\\w+)(B)_(\\d)", "\\\\\\1^{b}_{\\3}", gsub(
           # replace underscore digit with latex subscript for phis
           "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
             # replace rzeta with psi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", all_bpars$Param
+            "(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}}", gsub(
+              # replace lnsigma12 (random innovation covariance)
+              # with ln(psi)
+              "(lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2}})", all_bpars$Param
+            )
           )
         )
       )
@@ -551,7 +587,7 @@ mlts_model_formula <- function(model, file = NULL,
   # special case for fixed innovation variances
   all_bpars$names <- ifelse(
     startsWith(all_bpars$Param, "sigma_"),
-    gsub("(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}}", all_bpars$Param),
+    gsub("(sigma)_(\\d+)", "\\\\sigma^2_{\\\\zeta_{\\2}}", all_bpars$Param),
     all_bpars$names
   )
   # add one unit-specific names version (add i subscript)
@@ -566,7 +602,11 @@ mlts_model_formula <- function(model, file = NULL,
           "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3,i}", gsub(
             # replace rzeta with psi in case of fixed
             # innovation covariance (ugly fix but ok)
-            "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2, i}", all_bpars$Param
+            "(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}, i}", gsub(
+              # replace lnsigma12 (random innovation covariance)
+              # with ln(psi)
+              "(lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2}, i})", all_bpars$Param
+            )
           )
         )
       )
@@ -637,7 +677,11 @@ mlts_model_formula <- function(model, file = NULL,
             "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
               # replace rzeta with psi in case of fixed
               # innovation covariance (ugly fix but ok)
-              "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", re_preds$dv
+              "(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}}", gsub(
+                # replace lnsigma12 (random innovation covariance)
+                # with ln(psi)
+                "(lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2}})", re_preds$dv
+              )
             )
           )
         )
@@ -712,7 +756,11 @@ mlts_model_formula <- function(model, file = NULL,
             "(\\w+)(\\(\\d\\))_(\\d+)", "\\\\\\1_{\\2\\3}", gsub(
               # replace rzeta with psi in case of fixed
               # innovation covariance (ugly fix but ok)
-              "(lnsigma|psi)_(\\d+)", "\\\\psi_{\\2}", out$pred
+              "(sigma)_(\\d+)", "\\\\sigma_{\\\\zeta_{\\2}}", gsub(
+                # replace lnsigma12 (random innovation covariance)
+                # with ln(psi)
+                "(lnsigma)_(\\d+)", "\\\\ln(\\\\sigma_{\\\\zeta_{\\2}})", out$pred
+              )
             )
           )
         )
