@@ -291,7 +291,7 @@ model {
   // outcome prediction: get expectations of outcome values
   if(n_out > 0){
     int k = 1;
-    matrix[N,n_random+n_z] b_z = append_col(b,Z);
+    matrix[N,n_random+n_z] b_z = append_col(b[,is_random],Z);
     for(i in 1:n_out){
       int n_bs = n_out_bs[i,1];      // number of predictors for each outcome
       out[i,] ~ normal(alpha_out[i] + b_z[,n_out_b_pos[i,1:n_bs]] * segment(b_out_pred,k,n_bs), sigma_out[i]);
