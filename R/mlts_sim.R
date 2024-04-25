@@ -172,17 +172,22 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     }
   }
 
-  # variance covariance matrix of random effects
-  cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
 
   # calculate covariances from correlations
   n_random = infos$n_random
   rand.pars = infos$re_pars$Param
+
+  # variance covariance matrix of random effects
+  if(n_random == 1){
+    cov_mat = model$true.val[model$Type=="Random effect SD"]
+  } else {
+  cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
   for(i in 1:n_random){
     for(j in 1:n_random){
       if(i < j){
         r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
         cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
+        }
       }
     }
   }
@@ -190,7 +195,11 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
   #### sample random effects from multivariate normal distribution and add to bmus
   btw_random = matrix(NA, nrow = N, ncol = infos$n_random)
-  btw_random = bmu + mvtnorm::rmvnorm(n = N, mean = rep(0, infos$n_random), sigma = cov_mat)
+  if(n_random == 1){
+    btw_random = bmu + rnorm(n = N, mean = 0, sd = cov_mat)
+  } else {
+    btw_random = bmu + mvtnorm::rmvnorm(n = N, mean = rep(0, infos$n_random), sigma = cov_mat)
+  }
   colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
 
   # check for AR parameters with absolute values below "1"
