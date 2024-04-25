@@ -7,7 +7,7 @@
 \format{
 \subsection{\code{ts_data}}{
 
-A data frame with 7,240 rows and 60 columns:
+A data frame with 1,100 rows and 4 columns:
 \describe{
 \item{ID}{Unit identifier}
 \item{time}{Time point}
