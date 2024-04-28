@@ -199,6 +199,22 @@ mlts_fit <- function(model,
     }
   }
 
+  # initial data checks --------------------------------------------------
+  ## any variables with zero variance in any of the clusters
+  ids = unique(data[,id])
+  data.test <- data
+  data.test$ID = data[,id]
+  for(i in 1:length(ts)){
+    for(j in 1:length(ids)){
+     if(var(data.test[data.test$ID == ids[j],ts[i]], na.rm = T) == 0){
+       stop(paste0("Zero variance observed for indicator ", ts[i], " in cluster ", ids[j]))
+     }
+    }
+  }
+
+
+
+
   # PREPARE DATA =========================================================
   data = prepare_data(data, id = id, ts = ts, time = time,
                       tinterval = tinterval, beep = beep,
