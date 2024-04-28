@@ -34,7 +34,12 @@ added.}
 \item{btw.var.sds}{integer.}
 }
 \value{
-An object of class \code{data.frame}.
+An object of class \code{"mlts_simdata"}.
+The object is a list containing the following components:
+\item{model}{the model object passed to \code{mlts_sim} with true parameter values used
+in the data generation added in the column \code{true.val}}
+\item{data}{a long format \code{data.frame} of the generated time series data}
+\item{RE.pars}{a \code{matrix} of cluster-specific true values used in the data generation}
 }
 \description{
 Simulate data from mlts model

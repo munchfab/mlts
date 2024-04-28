@@ -3,14 +3,21 @@
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
-#' @param N integer. Number of observational units.
-#' @param TP integer. Number of measurements per observational unit.
-#' @param burn.in integer.
-#' @param seed integer.
-#' @param seed.true integer.
-#' @param btw.var.sds integer.
-#'
-#' @return An object of class `data.frame`.
+#' @param N integer number of observational units.
+#' @param TP integer number of measurements per observational unit.
+#' @param burn.in integer. Length of ‘burn-in’ period.
+#' @param seed integer. The seed used for data generation.
+#' @param seed.true integer. Separate seed used for sampling of true
+#' population parameters values from plausible ranges for stationary time series.
+#' @param btw.var.sds named numeric vector. Provide standard deviation(s) for all exogenous
+#' between-level variable(s) specified in `model`, e.g. (`btw.var.sds = c("covariate1" = 1)`,
+#' for the variable "covariate1" with a SD of 1).
+#' @return An object of class \code{"mlts_simdata"}.
+#' The object is a list containing the following components:
+#' \item{model}{the model object passed to `mlts_sim` with true parameter values used
+#' in the data generation added in the column `true.val`}
+#' \item{data}{a long format `data.frame` of the generated time series data}
+#' \item{RE.pars}{a `matrix` of cluster-specific true values used in the data generation}
 #' @export
 #'
 mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
