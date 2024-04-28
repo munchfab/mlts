@@ -355,6 +355,8 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
         within[within$ID==j,ind.lab] = YB + YW
       }
     }
+    # remove latent process variables
+    within = within[,!(colnames(within) %in% paste0("Y",1:infos$q))]
   }
 
   # CREATE OUTCOMES ==========================================================
