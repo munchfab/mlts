@@ -6,15 +6,16 @@
 #' a list object with simulated data created by `mlts_sim` can be entered directly
 #' and allows for comparison of estimates and true population paramter values used
 #' in the data generation.
-#' @param id Character. The variable in `data` that identifies the person or observational
-#' unit. Not necessary when `data` is a list object of simulated data generated
+#' @param id Character. The variable in `data` that identifies the observational
+#' cluster unit. Not necessary when `data` is a list object of simulated data generated
 #' with `mlts_sim`.
 #' @param ts Character. The variable(s) in `data` that contain the time-series
-#' construct(s). If multiple constructs are provided in the `model`, multiple entries
-#' are necessary. Note that the order of variable names provided in `ts` has to match
-#' the specification made in the `model`. E.g., if multiple constructs (e.g.,
-#' `mlts_model(q = 2)`) are provided the order of variables names provided in `ts`
-#' determines which construct is referred to as mu_1, phi(1)_11, etc..
+#' construct(s) or their indicator variable(s). If multiple constructs are provided
+#' in the `model`, multiple entries are necessary. Note that the order of variable
+#' names provided in `ts` has to match the specification made in the `model`. E.g.,
+#' if multiple constructs (e.g., `mlts_model(q = 2)`) are provided the order of
+#' variables names provided in `ts` determines which construct is referred to as
+#' mu_1, phi(1)_11, etc..
 #' @param covariates Named character vector. An optional named vector of
 #' characters to refer to predictors of random effects as specified in the `model`.
 #' Note that specifying `covariates` is only necessary if the respective
@@ -23,25 +24,28 @@
 #' characters to refer to outcome predicted by random effects as specified in the `model`.
 #' Note that specifying `outcomes` is only necessary if the respective
 #' variable name(s) in `data` differ from the outcome variable name(s) specified in `model`.
-#' @param outcome_pred_btw Character.
+#' @param outcome_pred_btw Named character vector. Similar to `covariates`, an optional named vector of
+#' characters to refer to additional between-level variables entered as outcome predictor(s)
+#' as specified in the `model`. Note that specifying `outcome_pred_btw` is only necessary if the
+#' respective variable name(s) in `data` differ from the variable name(s) specified in `model`.
 #' @param center_covs Logical. Between-level covariates used as predictors of random effects
-#' will be grand-mean centered before model fitting by default to allow interpretation
-#' of fixed effects intercepts as mean population effects for average covariate values.
-#' Setting `center_covs` to `FALSE` might be necessary when including categorical
-#' predictors into the set of `covariates`. Note that in this case, additional
-#' continuous covariates should be grand-mean centered prior to using `mlts_fit`.
-#' @param time Character. The variable in `data` that contains the (continuous) time.
-#' @param tinterval The step interval for approximation for a continuous time
-#' dynamic model. The smaller the step interval, the better the approximation.
+#' will be grand-mean centered before model fitting by default. Set `center_covs` to `FALSE`
+#' when including categorical predictors into the set of `covariates`. Note that in this case,
+#' additional continuous covariates should be grand-mean centered prior to using `mlts_fit`.
+#' @param time Character. The variable in `data` that contains the (continuous) time of observation.
+#' @param tinterval The step interval for approximating equally spaced observations in time by
+#' insertion of missing values, to be specified with respect to the time stamp variable
+#' provided in time. Procedure for inserting missing values resembles the procedure for
+#' time shift transformation as described in Asparouhov, Hamaker, & Muthén (2018).
 #' @param beep Character. The variable in `data` that contains the running
-#' beep from 1 to TP for each person.
+#' beep number starting with 1 for each person.
 #' @param days Optional. If a running beep identifier is provided via the `beep`
 #' argument and observations are nested within days (or similar grouping unit),
 #' the variable in `data` that contains the day identifier can be added to correct
 #' for overnight lags (see Details).
 #' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last
-#' observation of each day (if `day` is provided).
-#' @param na.rm logical. As default option missing values remain in the data and
+#' observation of each day (if `days` is provided).
+#' @param na.rm logical. Per default, missing values remain in the data and
 #' will be imputed during model estimation. Set to `TRUE` to remove all rows with
 #' missing values in variables given in `ts`.
 #' @param iter A positive integer specifying the number of iterations for each
@@ -58,7 +62,25 @@
 #' helpful to inspect prepared data used for model estimation (default = TRUE).
 #' @param ... Additional arguments passed to \code{\link[rstan]{sampling}}.
 #'
-#' @return An object of class `data.frame`.
+#' @return An object of class \code{"mltsfit"}.
+#' The object is a list containing the following components:
+#' \item{model}{the model object passed to `mlts_fit`}
+#' \item{data}{the preprocessed data used for fitting the model}
+#' \item{param.labels}{a `data.frame` that provides the names of parameters used in
+#' the stan model. These parameter names are necessary when running standard post-processing
+#' functions using `mlts_fit$stanfit`}
+#' \item{pop.pars.summary}{a `data.frame` that contains summary statistics for all parameter in `model`}
+#' \item{person.pars.summary}{if `monitor_person_pars = TRUE`, a `data.frame` containing
+#' summary statistics for cluster-specific parameters is provided}
+#' \item{standata}{a `list` with the data as passed to \code{\link[rstan]{sampling}}}
+#' \item{stanfit}{an object of class `stanfit` with the raw output created by \code{\link[rstan]{sampling}}}
+#' \item{posteriors}{an `array` of the MCMC chain results for all parameters in `model` created
+#' by `rstan::extract` with `dimnames` adapted to match the parameter names provided in `model`}
+#' @references
+#' Asparouhov, T., Hamaker, E. L., & Muthén, B. (2018). Dynamic Structural Equation
+#' Models. Structural Equation Modeling: *A Multidisciplinary Journal*, *25*(3), 359–388.
+#' \url{https://doi.org/10.1080/10705511.2017.1406803}
+#'
 #' @export
 #'
 #' @examples
@@ -71,8 +93,8 @@
 #'   model = var_model,
 #'   data = ts_data,
 #'   ts = c("Y1", "Y2"), # time-series variables
-#'   id = "ID", # identifier variable
-#'   tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#'   id = "ID", # cluster identifier variable
+#'   tinterval = 1 # interval for approximation of equidistant measurements,
 #' )
 #'
 #' # inspect model summary

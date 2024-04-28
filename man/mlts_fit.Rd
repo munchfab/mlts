@@ -38,16 +38,17 @@ a list object with simulated data created by \code{mlts_sim} can be entered dire
 and allows for comparison of estimates and true population paramter values used
 in the data generation.}
 
-\item{id}{Character. The variable in \code{data} that identifies the person or observational
-unit. Not necessary when \code{data} is a list object of simulated data generated
+\item{id}{Character. The variable in \code{data} that identifies the observational
+cluster unit. Not necessary when \code{data} is a list object of simulated data generated
 with \code{mlts_sim}.}
 
 \item{ts}{Character. The variable(s) in \code{data} that contain the time-series
-construct(s). If multiple constructs are provided in the \code{model}, multiple entries
-are necessary. Note that the order of variable names provided in \code{ts} has to match
-the specification made in the \code{model}. E.g., if multiple constructs (e.g.,
-\code{mlts_model(q = 2)}) are provided the order of variables names provided in \code{ts}
-determines which construct is referred to as mu_1, phi(1)_11, etc..}
+construct(s) or their indicator variable(s). If multiple constructs are provided
+in the \code{model}, multiple entries are necessary. Note that the order of variable
+names provided in \code{ts} has to match the specification made in the \code{model}. E.g.,
+if multiple constructs (e.g., \code{mlts_model(q = 2)}) are provided the order of
+variables names provided in \code{ts} determines which construct is referred to as
+mu_1, phi(1)_11, etc..}
 
 \item{covariates}{Named character vector. An optional named vector of
 characters to refer to predictors of random effects as specified in the \code{model}.
@@ -59,22 +60,25 @@ characters to refer to outcome predicted by random effects as specified in the \
 Note that specifying \code{outcomes} is only necessary if the respective
 variable name(s) in \code{data} differ from the outcome variable name(s) specified in \code{model}.}
 
-\item{outcome_pred_btw}{Character.}
+\item{outcome_pred_btw}{Named character vector. Similar to \code{covariates}, an optional named vector of
+characters to refer to additional between-level variables entered as outcome predictor(s)
+as specified in the \code{model}. Note that specifying \code{outcome_pred_btw} is only necessary if the
+respective variable name(s) in \code{data} differ from the variable name(s) specified in \code{model}.}
 
 \item{center_covs}{Logical. Between-level covariates used as predictors of random effects
-will be grand-mean centered before model fitting by default to allow interpretation
-of fixed effects intercepts as mean population effects for average covariate values.
-Setting \code{center_covs} to \code{FALSE} might be necessary when including categorical
-predictors into the set of \code{covariates}. Note that in this case, additional
-continuous covariates should be grand-mean centered prior to using \code{mlts_fit}.}
+will be grand-mean centered before model fitting by default. Set \code{center_covs} to \code{FALSE}
+when including categorical predictors into the set of \code{covariates}. Note that in this case,
+additional continuous covariates should be grand-mean centered prior to using \code{mlts_fit}.}
 
-\item{time}{Character. The variable in \code{data} that contains the (continuous) time.}
+\item{time}{Character. The variable in \code{data} that contains the (continuous) time of observation.}
 
-\item{tinterval}{The step interval for approximation for a continuous time
-dynamic model. The smaller the step interval, the better the approximation.}
+\item{tinterval}{The step interval for approximating equally spaced observations in time by
+insertion of missing values, to be specified with respect to the time stamp variable
+provided in time. Procedure for inserting missing values resembles the procedure for
+time shift transformation as described in Asparouhov, Hamaker, & Muthén (2018).}
 
 \item{beep}{Character. The variable in \code{data} that contains the running
-beep from 1 to TP for each person.}
+beep number starting with 1 for each person.}
 
 \item{days}{Optional. If a running beep identifier is provided via the \code{beep}
 argument and observations are nested within days (or similar grouping unit),
@@ -82,9 +86,9 @@ the variable in \code{data} that contains the day identifier can be added to cor
 for overnight lags (see Details).}
 
 \item{n_overnight_NAs}{Optional. The number of \code{NA} rows to add after the last
-observation of each day (if \code{day} is provided).}
+observation of each day (if \code{days} is provided).}
 
-\item{na.rm}{logical. As default option missing values remain in the data and
+\item{na.rm}{logical. Per default, missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
 missing values in variables given in \code{ts}.}
 
@@ -110,7 +114,20 @@ helpful to inspect prepared data used for model estimation (default = TRUE).}
 \item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }
 \value{
-An object of class \code{data.frame}.
+An object of class \code{"mltsfit"}.
+The object is a list containing the following components:
+\item{model}{the model object passed to \code{mlts_fit}}
+\item{data}{the preprocessed data used for fitting the model}
+\item{param.labels}{a \code{data.frame} that provides the names of parameters used in
+the stan model. These parameter names are necessary when running standard post-processing
+functions using \code{mlts_fit$stanfit}}
+\item{pop.pars.summary}{a \code{data.frame} that contains summary statistics for all parameter in \code{model}}
+\item{person.pars.summary}{if \code{monitor_person_pars = TRUE}, a \code{data.frame} containing
+summary statistics for cluster-specific parameters is provided}
+\item{standata}{a \code{list} with the data as passed to \code{\link[rstan]{sampling}}}
+\item{stanfit}{an object of class \code{stanfit} with the raw output created by \code{\link[rstan]{sampling}}}
+\item{posteriors}{an \code{array} of the MCMC chain results for all parameters in \code{model} created
+by \code{rstan::extract} with \code{dimnames} adapted to match the parameter names provided in \code{model}}
 }
 \description{
 Fit Bayesian Multilevel Manifest or Latent Time-Series Models
@@ -125,12 +142,17 @@ fit <- mlts_fit(
   model = var_model,
   data = ts_data,
   ts = c("Y1", "Y2"), # time-series variables
-  id = "ID", # identifier variable
-  tinterval = 1 # interval for approximation of continuous-time dynamic model,
+  id = "ID", # cluster identifier variable
+  tinterval = 1 # interval for approximation of equidistant measurements,
 )
 
 # inspect model summary
 summary(fit)
 }
 
+}
+\references{
+Asparouhov, T., Hamaker, E. L., & Muthén, B. (2018). Dynamic Structural Equation
+Models. Structural Equation Modeling: \emph{A Multidisciplinary Journal}, \emph{25}(3), 359–388.
+\url{https://doi.org/10.1080/10705511.2017.1406803}
 }
