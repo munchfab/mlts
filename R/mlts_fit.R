@@ -211,8 +211,13 @@ mlts_fit <- function(model,
      }
     }
   }
-
-
+  ## any missing data between-level variables
+  btw_vars = c(names(covariates), names(outcomes), names(outcome_pred_btw))
+  if(length(btw_vars)>0){
+    if(sum(is.na(data[,btw_vars]))>0){
+      stop("No missing values on between-level variables are allowed.")
+    }
+  }
 
 
   # PREPARE DATA =========================================================
