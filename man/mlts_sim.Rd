@@ -16,22 +16,26 @@ mlts_sim(
 )
 }
 \arguments{
-\item{model}{data.frame. Output of \code{\link[mlts]{mlts_model}}.}
+\item{model}{\code{data.frame}. Output of \code{\link[mlts]{mlts_model}}.}
 
 \item{default}{logical. If set to \code{TRUE}, default prior specifications are
 added.}
 
-\item{N}{integer. Number of observational units.}
+\item{N}{integer Number of observational units.}
 
 \item{TP}{integer. Number of measurements per observational unit.}
 
-\item{burn.in}{integer.}
+\item{burn.in}{integer. Length of ‘burn-in’ period.}
 
-\item{seed}{integer.}
+\item{seed}{integer. Seed used for data generation.}
 
-\item{seed.true}{integer.}
+\item{seed.true}{integer. Separate seed used for sampling of true
+population parameters values from plausible ranges for stationary time series.}
 
-\item{btw.var.sds}{integer.}
+\item{btw.var.sds}{named numeric vector. Provide standard deviation(s) for all exogenous
+between-level variable(s) specified in \code{model}, e.g. (\code{btw.var.sds = c("covariate1" = 1)},
+to set the SD of the variable "covariate1" to 1). Mean values of the respective
+variable(s) will be set to 0 per default.}
 }
 \value{
 An object of class \code{"mlts_simdata"}.
@@ -43,4 +47,7 @@ in the data generation added in the column \code{true.val}}
 }
 \description{
 Simulate data from mlts model
+}
+\details{
+A function to generate data from an output of \code{\link[mlts]{mlts_model}}.
 }

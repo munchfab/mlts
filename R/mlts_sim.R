@@ -1,17 +1,21 @@
 #' Simulate data from mlts model
 #'
-#' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
+#' @details
+#' A function to generate data from an output of \code{\link[mlts]{mlts_model}}.
+#'
+#' @param model `data.frame`. Output of \code{\link[mlts]{mlts_model}}.
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
-#' @param N integer number of observational units.
-#' @param TP integer number of measurements per observational unit.
+#' @param N integer Number of observational units.
+#' @param TP integer. Number of measurements per observational unit.
 #' @param burn.in integer. Length of ‘burn-in’ period.
-#' @param seed integer. The seed used for data generation.
+#' @param seed integer. Seed used for data generation.
 #' @param seed.true integer. Separate seed used for sampling of true
 #' population parameters values from plausible ranges for stationary time series.
 #' @param btw.var.sds named numeric vector. Provide standard deviation(s) for all exogenous
 #' between-level variable(s) specified in `model`, e.g. (`btw.var.sds = c("covariate1" = 1)`,
-#' for the variable "covariate1" with a SD of 1).
+#' to set the SD of the variable "covariate1" to 1). Mean values of the respective
+#' variable(s) will be set to 0 per default.
 #' @return An object of class \code{"mlts_simdata"}.
 #' The object is a list containing the following components:
 #' \item{model}{the model object passed to `mlts_sim` with true parameter values used
@@ -134,6 +138,9 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     model$true.val[model$Type == model.type & model$Param_Label == "intercept"] = 0
     model$true.val[model$Type == model.type & model$Param_Label == "Residual SD"] = 0.5
 
+  } else if ( is.null(model$true.val)) {
+    stop("No true parameter values provided in model$true.val. Set default = TRUE to run data generation with random true parameter values.",
+         "Alternatively, user-specified values for each parameter can be specified in an additional column `true.val` in model.")
   }
 
 

@@ -17,19 +17,20 @@
 #' to zero (constraining parameters to be equal across clusters).
 #' @param inno_covs_zero Logical. Set to `TRUE` to treat all innovations as independent.
 #' @param inno_covs_dir For bivariate VAR models with person-specific innovation covariances,
-#' a latent variable approach is applied by specifying an additional factor that loads onto
-#' the contemporaneous innovations of both constructs, capturing the shared variance of innovations,
-#' that is not predicted by the previous time points. The loading parameters of this latent factor,
-#' however, have to be restricted in accordance with researchers assumptions about the sign of
-#' the association between innovations across construct. Hence, if innovations at time $t$ are
-#' assumed to be mainly positive across clusters, set the argument to `pos`, or `neg` respectively.
+#' a latent variable approach is applied (for a detailed description, see Hamaker et al., 2018).
+#' by specifying an additional factor that loads onto the contemporaneous innovations of both constructs,
+#' capturing the shared variance of innovations, that is not predicted by the previous time points.
+#' The loading parameters of this latent factor, however, have to be restricted in accordance with
+#' researchers assumptions about the sign of the association between innovations across construct.
+#' Hence, if innovations at time $t$ are assumed to be positively correlated across clusters, set the
+#' argument to `pos`, or `neg` respectively.
 #' @param fixef_zero Character. A character vector to index which fixed effects
 #' (referring to the parameter labels in `model$Param`) should be constrained to zero
 #' (Note: this also results in removing the random effect variance of the respective parameter).
 #' @param ranef_zero Character. A character vector to index which random effect variances
 #' (referring to the parameter labels in `model$Param`) should be constrained to zero.
 #' @param btw_factor Logical. If `TRUE` (the default), a common between-level factor
-#' is modeled across all indicator variables. If `FALSE`, instead of a between-level
+#' is modeled across all indicator variables per construct `q`. If `FALSE`, instead of a between-level
 #' factor, indicator mean levels will be included as individual (random) effects drawn
 #' from a joint multivariate normal distribution.
 #' @param btw_model A list to indicate for which manifest indicator variables a common
@@ -41,21 +42,25 @@
 #' between-level covariates as predictors of specific random effects, a named
 #' list (using the labels in `model$Param`) can be entered (see examples).
 #' Note that if a named list is provided, all names that do not match random
-#' parameters in `model` will be ignored.
-#' @param out_pred A character vector or a named list. Include between-level covariate(s)
-#' as predictor(s) of all random effects in `model` by entering a vector of unique variable
-#' names. Alternatively, to include between-level covariates or differing sets of
-#' between-level covariates as predictors of specific random effects, a named
-#' list (using the labels in `model$Param`) can be entered (see examples). Note that
-#' if a named list is provided, all character strings in the vector of each list
+#' parameters in `model` will be ignored. Note that variables entered in `ranef_pred` will
+#' be grand-mean centered by default when fitting the model with `mlts_fit`.
+#' @param out_pred A character vector or a named list. Include between-level outcome(s)
+#' to be regressed on all random effects in `model` by entering a vector of unique variable
+#' names. Alternatively, to include multiple between-level outcomes regressed differing sets of
+#' specific random effects, a named list (using the labels in `model$Param`) can be entered
+#' (see examples). Note that if a named list is provided, all character strings in the vector of each list
 #' (with independent variables) element that do not match random effect parameter names
 #' in `model$Param` will be treated as additional between-level predictors.
-#' @param out_pred_add_btw A character vector. All inputs will be treated as
-#' between-level covariates to be used as additional predictors of all outcomes specified
-#' in `out_pred`.
+#' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
+#' inputs will be treated as between-level covariates to be used as additional predictors of
+#' all outcomes specified in `out_pred`.
 #' @return An object of class `data.frame` containing all model parameters.
+#' @references
+#' Hamaker, E. L., Asparouhov, T., Brose, A., Schmiedek, F., & Muthén, B. (2018).
+#' At the frontiers of modeling intensive longitudinal data: Dynamic structural equation models
+#' for the affective measurements from the COGITO study. *Multivariate behavioral research*, *53*(6), 820-841.
+#' \url{https://doi.org/10.1080/00273171.2018.1446819}
 #' @export
-#'
 #'
 #' @examples
 #' \donttest{
