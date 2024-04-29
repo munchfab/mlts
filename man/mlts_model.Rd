@@ -38,7 +38,7 @@ measured with the same number of indicators, a single value is sufficient.}
 included in the model. The maximum is 3. Defaults to 1.}
 
 \item{btw_factor}{Logical. If \code{TRUE} (the default), a common between-level factor
-is modeled across all indicator variables. If \code{FALSE}, instead of a between-level
+is modeled across all indicator variables per construct \code{q}. If \code{FALSE}, instead of a between-level
 factor, indicator mean levels will be included as individual (random) effects drawn
 from a joint multivariate normal distribution.}
 
@@ -58,12 +58,13 @@ to zero (constraining parameters to be equal across clusters).}
 \item{inno_covs_zero}{Logical. Set to \code{TRUE} to treat all innovations as independent.}
 
 \item{inno_covs_dir}{For bivariate VAR models with person-specific innovation covariances,
-a latent variable approach is applied by specifying an additional factor that loads onto
-the contemporaneous innovations of both constructs, capturing the shared variance of innovations,
-that is not predicted by the previous time points. The loading parameters of this latent factor,
-however, have to be restricted in accordance with researchers assumptions about the sign of
-the association between innovations across construct. Hence, if innovations at time $t$ are
-assumed to be mainly positive across clusters, set the argument to \code{pos}, or \code{neg} respectively.}
+a latent variable approach is applied (for a detailed description, see Hamaker et al., 2018).
+by specifying an additional factor that loads onto the contemporaneous innovations of both constructs,
+capturing the shared variance of innovations, that is not predicted by the previous time points.
+The loading parameters of this latent factor, however, have to be restricted in accordance with
+researchers assumptions about the sign of the association between innovations across construct.
+Hence, if innovations at time $t$ are assumed to be positively correlated across clusters, set the
+argument to \code{pos}, or \code{neg} respectively.}
 
 \item{fixef_zero}{Character. A character vector to index which fixed effects
 (referring to the parameter labels in \code{model$Param}) should be constrained to zero
@@ -78,23 +79,42 @@ names. Alternatively, to include between-level covariates or differing sets of
 between-level covariates as predictors of specific random effects, a named
 list (using the labels in \code{model$Param}) can be entered (see examples).
 Note that if a named list is provided, all names that do not match random
-parameters in \code{model} will be ignored.}
+parameters in \code{model} will be ignored. Note that variables entered in \code{ranef_pred} will
+be grand-mean centered by default when fitting the model with \code{mlts_fit}.}
 
-\item{out_pred}{A character vector or a named list. Include between-level covariate(s)
-as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
-names. Alternatively, to include between-level covariates or differing sets of
-between-level covariates as predictors of specific random effects, a named
-list (using the labels in \code{model$Param}) can be entered (see examples). Note that
-if a named list is provided, all character strings in the vector of each list
+\item{out_pred}{A character vector or a named list. Include between-level outcome(s)
+to be regressed on all random effects in \code{model} by entering a vector of unique variable
+names. Alternatively, to include multiple between-level outcomes regressed differing sets of
+specific random effects, a named list (using the labels in \code{model$Param}) can be entered
+(see examples). Note that if a named list is provided, all character strings in the vector of each list
 (with independent variables) element that do not match random effect parameter names
 in \code{model$Param} will be treated as additional between-level predictors.}
 
-\item{out_pred_add_btw}{A character vector. All inputs will be treated as
-between-level covariates to be used as additional predictors of all outcomes specified
-in \code{out_pred}.}
+\item{out_pred_add_btw}{A character vector. If \code{out_pred} is a character (vector), all
+inputs will be treated as between-level covariates to be used as additional predictors of
+all outcomes specified in \code{out_pred}.}
 }
 \value{
-An object of class \code{data.frame} containing all model parameters.
+An object of class \code{data.frame} containing all model specifications.
+Description of the columns:
+\item{Model}{Indicates if the parameter in the respective row is part of the structural, or
+the measurement model (if multiple indicators per construct are provided)}
+\item{Level}{Parameter on the between- or within-level.}
+\item{Type}{Describes the parameter type.}
+\item{Param}{Parameter names to be referred to in arguments of \code{mlts_model}.}
+\item{Param_Label}{Parameter labels (additional option to address specific parameters).}
+\item{isRandom}{Indicates which within-level parameters are modeled as random (1) or a constant
+across clusters (0).}
+\item{Constraint}{Optional. Included if multiple-indicators per construct (p > 1) are provided.
+Constraints on measurement model parameters can be changed by overwriting the respective value
+in \code{model}. Possible inputs are "free", "= 0" (for SDs of measurement error variances),
+and "= 1" (for loading parameters).}
+\item{prior_type}{Contains the parameters' prior distribution used in \code{mlts_fit} (prior classes
+can not be changed at this point).}
+\item{prior_location}{Location values of the parameters' prior distribution used
+in \code{mlts_fit} (can be changed to any real value by overwriting the respective value in \code{model}).}
+\item{prior_scale}{Scale values of the parameters' prior distribution used
+in \code{mlts_fit} (can be changed to any real value by overwriting the respective value in \code{model}).}
 }
 \description{
 Build a multilevel latent time series model
@@ -128,7 +148,7 @@ Build a multilevel latent time series model
           btw_factor = TRUE
         )
 
- # 3. Incorporating additional between-level variables. For example, inclusion of
+ # 3. Incorporating between-level variables. For example, inclusion of
  #    an additional between-level variable ("cov1") as predictor of all
  #    (ranef_pred = "cov1") or a specific set of random effects
  #    (ranef_pred = list("phi(1)_11") = "cov1"), an external outcome (e.g., "out1")

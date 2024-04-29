@@ -54,8 +54,7 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
-#' @return An object of class `data.frame` containing all model specifications.
-#' Description of the columns:
+#' @return An object of class `data.frame` with the following columns:
 #' \item{Model}{Indicates if the parameter in the respective row is part of the structural, or
 #' the measurement model (if multiple indicators per construct are provided)}
 #' \item{Level}{Parameter on the between- or within-level.}
