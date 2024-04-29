@@ -54,7 +54,26 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
-#' @return An object of class `data.frame` containing all model parameters.
+#' @return An object of class `data.frame` containing all model specifications.
+#' Description of the columns:
+#' \item{Model}{Indicates if the parameter in the respective row is part of the structural, or
+#' the measurement model (if multiple indicators per construct are provided)}
+#' \item{Level}{Parameter on the between- or within-level.}
+#' \item{Type}{Describes the parameter type.}
+#' \item{Param}{Parameter names to be referred to in arguments of `mlts_model`.}
+#' \item{Param_Label}{Parameter labels (additional option to address specific parameters).}
+#' \item{isRandom}{Indicates which within-level parameters are modeled as random (1) or a constant
+#' across clusters (0).}
+#' \item{Constraint}{Optional. Included if multiple-indicators per construct (p > 1) are provided.
+#' Constraints on measurement model parameters can be changed by overwriting the respective value
+#' in `model`. Possible inputs are "free", "= 0" (for SDs of measurement error variances),
+#' and "= 1" (for loading parameters).}
+#' \item{prior_type}{Contains the parameters' prior distribution used in `mlts_fit` (prior classes
+#' can not be changed at this point).}
+#' \item{prior_location}{Location values of the parameters' prior distribution used
+#' in `mlts_fit` (can be changed to any real value by overwriting the respective value in `model`).}
+#' \item{prior_scale}{Scale values of the parameters' prior distribution used
+#' in `mlts_fit` (can be changed to any real value by overwriting the respective value in `model`).}
 #' @references
 #' Hamaker, E. L., Asparouhov, T., Brose, A., Schmiedek, F., & Muthén, B. (2018).
 #' At the frontiers of modeling intensive longitudinal data: Dynamic structural equation models
@@ -91,7 +110,7 @@
 #'           btw_factor = TRUE
 #'         )
 #'
-#'  # 3. Incorporating additional between-level variables. For example, inclusion of
+#'  # 3. Incorporating between-level variables. For example, inclusion of
 #'  #    an additional between-level variable ("cov1") as predictor of all
 #'  #    (ranef_pred = "cov1") or a specific set of random effects
 #'  #    (ranef_pred = list("phi(1)_11") = "cov1"), an external outcome (e.g., "out1")
