@@ -144,7 +144,7 @@ mlts_model_paths <- function(model, file = NULL,
     \\draw  [path]  (y1wt)  to node  []  {}  (y1t);
     \\draw  [path]  (mu1)  to node  []  {}  (y1t);
     "
-    if (infos$p > 1) { # one latent construct
+    if (infos$isLatent == TRUE) { # one latent construct
       # initiate empty vectors to store tikz nodes
       ind_vec <- c() # indicator variables
       # latent variables (within and between)
@@ -292,7 +292,7 @@ mlts_model_paths <- function(model, file = NULL,
     infos$q, "}
     \\draw  [path]  (mu\\i)  to node  []  {}  (y\\i t);"
     )
-    if (any(infos$p > 1)) {
+    if (infos$isLatent == TRUE) {
       # initiate empty vectors to store tikz nodes
       ind_vec <- c() # indicator variables
       coord_vec <- c() # coordinates for positioning of latent variables
@@ -363,7 +363,7 @@ mlts_model_paths <- function(model, file = NULL,
           } else if (i > 1 & j == 1) {
             # first indicator variable of next construct
             ind_vec <- c(ind_vec, paste0(
-              "\\node  [manifest]  (y", i, j, "t)  [right = 1.5em of y",
+              "\\node  [manifest]  (y", i, j, "t)  [right = 2.5em of y",
               i - 1, infos$p[i - 1], "t]  {$y_{", i, j, ",it}$};"
             ))
             if (infos$p[i] == 1) {
@@ -543,7 +543,7 @@ mlts_model_paths <- function(model, file = NULL,
       \\draw  [path]  (zeta1t)  to node  []  {}  (y1wt);
     "
     )
-    if (infos$p > 1) {
+    if (infos$isLatent == TRUE) {
       wm <- paste0(
         "% draw within-level structural model
         \\node  [latent]  (eta1wt-1)  {$\\eta_{1,i(t-1)}^w$};
@@ -605,7 +605,7 @@ mlts_model_paths <- function(model, file = NULL,
     infos$q, "}
     \\draw  [path]  (zeta\\i t)  to node  []  {}  (y\\i wt);
     ")
-    if (any(infos$p > 1)) {
+    if (infos$isLatent == TRUE) {
       wm <- paste0(
       "
       % draw within-level structural model
