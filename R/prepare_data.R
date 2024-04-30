@@ -117,7 +117,7 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
 
     # print warning for NA removal and tinterval
     if (is.numeric(tinterval)) {
-      warning("Removing NAs with na.rm = TRUE does not allow to approximate",
+      warning("Removing NAs with \"na.rm = TRUE\" does not allow to approximate",
               " a continuous time model.")
     }
 
@@ -168,7 +168,7 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
 
       # stop and print warning for missing time or beep variable
       stop("Specifying a tinterval requires additional specification of",
-           "either a time or a beep variable in data.")
+           " either a \"time\" or a \"beep\" variable in data.")
     }
   }
 
