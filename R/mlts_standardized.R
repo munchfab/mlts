@@ -25,7 +25,7 @@
 #' mlts_standardized(fit)
 #' }
 #'
-mlts_standardized <- function(object, digit = 3, prob = .95
+mlts_standardized <- function(object, digits = 3, prob = .95
 ){
 
   # make sure object is of class mltsfit
@@ -106,7 +106,7 @@ mlts_standardized <- function(object, digit = 3, prob = .95
      b_std = apply(b_std, MARGIN = 1, FUN = mean)
      re_pred_std[i, result.cols] = round(c(
        mean(b_std),
-       quantile(b_std, c(probs))),digits = digit)
+       quantile(b_std, c(probs))),digits = digits)
     }
     btw.std = rbind(btw.std, re_pred_std)
   }
@@ -151,7 +151,7 @@ mlts_standardized <- function(object, digit = 3, prob = .95
       b_std = apply(b_std, MARGIN = 1, FUN = mean)
       out_pred_std[i, result.cols] = round(c(
         mean(b_std),
-        quantile(b_std, c(probs))),digits = digit)
+        quantile(b_std, c(probs))),digits = digits)
     }
     btw.std = rbind(btw.std, out_pred_std)
   }
@@ -196,7 +196,7 @@ mlts_standardized <- function(object, digit = 3, prob = .95
         b_std = apply(b_std, MARGIN = 1, FUN = mean)
         within_std[j, result.cols] = round(c(
           mean(b_std),
-          quantile(b_std, c(probs))),digits = digit)
+          quantile(b_std, c(probs))),digits = digits)
       }
 
   } else {  # for latent models ...
