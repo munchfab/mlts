@@ -71,7 +71,8 @@ data {
   int YB_free_pos[n_p]; //
   int mu_is_etaB[n_p];  //
   int mu_etaB_pos[n_p]; // indicate whether to use etaB or random item mean
-
+  // get SDs for standardized results
+  int<lower=0,upper=1> standardized;
 
   // priors
   matrix[n_random,2] prior_gamma;
@@ -88,6 +89,18 @@ data {
   matrix[n_loadWfree,2] prior_loadW;
   matrix[n_sigmaBfree,2] prior_sigmaB;
   matrix[n_sigmaWfree,2] prior_sigmaW;
+}
+
+transformed data{
+  int n_SD_etaW_all;
+  int n_SD_etaW_i;
+  if(standardized == 1){
+    n_SD_etaW_all = n_etaW_free;
+    n_SD_etaW_i = N;
+  } else {
+    n_SD_etaW_all = 0;
+    n_SD_etaW_i = 0;
+  }
 }
 
 parameters {
@@ -303,6 +316,20 @@ model {
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
   matrix[D,D] bcorr_inn; // random coefficients correlation matrix
+  vector[n_SD_etaW_all] SD_etaW;
+  vector[n_SD_etaW_i] SD_etaW_i[n_SD_etaW_all];
   bcorr = multiply_lower_tri_self_transpose(L);
   bcorr_inn = multiply_lower_tri_self_transpose(L_inno);
+  if(standardized == 1){
+    for(i in 1:n_SD_etaW_all){
+      SD_etaW[i] = sd(etaW_free[i,]);
+      {
+      int pos = 1;
+      for(p in 1:N){
+        SD_etaW_i[i,p] = sd(segment(etaW_free[i,], pos,N_obs_id[p]));
+        pos = pos + N_obs_id[p];
+        }
+      }
+    }
+  }
 }
