@@ -9,7 +9,7 @@ prepare_data(
   id,
   ts,
   time = NULL,
-  tinterval,
+  tinterval = NULL,
   beep = NULL,
   days = NULL,
   n_overnight_NAs,

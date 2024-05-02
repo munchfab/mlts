@@ -320,7 +320,7 @@ mlts_fit <- function(model,
     # latent variable SDs requested?
     standata$standardized = ifelse(get_SD_latent == T, 1, 0)
     if(get_SD_latent == F & print_message == T){
-      message("Set get_SD_latent = TRUE to obtain standardized parameter estimates using mlts_standardized in a subsequent step.")
+      message("\n Set get_SD_latent = TRUE to obtain standardized parameter estimates using mlts_standardized in a subsequent step.")
     }
 
     # model fit

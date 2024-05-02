@@ -14,7 +14,7 @@ mlts_fit(
   outcome_pred_btw = NULL,
   center_covs = T,
   time = NULL,
-  tinterval,
+  tinterval = NULL,
   beep = NULL,
   days = NULL,
   n_overnight_NAs,
@@ -23,6 +23,7 @@ mlts_fit(
   chains = 2,
   cores = 2,
   monitor_person_pars = F,
+  get_SD_latent = F,
   fit_model = T,
   print_message = T,
   print_warning = T,
@@ -103,6 +104,9 @@ The default is 2 (see \code{\link[rstan]{stan}}).}
 
 \item{monitor_person_pars}{Logical. Should person parameters (i.e., values of the
 latent variables) be stored? Default is FALSE.}
+
+\item{get_SD_latent}{Logical. Set to \code{TRUE} to obtain standardized estimates
+in multiple-indicator models.}
 
 \item{fit_model}{Logical. Set to FALSE to avoid fitting the model which may be
 helpful to inspect prepared data used for model estimation (default = TRUE).}

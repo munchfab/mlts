@@ -95,8 +95,7 @@ inputs will be treated as between-level covariates to be used as additional pred
 all outcomes specified in \code{out_pred}.}
 }
 \value{
-An object of class \code{data.frame} containing all model specifications.
-Description of the columns:
+An object of class \code{data.frame} with the following columns:
 \item{Model}{Indicates if the parameter in the respective row is part of the structural, or
 the measurement model (if multiple indicators per construct are provided)}
 \item{Level}{Parameter on the between- or within-level.}
