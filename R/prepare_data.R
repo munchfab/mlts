@@ -115,10 +115,17 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
     # remove rows containing missing values
     data <- data[data$miss.NA == FALSE,]
 
-  } else if(is.character(time) & is.numeric(tinterval)){
+    # print warning for NA removal and tinterval
+    if (is.numeric(tinterval)) {
+      warning("Removing NAs with \"na.rm = TRUE\" does not allow to approximate",
+              " a continuous time model.")
+    }
+
+  } else if (is.numeric(tinterval)) {
+    if (is.character(time)) {
       # create time grid according to continuous time variable
       data = create_missings(data = data, tinterval = tinterval, id = id,
-                      time = "time", btw_vars = btw.vars)
+                             time = time, btw_vars = btw.vars)
       data = cbind("order" = 1:nrow(data), data)
 
       # ADD LATER ==============================================================
@@ -130,40 +137,40 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days
       data = data[order(data$order),]
 
       # to speed up estimation: Exclude all (consecutive) NAs on first observations
-
-
-
-      } else if(is.character(days) & is.numeric(tinterval)){
+    } else if (is.character(days)) {
       # create a pseudo time-grid using the beep number for data nested within days
-        if(!is.character(beep)){
-          stop("No beep variable provided")
-        }
-        if(tinterval != 1){
-          warning("tinterval should be 1")
-        }
-        if(!is.numeric(n_overnight_NAs)){
-          stop("Specify the number of missings to add.")
-        }
-        # update the beep numbers by a multiple of the day number and n_overnight_NAs
-        add_beep = (data$day-1) * n_overnight_NAs
-        new_beep = add_beep + data$beep
-        data$beep_new = new_beep
+      if(!is.character(beep)){
+        stop("No beep variable provided")
+      }
+      if(tinterval != 1){
+        warning("tinterval should be 1")
+      }
+      if(!is.numeric(n_overnight_NAs)){
+        stop("Specify the number of missings to add.")
+      }
+      # update the beep numbers by a multiple of the day number and n_overnight_NAs
+      add_beep = (data$day-1) * n_overnight_NAs
+      new_beep = add_beep + data$beep
+      data$beep_new = new_beep
 
-        # create time grid according to continuous time variable
-        data = create_missings(data = data, tinterval = tinterval, id = id,
-                                    time = "beep_new", btw_vars = btw.vars)
-        data = cbind("order" = 1:nrow(data),data)
+      # create time grid according to continuous time variable
+      data = create_missings(data = data, tinterval = tinterval, id = id,
+                             time = "beep_new", btw_vars = btw.vars)
+      data = cbind("order" = 1:nrow(data),data)
 
-        # ADD LATER ==============================================================
-        # check number of missings and print a warning in case number is high
+      # ADD LATER ==============================================================
+      # check number of missings and print a warning in case number is high
 
-        # ========================================================================
-        data = data[order(data$order),]
-
+      # ========================================================================
+      data = data[order(data$order),]
     } else {
-      ############################ CONTINUE HERE FOR STANDARD BEEP OPTION --------
+      ############################ CONTINUE HERE FOR STANDARD BEEP OPTION -----
 
+      # stop and print warning for missing time or beep variable
+      stop("Specifying a tinterval requires additional specification of",
+           " either a \"time\" or a \"beep\" variable in data.")
     }
+  }
 
 
     # remove helper column(s)

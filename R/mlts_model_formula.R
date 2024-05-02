@@ -139,7 +139,12 @@ mlts_model_formula <- function(model, file = NULL,
         ts_vec <- c(ts_vec, paste0("y_{", i, j, ", it} \\\\"))
         ts_w_vec <- c(ts_w_vec, paste0("y_{", i, j, ", it}^w \\\\"))
         ts_b_vec <- c(ts_b_vec, paste0("\\mu_{", i, j, ",i} \\\\"))
-        eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", it}^w \\\\"))
+        # if infos$p[i] is 1, add 0 as within-level epsilon
+        if (infos$p[i] == 1) {
+          eps_w_vec <- c(eps_w_vec, paste0("0 \\\\"))
+        } else {
+          eps_w_vec <- c(eps_w_vec, paste0("\\varepsilon_{", i, j, ", it}^w \\\\"))
+        }
         # if common between-factor is modeled, build between-level formula
         if (all(infos$indicators[infos$indicators$q == i, "btw_factor"] == 1)) {
           # if common between-factor is modeled, use eta
@@ -250,20 +255,45 @@ mlts_model_formula <- function(model, file = NULL,
       )
     }
 
-    eps_dist_w <- ",\\\\ \n\\text{with}~
-    \\varepsilon^w_{it} \\sim \\mathit{N}(0, \\sigma^2_{\\varepsilon^w_{it}}) \\\\"
+    # residual distribution
+    if (any(infos$p > 1)) {
+      eps_dist_w <- paste0(
+        ",\\\\ \n\\text{with}~",
+        "\\varepsilon^w_{jk, it} \\sim \\mathit{N}(0,",
+        "\\sigma^2_{\\varepsilon^w_{jk}})~",
+        "\\text{for indicator $j$ of construct $k$}\\\\"
+      )
+    } else {
+      eps_dist_w <- "\\\\"
+    }
 
-    eps_dist_b <- ",\\\\ \n\\text{with}~
-    \\varepsilon^b_{i} \\sim \\mathit{N}(0, \\sigma^2_{\\varepsilon^b_{i}})"
+    if (any(infos$p > 1)) {
+      eps_dist_b <- paste0(
+        ",\\\\ \n\\text{with}~",
+        "\\varepsilon^b_{jk,i} \\sim \\mathit{N}(0,",
+        "\\sigma^2_{\\varepsilon^b_{jk}})~",
+        "\\text{for indicator $j$ of construct $k$}\\\\"
+      )
+    } else {
+      eps_dist_b <- NULL
+    }
+
 
     # decomposition formula with within- and between-level measurement model
     dcf <- paste(
       begin_math,
       dcf_lhs, "=", dcf_rhs, "\\\\",
       dcf_lhs_w, "=", dcf_rhs_w,
+      # if (!is.null(eps_dist_w)) {
+      #   paste(eps_dist_w)
+      # },
       eps_dist_w,
       if (!is.null(lat_b_vec)) {
-        paste(dcf_lhs_b, "=", dcf_rhs_b, eps_dist_b)
+        if (!is.null(eps_dist_b)) {
+          paste(dcf_lhs_b, "=", dcf_rhs_b, eps_dist_b)
+        } else {
+          paste(dcf_lhs_b, "=", dcf_rhs_b)
+        }
       },
       end_math
     )
@@ -435,7 +465,7 @@ mlts_model_formula <- function(model, file = NULL,
       ),"})"
     )
     psi_mat_vec <- NULL
-  } else if (infos$q > 1 & infos$n_inno_cors > 0) {
+  } else if (infos$q > 1 & infos$n_inno_cors == 0 & infos$n_inno_covs == 0) {
     inno_dist <- paste0(
       ",\\\\ \n\\text{with}~",
       "\\zeta_{k,it} \\sim \\mathit{N}(\\mathbf{0}, \\sigma^2_{\\zeta_{k}",
@@ -448,7 +478,7 @@ mlts_model_formula <- function(model, file = NULL,
       ), "})"
     )
     psi_mat_vec <- NULL
-  } else if (!is.null(infos$inno_cov_load)) {
+  } else if (infos$n_inno_covs > 0) {
     # in case of random innovation covariance, include eta distribution
     # together with innovation distribution
     inno_dist <- paste0(
