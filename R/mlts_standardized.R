@@ -4,7 +4,9 @@
 #' @param prob A value between 0 and 1 to indicate the width of the credible
 #' interval. Default is .95.
 #' @param digits Number of digits.
-#' @return An object of class `data.frame`.
+#' @param add_cluster_std logical. Include within-level standardized effects for each cluster
+#' (defaults to `FALSE`).
+#' @return An object of class `list`.
 #' @export
 #'
 #' @examples
@@ -25,7 +27,7 @@
 #' mlts_standardized(fit)
 #' }
 #'
-mlts_standardized <- function(object, digit = 3, prob = .95
+mlts_standardized <- function(object, digit = 3, prob = .95, add_cluster_std = FALSE
 ){
 
   # make sure object is of class mltsfit
@@ -46,12 +48,13 @@ mlts_standardized <- function(object, digit = 3, prob = .95
   probs = c(alpha/2, 1-alpha/2)
   prob.cols = paste0(c(100-(100-(alpha/2)*100), 100-(alpha/2)*100), "%")
   # result columns
-  result.cols = c("Std.Est", prob.cols)
+  result.cols = c("Std.Est", "SD", prob.cols)
 
   # prepare results object
   results.std = list()
   btw.std = data.frame()
   within_std = data.frame()
+  within_std_cluster = data.frame()
 
   # Between-level standardized effects =========================================
   ## Get posteriors of all random effects by parameter
@@ -62,18 +65,45 @@ mlts_standardized <- function(object, digit = 3, prob = .95
   warmup <- as.numeric(object$stanfit@sim$warmup)
   iter <- as.numeric(object$stanfit@sim$iter) -warmup
 
+
+  # # Old Version:
+  # for(i in 1:object$standata$n_random){
+  #   # create stan par names
+  #   par_names = paste0("b_free[",1:N,",",i,"]")
+  #   # get mcmc chains results for respective parameter
+  #   poster = rstan::As.mcmc.list(object$stanfit, pars = par_names)
+  #   # get individual parameter SD in each chain
+  #   for(k in 1:chains){
+  #     for(l in 1:nrow(poster[[k]])){
+  #        SDs[l,i] = sd(poster[[k]][l,])
+  #     }
+  #     RE_par_SD[[k]] = SDs
+  #   }
+  # }
+
+  # RE_par_SD_vec = c()
+  # for(i in 1:object$standata$n_random){
+  #   sds_vec = c()
+  #   for(j in 1:chains){
+  #     sds_vec = c(sds_vec, RE_par_SD[[j]][,i])
+  #   }
+  #   RE_par_SD_vec[i] = mean(sds_vec)
+  # }
+  #
+  # RE_par_SD_vec
+
+
+  ### NEW VERSION ::::::::
+
+  RE_par_SD = c()
   for(i in 1:object$standata$n_random){
     # create stan par names
     par_names = paste0("b_free[",1:N,",",i,"]")
-    # get mcmc chains results for respective parameter
-    poster = rstan::As.mcmc.list(object$stanfit, pars = par_names)
-    # get individual parameter SD in each chain
-    for(k in 1:chains){
-      for(l in 1:nrow(poster[[k]])){
-         SDs[l,i] = sd(poster[[k]][l,])
-      }
-      RE_par_SD[[k]] = SDs
+    poster = c()
+    for(j in 1:chains){
+      poster[j] = sd(rstan::get_posterior_mean(object = object$stanfit, pars = par_names)[,j])
     }
+    RE_par_SD[i] = mean(poster)
   }
 
   ## random effect prediction
@@ -99,14 +129,15 @@ mlts_standardized <- function(object, digit = 3, prob = .95
       # calculate standardized effect for all iterations chain-wise
       # formular: beta = b * (SD_x / SD_y)
       for(l in 1:nrow(b_unstd[[k]])){
-        b_std[l,k] = b_unstd[[k]][l] * (sd_x / RE_par_SD[[k]][l,sd_y_pos])
+        b_std[l,k] = b_unstd[[k]][l] * (sd_x / RE_par_SD[sd_y_pos])
       }
      }
      # calculate by iteration means
-     b_std = apply(b_std, MARGIN = 1, FUN = mean)
+   #  b_std = apply(b_std, MARGIN = 1, FUN = mean)
      re_pred_std[i, result.cols] = round(c(
-       mean(b_std),
-       quantile(b_std, c(probs))),digits = digit)
+       mean(unlist(b_std)),
+       sd(unlist(b_std)),
+       quantile(unlist(b_std), c(probs))),digits = digit)
     }
     btw.std = rbind(btw.std, re_pred_std)
   }
@@ -123,13 +154,11 @@ mlts_standardized <- function(object, digit = 3, prob = .95
       sd_y = sd(object$standata$out[infos$OUT$out_var_no[i],])
       # get position of RE on RE_par_SD
       if(is.na(infos$OUT$Pred_Z[i])){
-        sd_x = list()
-        for(k in 1:chains){
-          sd_x[[k]] = RE_par_SD[[k]][,infos$OUT$Pred_no[i]]
-        }
+        sd_x = c()
+        sd_x = RE_par_SD[infos$OUT$Pred_no[i]]
       } else {
         for(k in 1:chains){
-          sd_x[[k]][1:iter] = sd(object$standata$Z[,infos$OUT$Pred_no[i]-infos$n_random])
+          sd_x = sd(object$standata$Z[,infos$OUT$Pred_no[i]-infos$n_random])
         }
       }
 
@@ -144,14 +173,15 @@ mlts_standardized <- function(object, digit = 3, prob = .95
         # calculate standardized effect for all iterations chain-wise
         # formular: beta = b * (SD_x / SD_y)
         for(l in 1:nrow(b_unstd[[k]])){
-          b_std[l,k] = b_unstd[[k]][l] * (sd_x[[k]][l] / sd_y)
+          b_std[l,k] = b_unstd[[k]][l] * (sd_x / sd_y)
         }
       }
       # calculate by iteration means
-      b_std = apply(b_std, MARGIN = 1, FUN = mean)
+      #b_std = apply(b_std, MARGIN = 1, FUN = mean)
       out_pred_std[i, result.cols] = round(c(
-        mean(b_std),
-        quantile(b_std, c(probs))),digits = digit)
+        mean(unlist(b_std)),
+        sd(unlist(b_std)),
+        quantile(unlist(b_std), c(probs))),digits = digit)
     }
     btw.std = rbind(btw.std, out_pred_std)
   }
@@ -161,11 +191,28 @@ mlts_standardized <- function(object, digit = 3, prob = .95
     results.std[["Between-level standardized estimates"]] <- btw.std
   }
 
+
+
+
+
+
+
+
+
+
+
+
+
   # Average Within-Level Standardized Estimates of Dynamics ====================
   SD_y_id = data.frame()
   b_std = data.frame()
   within_std = infos$fix_pars_dyn[, c("Type", "Param")]
-  std_individual <- c()
+  std_individual <- array(dim = c(iter, chains, N))
+  cluster_std <- list()
+  for(p in 1:N){
+    cluster_std[[p]] = infos$fix_pars_dyn[ ,c("Type", "Param")]
+    }
+
   if(infos$isLatent == F){
     # first get individual SDs of time series variables
     for(i in 1:infos$q){
@@ -181,7 +228,8 @@ mlts_standardized <- function(object, digit = 3, prob = .95
          re_par_no = infos$re_pars$par_no[infos$re_pars$Param == infos$fix_pars_dyn$Param[j]]
          param_stan = paste0("b_free[",1:N,",",re_par_no,"]")
       } else {
-         param_stan = paste0("gammas[",infos$fix_pars_dyn$no,"]")
+         fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)
+         param_stan = paste0("b_fix[",fix_par_no[j],"]")
         }
       sd_y = SD_y_id[1:N,as.integer(infos$fix_pars_dyn$Dout[j])]
       sd_x = SD_y_id[1:N,as.integer(infos$fix_pars_dyn$Dpred[j])]
@@ -189,14 +237,21 @@ mlts_standardized <- function(object, digit = 3, prob = .95
       b_std = data.frame()
       for(k in 1:chains){
         for(l in 1:iter){
-          std_individual = b_unstd.list[[k]][l,] * (sd_x /sd_y)
-          b_std[l,k] = mean(std_individual)
+          std_individual[l,k,1:N] = b_unstd.list[[k]][l,] * (sd_x /sd_y)
+          b_std[l,k] = mean(std_individual[l,k,])
           }
         }
-        b_std = apply(b_std, MARGIN = 1, FUN = mean)
+        #b_std = apply(b_std, MARGIN = 1, FUN = mean)
         within_std[j, result.cols] = round(c(
-          mean(b_std),
-          quantile(b_std, c(probs))),digits = digit)
+          mean(unlist(b_std)),
+          sd(unlist(b_std)),
+          quantile(unlist(b_std), c(probs))),digits = digit)
+        for(p in 1:N){
+          cluster_std[[p]][j,result.cols] = round(c(
+            mean(unlist(std_individual[,,p])),
+            sd(unlist(std_individual[,,p])),
+            quantile(unlist(std_individual[,,p]), c(probs))),digits = digit)
+        }
       }
 
   } else {  # for latent models ...
@@ -209,6 +264,9 @@ mlts_standardized <- function(object, digit = 3, prob = .95
     results.std[["Within-level standardidzed effects averaged over clusters"]] <- within_std
   }
 
+  if(add_cluster_std==TRUE){
+    results.std[["Standardized effects by cluster"]] <- cluster_std
+  }
 
   return(results.std)
 

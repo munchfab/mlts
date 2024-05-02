@@ -4,7 +4,7 @@
 \alias{mlts_standardized}
 \title{Get Standardized Estimates for an mlts Model}
 \usage{
-mlts_standardized(object, digit = 3, prob = 0.95)
+mlts_standardized(object, digit = 3, prob = 0.95, add_cluster_std = FALSE)
 }
 \arguments{
 \item{object}{\code{mltsfit}. Output of \code{\link[mlts]{mlts_model}} and related functions.}
@@ -12,10 +12,13 @@ mlts_standardized(object, digit = 3, prob = 0.95)
 \item{prob}{A value between 0 and 1 to indicate the width of the credible
 interval. Default is .95.}
 
+\item{add_cluster_std}{logical. Include within-level standardized effects for each cluster
+(defaults to \code{FALSE}).}
+
 \item{digits}{Number of digits.}
 }
 \value{
-An object of class \code{data.frame}.
+An object of class \code{list}.
 }
 \description{
 Get Standardized Estimates for an mlts Model
