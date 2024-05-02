@@ -36,6 +36,9 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
   what <- match.arg(what)
   result <- list()
 
+  # get model infos
+  infos <- mlts_model_eval(object$model)
+
   # make sure object is of class mltsfit
   if(class(object) != "mltsfit"){
     stop("Input of `object` should be of class 'mltsfit'.")
