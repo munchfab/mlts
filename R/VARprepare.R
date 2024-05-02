@@ -19,6 +19,7 @@
 #'
 #' @return A `list` object that can be passed to \code{\link[rstan]{sampling}}.
 #' @export
+#' @noRd
 #'
 #' @details
 #' For internal use only.

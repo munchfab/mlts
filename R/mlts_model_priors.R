@@ -6,6 +6,7 @@
 #'
 #' @return An object of class `data.frame`.
 #' @export
+#' @noRd
 #'
 mlts_model_priors <- function(model, default = F){
 
