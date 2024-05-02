@@ -56,6 +56,8 @@
 #' The default is 2 (see \code{\link[rstan]{stan}}).
 #' @param monitor_person_pars Logical. Should person parameters (i.e., values of the
 #' latent variables) be stored? Default is FALSE.
+#' @param get_SD_latent Logical. Set to `TRUE` to obtain standardized estimates
+#' in multiple-indicator models.
 #' @param print_message Logical. Print messages based on defined inputs (default = TRUE).
 #' @param print_warning Logical. Print warnings based on defined inputs (default = TRUE).
 #' @param fit_model Logical. Set to FALSE to avoid fitting the model which may be
@@ -119,6 +121,7 @@ mlts_fit <- function(model,
                      chains = 2,
                      cores = 2,
                      monitor_person_pars = F,
+                     get_SD_latent = F,
                      fit_model = T,
                      print_message = T,
                      print_warning = T,
@@ -314,11 +317,16 @@ mlts_fit <- function(model,
                            covariates = covariates, outcomes = outcomes,
                            outcome_pred_btw = outcome_pred_btw,
                            center_covs = center_covs)
+    # latent variable SDs requested?
+    standata$standardized = ifelse(get_SD_latent == T, 1, 0)
+    if(get_SD_latent == F & print_message == T){
+      message("Set get_SD_latent = TRUE to obtain standardized parameter estimates using mlts_standardized in a subsequent step.")
+    }
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out",
-              "alpha", "loadB", "sigmaB", "loadW", "sigmaW")
+              "alpha", "loadB", "sigmaB", "loadW", "sigmaW", "SD_etaW", "SD_etaW_i")
     if(monitor_person_pars == T){
       pars = c(pars, "b_free")
     }
