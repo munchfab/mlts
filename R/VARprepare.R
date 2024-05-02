@@ -169,6 +169,8 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   prior_sigma_out = infos$prior_sigma_out
   prior_b_fix = infos$prior_b_fix
 
+  # get SDs of latent variables
+  standardized = 0   # will be overwritten in mlts_fit if requested
 
   # combine all information
   standata = rstan::nlist(
@@ -191,7 +193,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     prior_b_out, prior_alpha_out, prior_sigma_out,
 
     # add indicator names to print in summary
-    ts
+    standardized, ts
   )
 
   # for latent models:
