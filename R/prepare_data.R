@@ -48,7 +48,8 @@
 #' # further examples with overnight lags
 #'
 #' }
-prepare_data <- function(data, id, ts, time = NULL, tinterval, beep = NULL, days = NULL,
+prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
+                         beep = NULL, days = NULL,
                          n_overnight_NAs, na.rm = FALSE, covariates = NULL,
                          outcomes = NULL, outcome_pred_btw = NULL){
 
