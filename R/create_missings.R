@@ -65,14 +65,20 @@ create_missings <- function(data, tinterval, id, time,
     # create empty vector of imputed time
     time_imp <- NA
 
-    # iterate through values of time_cont
     for (j in 1:length(time_cont)) {
-      # fill time_imp with values of time_cont
-      time_imp[
-        # determine in which interval between two numbers of time_seq
-        # lies value [j] of time_cont
-        findInterval(x = time_cont[j], vec = time_seq)
-      ] <- time_cont[j] # and fill that position with with value [j]
+      if (is.na(time_imp[findInterval(x = time_cont[j], vec = time_seq)])) {
+        time_imp[
+          # determine in which interval between two numbers of time_seq
+          # lies value [j] of time_cont
+          findInterval(x = time_cont[j], vec = time_seq)
+        ] <- time_cont[j] # and fill that position with with value [j]
+      } else {
+        # check if position is already taken, else fill next position
+        k <- length(time_imp) - findInterval(x = time_cont[j], vec = time_seq) + 1
+        time_imp[
+          findInterval(x = time_cont[j], vec = time_seq) + k
+        ] <- time_cont[j]
+      }
     }
 
     # create integer time variable for use in dsem analysis
@@ -97,6 +103,21 @@ create_missings <- function(data, tinterval, id, time,
   new_data <- merge(
     x = new_data, y = btw_data, by = c("num_id"), all.x = T, sort = F
   )
+
+  # check for duplicates and delete if necessary
+  duplicates_list <- list()
+  for (i in 1:length(unique(new_data$num_id))) {
+    duplicates_list[[i]] <- duplicated(new_data[new_data$num_id == i, "int_time"])
+    if (any(duplicates_list[[i]]) == TRUE) {
+      warn_id <- btw_data[btw_data$num_id == i, id]
+      warning("Deleted ", sum(duplicates[[i]]), " duplicated ", ifelse(
+        sum(duplicates[[i]]) > 1, paste0("entries"), "entry"
+      ), " in ", time, " for id ", warn_id)
+    }
+  }
+  # reduce to data frame
+  duplicates <- do.call("c", duplicates_list)
+  new_data <- new_data[!duplicates, ]
 
   return(new_data)
 }
