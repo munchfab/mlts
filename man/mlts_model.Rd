@@ -123,24 +123,23 @@ Build a multilevel latent time series model
  # To illustrate the general model building procedure, starting with a simple
  # two-level AR(1) model with person-specific individual means, AR effects,
  # and innovation variances (the default option when using mlts_model() and q = 1).
- ar1 <- mlts_model(q = 1)
+ model <- mlts_model(q = 1)
 
- # All model parameters can be inspected by calling:
- ar1
+ # All model parameters (with their labels stored in model$Param) can be inspected by calling:
+ model
 
- # The following model extensions/restrictions can be made (in that specific order):
+ # Possible model extensions/restrictions:
  # 1. Introducing additional parameter constraints, such as fixing specific
  #    parameters to a constant value by setting the respective random effect
  #    variances to zero, such as e.g. (log) innovation variances
- ar1 <- mlts_model_constraint(model = ar1, ranef_zero = "ln.sigma2_1")
+ model <- mlts_model(q = 1, ranef_zero = "ln.sigma2_1")
  #    Note that setting the argument `fix_inno_vars` to `TRUE` provides
  #    a shortcut to fixing the innovation variances of all constructs
  #    (if q >= 1) to a constant.
 
  # 2. Including a multiple indicator model, where the construct is measured by
  #    multiple indicators (here, p = 3 indicators)
- ar1 <- mlts_model_measurement(
-          model = ar1,
+ model <- mlts_model(
           q = 1, # the number of time-varying constructs
           p = 3, # the number of manifest indicators
           # assuming a common between-level factor (the default)
@@ -155,23 +154,18 @@ Build a multilevel latent time series model
  #    (out_pred = list("out1" = c("etaB_1", "phi(1)_11")), using the latent
  #    between-level factor trait scores (etaB_1) and individual first-order
  #    autoregressive effects (phi(1)_11) as joint predictors of outcome "out1".
- ar1 <- mlts_model_betw(
-          model = ar1,
-          ranef_pred = "cov1",
-          out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
-        )
+ model <- mlts_model(
+            q = 1,
+            p = 3,
+            fix_inno_vars = TRUE,
+            model = ar1,
+            ranef_pred = "cov1",
+            out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
+           )
  #    Note that the names of the random effect parameters must match the
- #    parameter labels provided in ar1$Param, the result of the
+ #    parameter labels provided in model$Param, the result of the
  #    mlts_model()-functions.
 
- # Finally, a shorthand for specifying the above model would be:
- ar1 <- mlts_model(
-          q = 1,
-          p = 3,
-          fix_inno_vars = TRUE,
-          ranef_pred = "cov1",
-          out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
-        )
 }
 }
 \references{
