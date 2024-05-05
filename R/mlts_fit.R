@@ -224,6 +224,12 @@ mlts_fit <- function(model,
     }
   }
 
+  # print a warning if monitor_person_pars = FALSE
+  if(monitor_person_pars == FALSE & print_message == TRUE){
+    message("\n Note that obtaining (standardized) estimates by cluster,
+    requires settting `monitor_person_pars = TRUE`. However, keeping the default option
+    (`monitor_person_pars = FALSE`) can improve sampling times.")
+  }
   # initial data checks --------------------------------------------------
   ## any variables with zero variance in any of the clusters
   ids = unique(data[,id])
@@ -232,7 +238,7 @@ mlts_fit <- function(model,
   for(i in 1:length(ts)){
     for(j in 1:length(ids)){
      if(var(data.test[data.test$ID == ids[j],ts[i]], na.rm = T) == 0){
-       stop(paste0("Zero variance observed for indicator ", ts[i], " in cluster ", ids[j]))
+       stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
      }
     }
   }
