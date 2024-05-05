@@ -79,50 +79,68 @@ mlts_standardize_within <- function(object, digit = 3, prob = .95, add_cluster_s
     }
 
   } else if(object$standata$standardized == 0){  # check if SDs of latent variables are available
-  } else {  # run standardization
+    warning("Variance of latent factor scores not available for standardization
+            of dynamic model parameters. Refit the model with get_SD_latent = TRUE
+            to obtain standardized estimates.")
+
+    } else {  # run standardization
     k_etaW_index = 1 # index latent factor constructs
-    SD_y_id = array(dim=c())
+    SD_y_id = array(dim=c(n_dim, N, (chains*iter)))
 
     # first get SDs of time series variables
     for(i in 1:infos$q){
-      for(pp in 1:N){
-        SD_y_id[pp,i] = sd(object$data[object$data$num_id == pp, object$standata$ts[i]], na.rm = T)
+      if(object$standata$D_np[i] == 1){  # for constructs with single-indicator
+        q_pos_ts = object$standata$D_pos_is_SI[i]
+        for(pp in 1:N){
+          SD_y_id[i,pp,] = sd(object$data[object$data$num_id == pp, object$standata$ts[q_pos_ts]], na.rm = T)
+        }
+      } else {  # constructs with multiple indicators
+        for(pp in 1:N){
+          # get sds of latent variables
+          etaW_sd_lab = paste0("SD_etaW_i[",k_etaW_index,",",pp,"]")
+          SD_y_id[i,pp,] = rstan::extract(object$stanfit, pars = etaW_sd_lab)[[1]]
+        }
+        # update index
+        k_etaW_index = k_etaW_index + 1
       }
     }
+
     # calculate std estimates per person, averaged over chain and iteration
+    # calculate std estimates per person
     for(j in 1:nrow(infos$fix_pars_dyn)){
-
-      # check
-
-
+      b = array(dim = c(N, iter*chains))
+      b_std = array(dim = c(N, iter*chains))
       # get individual effect parameters
       if(infos$fix_pars_dyn$isRandom[j] == 1){
         re_par_no = infos$re_pars$par_no[infos$re_pars$Param == infos$fix_pars_dyn$Param[j]]
-        param_stan = paste0("b_free[",1:N,",",re_par_no,"]")
+        for(p in 1:N){
+          param_stan = paste0("b_free[",p,",",re_par_no,"]")
+          b[p,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
+          b_std[p,] = b[p,] *
+            SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
+            SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+        }
       } else {
         fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)
         param_stan = paste0("b_fix[",fix_par_no[j],"]")
+        b[,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
+        b_std[p,] = b[p,] *
+          SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
+          SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
       }
-      sd_y = SD_y_id[1:N,as.integer(infos$fix_pars_dyn$Dout[j])]
-      sd_x = SD_y_id[1:N,as.integer(infos$fix_pars_dyn$Dpred[j])]
-      b_unstd.list = rstan::As.mcmc.list(object$stanfit, pars = param_stan)
-      b_std = data.frame()
-      for(k in 1:chains){
-        for(l in 1:iter){
-          std_individual[l,k,1:N] = b_unstd.list[[k]][l,] * (sd_x /sd_y)
-          b_std[l,k] = mean(std_individual[l,k,])
-        }
-      }
-      #b_std = apply(b_std, MARGIN = 1, FUN = mean)
+      # calculate average standardized effect per iteration
+      b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
       within_std[j, result.cols] = round(c(
-        mean(unlist(b_std)),
-        sd(unlist(b_std)),
-        quantile(unlist(b_std), c(probs))),digits = digit)
+        mean(b_std_average),
+        sd(b_std_average),
+        quantile(b_std_average, c(probs))),digits = digit)
+
+      # get cluster-specific estimates
       for(p in 1:N){
         cluster_std[[p]][j,result.cols] = round(c(
-          mean(unlist(std_individual[,,p])),
-          sd(unlist(std_individual[,,p])),
-          quantile(unlist(std_individual[,,p]), c(probs))),digits = digit)
+          mean(b_std[p,]),
+          sd(b_std[p,]),
+          quantile(b_std[p,], c(probs))),digits = digit)
       }
     }
   }
