@@ -76,9 +76,10 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     phis = infos$fix_pars_dyn
     phis$true.val = NA
     ## start with lag 1 ARs
-    phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = T, size = infos$q)
-    phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),
-                                                           replace = T, size = infos$q)
+    n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
+    phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = T, size = n_sample)
+    n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
+    phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = T, size = n_sample)
     ## add higher order effects
     if(infos$maxLag>1){
       for(i in 1:nrow(phis)){
@@ -313,7 +314,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
         if(infos$q == 2 & infos$n_inno_covs == 1){
           inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
-          y[t,] = y[t,] + inno_t
+          y[t,] = y[t,] + infos$inno_cov_load * inno_t
         }
       }
     }

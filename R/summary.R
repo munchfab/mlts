@@ -246,6 +246,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     ), ""
   )
   # determine fixed effects fixed to zero
+  suppressMessages({
   sat_model <- mlts_model(
     q = infos$q,
     p = if (all(infos$p == 1)) {NULL} else {infos$p},
@@ -253,10 +254,11 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     ranef_pred = if (length(infos$n_cov_vars) > 1) {infos$n_cov_vars} else {NULL},
     out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL},
     fix_inno_covs =  if (infos$n_inno_cov_fix > 0) {TRUE} else {FALSE},
-    inno_covs_zero =  if(infos$n_inno_covs == 1) {TRUE} else {FALSE},
-    # inno_covs_dir = "pos" ##### needs adjustment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    inno_covs_dir = infos$inno_cov_dir
+    inno_covs_zero =  if(infos$n_inno_covs == 0) {TRUE} else {FALSE},
+    inno_covs_dir = if(is.na(infos$inno_cov_dir)) {NULL} else {infos$inno_cov_dir},
+  )}
   )
+
   sat_model_fixed <- sat_model[grepl("Fix", sat_model$Type), "Param"]
   model_fixed <- model[grepl("Fix", model$Type), "Param"]
   fe_zero <- setdiff(
