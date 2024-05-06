@@ -39,7 +39,24 @@
 #'
 #' @export
 #'
-#' @examples 1 + 1
+#' @examples
+#' \donttest{
+#' # build simple vector-autoregressive mlts model for two time-series variables
+#' var_model <- mlts_model(q = 2)
+#'
+#' # fit model with (artificial) dataset ts_data
+#' fit <- mlts_fit(
+#'   model = var_model,
+#'   data = ts_data,
+#'   ts = c("Y1", "Y2"), # time-series variables
+#'   id = "ID", # identifier variable
+#'   time = "time",
+#'   tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#' )
+#'
+#' # inspect model summary
+#' mlts_plot(fit, type = "fe", what = "Fixed effect")
+#' }
 mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
                       what = c("all", "Fixed effect", "Random effect SD", "RE correlation",
                                "Outcome prediction", "RE prediction", "Item intercepts",

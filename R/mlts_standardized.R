@@ -22,7 +22,9 @@
 #'   data = ts_data,
 #'   ts = c("Y1", "Y2"), # time-series variables
 #'   id = "ID", # identifier variable
-#'   tinterval = 1 # interval for approximation of continuous-time dynamic model,
+#'   time = "time", # time variable
+#'   tinterval = 1, # interval for approximation of continuous-time dynamic model,
+#'   monitor_person_pars = TRUE # person parameters need to be sampled for standardization
 #' )
 #'
 #' # inspect standardized parameter estimates

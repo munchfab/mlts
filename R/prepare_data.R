@@ -32,7 +32,7 @@
 #' @param outcome_pred_btw character.
 #'
 #' @return A `data.frame` that can be passed to \code{\link[mlts]{mlts_fit}}.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' \donttest{

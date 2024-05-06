@@ -120,7 +120,6 @@
 #'             q = 1,
 #'             p = 3,
 #'             fix_inno_vars = TRUE,
-#'             model = ar1,
 #'             ranef_pred = "cov1",
 #'             out_pred = list("out1" = c("etaB_1", "phi(1)_11"))
 #'            )

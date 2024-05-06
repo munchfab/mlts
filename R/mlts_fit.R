@@ -96,6 +96,7 @@
 #'   data = ts_data,
 #'   ts = c("Y1", "Y2"), # time-series variables
 #'   id = "ID", # cluster identifier variable
+#'   time = "time", # time variable
 #'   tinterval = 1 # interval for approximation of equidistant measurements,
 #' )
 #'

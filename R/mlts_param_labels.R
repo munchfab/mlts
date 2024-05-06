@@ -2,7 +2,7 @@
 #'
 #' @param model `data frame`. Output of \code{\link[mlts]{mlts_model}} and
 #' related functions.
-#' @export
+#' @noRd
 #'
 #' @details
 #' For internal use only.

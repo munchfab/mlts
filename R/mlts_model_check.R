@@ -6,7 +6,7 @@
 #' @param covariates tba
 #' @param outcomes tba.
 #' @return An object of class `data.frame`.
-#' @export
+#' @noRd
 #'
 mlts_model_check <- function(model, data, ts, covariates, outcomes){
 

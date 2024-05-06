@@ -28,6 +28,7 @@
 #'   data = ts_data,
 #'   ts = c("Y1", "Y2"), # time-series variables
 #'   id = "ID", # identifier variable
+#'   time = "time",
 #'   tinterval = 1 # interval for approximation of continuous-time dynamic model,
 #' )
 #'

@@ -15,7 +15,7 @@
 #' (referring to the parameter labels in `model$Param`) should be constrained to zero.
 #'
 #' @return An object of class `data.frame`.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' # simple vector-autoregressive mlts model with q = 2 time-series constructs

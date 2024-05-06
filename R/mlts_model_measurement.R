@@ -17,7 +17,7 @@
 #' At this point restricted to one factor per latent construct.
 #' @return An object of class `data.frame`.
 #' @details Update a `model`-object.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' # build a manifest two-level AR(1) model
@@ -35,7 +35,6 @@
 #'               btw_model = list(""))
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
-#' @export
 #'
 mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL){
 

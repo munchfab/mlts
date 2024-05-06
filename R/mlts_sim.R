@@ -24,6 +24,38 @@
 #' \item{RE.pars}{a `matrix` of cluster-specific true values used in the data generation}
 #' @export
 #'
+#' @examples
+#' \donttest{
+#' # build a simple vector-autoregressive mlts model with two time-series variables
+#' var_model <- mlts_model(q = 2)
+#'
+#' # simulate data from this model with default true values
+#' # (true values are randomly drawn from normal distribution)
+#' var_data <- mlts_sim(
+#'   model = var_model,
+#'   N = 50, TP = 30, # number of units and number of measurements per unit
+#'   default = TRUE # use default parameter values
+#' )
+#'
+#' # the data set is stored in .$data
+#' head(var_data$data)
+#'
+#' # individual parameter values are stored in .$RE.pars
+#' head(var_data$RE.pars)
+#'
+#' # if the mltssim-object is used in mlts_fit(), true values
+#' # are added to the fitted object
+#' fit <- mlts_fit(
+#'   model = var_model,
+#'   data = var_data,
+#'   id = "ID", ts = c("Y1", "Y2"), time = "time"
+#' )
+#'
+#' # inspect model with true values
+#' head(fit$pop.pars.summary)
+#' }
+#'
+
 mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
                      seed.true = 1, btw.var.sds = NULL){
 

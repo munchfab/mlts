@@ -20,7 +20,7 @@
 #' between-level covariates to be used as additional predictors of all outcomes specified
 #' in `out_pred`.
 #' @return An object of class `data.frame`.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' # simple autoregressive mlts model with q = 2 time-series constructs

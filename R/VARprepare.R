@@ -18,7 +18,6 @@
 #' @param center_covs tba.
 #'
 #' @return A `list` object that can be passed to \code{\link[rstan]{sampling}}.
-#' @export
 #' @noRd
 #'
 #' @details

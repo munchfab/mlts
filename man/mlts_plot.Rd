@@ -92,5 +92,21 @@ Returns a \code{ggplot}-object .
 Plot results of mlts
 }
 \examples{
-1 + 1
+\donttest{
+# build simple vector-autoregressive mlts model for two time-series variables
+var_model <- mlts_model(q = 2)
+
+# fit model with (artificial) dataset ts_data
+fit <- mlts_fit(
+  model = var_model,
+  data = ts_data,
+  ts = c("Y1", "Y2"), # time-series variables
+  id = "ID", # identifier variable
+  time = "time",
+  tinterval = 1 # interval for approximation of continuous-time dynamic model,
+)
+
+# inspect model summary
+mlts_plot(fit, type = "fe", what = "Fixed effect")
+}
 }

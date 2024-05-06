@@ -3,7 +3,7 @@
 #' @param model data.frame. Output of \code{\link[mlts]{mlts_model}}.
 #'
 #' @return A `list`-object with details of the mlts model object.
-#' @export
+#' @noRd
 #'
 #' @details
 #' Primarily for internal use.
