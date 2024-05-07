@@ -33,6 +33,8 @@ create_missings <- function(data, tinterval, id, time,
 
   # create empty list for imputed data frames
   imp_list <- list()
+  # coerce data to data frame if necessary
+  data <- as.data.frame(data)
   # create numeric id variable
   data$num_id <- as.numeric(as.factor(data[, id]))
 
@@ -46,8 +48,18 @@ create_missings <- function(data, tinterval, id, time,
     # id
     num_id <- i
 
-    # store continuous time variable for id == i
-    time_cont <- data[data$num_id == i, time]
+    # store continuous time variable for id == i and sort
+    time_cont <- sort(data[data$num_id == i, time])
+    # stop if time_cont is not strictly increasing
+    if (any(diff(time_cont) <= 0)) {
+      err_id <- btw_data[btw_data$num_id == i, id]
+      # err_pos <- rownames(data[data$num_id == i, ])
+      stop(
+        time, " is not strictly increasing for id ", err_id,
+        ". Please check entry ", which(diff(time_cont) == 0),
+        " for id ", err_id, "."
+      )
+    }
 
     # seq in steps of time grid from min to max of time
     time_seq <- seq(min(time_cont), max(time_cont), by = tinterval)
@@ -105,19 +117,19 @@ create_missings <- function(data, tinterval, id, time,
   )
 
   # check for duplicates and delete if necessary
-  duplicates_list <- list()
-  for (i in 1:length(unique(new_data$num_id))) {
-    duplicates_list[[i]] <- duplicated(new_data[new_data$num_id == i, "int_time"])
-    if (any(duplicates_list[[i]]) == TRUE) {
-      warn_id <- btw_data[btw_data$num_id == i, id]
-      warning("Deleted ", sum(duplicates[[i]]), " duplicated ", ifelse(
-        sum(duplicates[[i]]) > 1, paste0("entries"), "entry"
-      ), " in ", time, " for id ", warn_id)
-    }
-  }
+  # duplicates_list <- list()
+  # for (i in 1:length(unique(new_data$num_id))) {
+  #   duplicates_list[[i]] <- duplicated(new_data[new_data$num_id == i, "int_time"])
+  #   if (any(duplicates_list[[i]]) == TRUE) {
+  #     warn_id <- btw_data[btw_data$num_id == i, id]
+  #     warning("Deleted ", sum(duplicates_list[[i]]), " duplicated ", ifelse(
+  #       sum(duplicates_list[[i]]) > 1, paste0("entries"), "entry"
+  #     ), " in ", time, " for id ", warn_id)
+  #   }
+  # }
   # reduce to data frame
-  duplicates <- do.call("c", duplicates_list)
-  new_data <- new_data[!duplicates, ]
+  # duplicates <- do.call("c", duplicates_list)
+  # new_data <- new_data[!duplicates, ]
 
   return(new_data)
 }
