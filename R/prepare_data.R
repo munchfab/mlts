@@ -53,6 +53,8 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
                          n_overnight_NAs, na.rm = FALSE, covariates = NULL,
                          outcomes = NULL, outcome_pred_btw = NULL){
 
+  # coerce to data frame if necessary (e.g., if tibble is provided)
+  data <- as.data.frame(data)
 
   # create a subset of the data with fixed variable names
   data$num_id = data[,id]
