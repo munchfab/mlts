@@ -31,5 +31,22 @@ test_that("Missings are inserted correctly (at least same as in MPlus)", {
     object = data15$int_time,
     expected = mplus15$int_time
   )
+  ##
+  # slightly more complicated example
+  mplus_raw2 <- testthat::test_path("testdata", "mplus_raw2.rda")
+  load(mplus_raw2)
+  mplus2 <- testthat::test_path("testdata", "mplus2.rda")
+  load(mplus2)
+  data2 <- create_missings(
+    data = mplus_raw2, tinterval = 2, id = "id", time = "time_cont"
+  )
+  expect_equal(
+    object = is.na(data2$var1),
+    expected = is.na(mplus2$var1)
+  )
+  expect_equal(
+    object = data2$int_time,
+    expected = mplus2$int_time
+  )
 })
 
