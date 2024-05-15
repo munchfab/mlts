@@ -113,11 +113,19 @@ Furthermore, a path model can also be produced with the function `mlts_model_pat
 mlts_model_paths(ar1_model)
 ```
 
+<<<<<<< HEAD
 <p align="center">
 ```{r echo=FALSE, out.width="50%", fig.align='center'}
 knitr::include_graphics(c("vignettes/pathmodel_ar1.png"))
 ```
 </p>
+=======
+<center>
+```{r echo=FALSE, out.width="50%", fig.align='center'}
+knitr::include_graphics(c("vignettes/pathmodel_ar1.png"))
+```
+</center>
+>>>>>>> 3802b3f2c35d230408f407d30da328ddf944ef57
 
 To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
 
