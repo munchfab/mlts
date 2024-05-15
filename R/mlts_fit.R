@@ -134,9 +134,6 @@ mlts_fit <- function(model,
   # Get the parameter table
   par_labels <- mlts_param_labels(model)
 
-  # coerce to data frame if necessary
-  data <- as.data.frame(data)
-
   # print information on indicators per dimension
   # print information on variables used for model estimation
   if(infos$isLatent == F){
@@ -162,7 +159,7 @@ mlts_fit <- function(model,
   data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
   # check if data is class "mlts_simdata"
-  if(data.simulated == T){
+  if(data.simulated == T) {
     message("Simulated data provided:",
     "\nTrue scores used in the data generation will be added to the returned object.")
 
@@ -178,6 +175,9 @@ mlts_fit <- function(model,
 
     #### for now only use na.rm = T -version for simulated data
     na.rm <- TRUE
+  } else {
+    # coerce to data frame if necessary
+    data <- as.data.frame(data)
     }
 
   # Some initial checks:
