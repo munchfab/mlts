@@ -1,4 +1,4 @@
-mlts_standardize_within <- function(object, digit = 3, prob = .95, add_cluster_std = FALSE
+mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_std = FALSE
 ){
 
   # get model infos
@@ -67,14 +67,14 @@ mlts_standardize_within <- function(object, digit = 3, prob = .95, add_cluster_s
       within_std[j, result.cols] = round(c(
         mean(b_std_average),
         sd(b_std_average),
-        quantile(b_std_average, c(probs))),digits = digit)
+        quantile(b_std_average, c(probs))),digits = digits)
 
       # get cluster-specific estimates
       for(p in 1:N){
         cluster_std[[p]][j,result.cols] = round(c(
           mean(b_std[p,]),
           sd(b_std[p,]),
-          quantile(b_std[p,], c(probs))),digits = digit)
+          quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
 
@@ -133,14 +133,14 @@ mlts_standardize_within <- function(object, digit = 3, prob = .95, add_cluster_s
       within_std[j, result.cols] = round(c(
         mean(b_std_average),
         sd(b_std_average),
-        quantile(b_std_average, c(probs))),digits = digit)
+        quantile(b_std_average, c(probs))),digits = digits)
 
       # get cluster-specific estimates
       for(p in 1:N){
         cluster_std[[p]][j,result.cols] = round(c(
           mean(b_std[p,]),
           sd(b_std[p,]),
-          quantile(b_std[p,], c(probs))),digits = digit)
+          quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
   }

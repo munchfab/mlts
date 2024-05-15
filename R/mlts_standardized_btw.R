@@ -1,4 +1,4 @@
-mlts_standardized_btw <- function(object, digit = 3, prob = .95
+mlts_standardized_btw <- function(object, digits = 3, prob = .95
 ){
 
   # make sure object is of class mltsfit
@@ -90,7 +90,7 @@ mlts_standardized_btw <- function(object, digit = 3, prob = .95
       re_pred_std[k, result.cols] = round(c(
         mean(unlist(b_std)),
         sd(unlist(b_std)),
-        quantile(unlist(b_std), c(probs))),digits = digit)
+        quantile(unlist(b_std), c(probs))),digits = digits)
     }
 
     result = rbind(result, re_pred_std)
@@ -122,7 +122,7 @@ mlts_standardized_btw <- function(object, digit = 3, prob = .95
       out_pred_std[i, result.cols] = round(c(
         mean(unlist(b_std)),
         sd(unlist(b_std)),
-        quantile(unlist(b_std), c(probs))),digits = digit)
+        quantile(unlist(b_std), c(probs))),digits = digits)
     }
 
     row.names(result) <- NULL
@@ -176,7 +176,7 @@ mlts_standardized_btw <- function(object, digit = 3, prob = .95
         b_std = round(c(
           mean(unlist(b_std)),
           sd(unlist(b_std)),
-          quantile(unlist(b_std), c(probs))),digits = digit)
+          quantile(unlist(b_std), c(probs))),digits = digits)
         b_std = cbind.data.frame(
           "Type" = "Dynamic",
           "Param" = par_label,
@@ -246,7 +246,7 @@ mlts_standardized_btw <- function(object, digit = 3, prob = .95
           b_std = round(c(
             mean(unlist(b_std)),
             sd(unlist(b_std)),
-            quantile(unlist(b_std), c(probs))),digits = digit)
+            quantile(unlist(b_std), c(probs))),digits = digits)
           b_std = cbind.data.frame(
             "Type" = "Dynamic",
             "Param" = par_label,

@@ -32,7 +32,7 @@
 #' }
 #'
 mlts_standardized <- function(object, what = c("between", "within", "both"),
-                              digit = 3, prob = .95, add_cluster_std = FALSE
+                              digits = 3, prob = .95, add_cluster_std = FALSE
 ){
 
   what <- match.arg(what)
@@ -48,7 +48,7 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
 
   # run between-level standardization
   if(what == "between" | what == "both"){
-  std_btw = mlts_standardized_btw(object = object, digit = digit, prob = prob)
+  std_btw = mlts_standardized_btw(object = object, digits = digits, prob = prob)
   result[["Between-level standardized"]] = std_btw
   }
 
@@ -66,7 +66,7 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
   }
 
     # run within-level standardization
-    std_within = mlts_standardize_within(object = object, digit = digit, prob = prob,
+    std_within = mlts_standardize_within(object = object, digits = digits, prob = prob,
                             add_cluster_std = add_cluster_std)
     result[["Within-level standardidzed effects averaged over clusters"]] =
       std_within$`Within-level standardidzed effects averaged over clusters`
