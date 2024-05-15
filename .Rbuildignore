@@ -3,3 +3,4 @@
 rcppExports.cpp
 stanExports_*
 ^LICENSE\.md$
+^README\.Rmd$
