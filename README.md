@@ -104,7 +104,7 @@ mlts_model_formula(ar1_model)
 ```
 
 <center>
-$$\text{Decomposition.}$$
+Decomposition.
 </center>
 
 $$
@@ -120,7 +120,7 @@ y_{1, it}^w \\
 $$
 
 <center>
-$$\text{Within-level model.}$$
+Within-level model.
 </center>
 
 $$
@@ -131,7 +131,7 @@ y_{1, it}^w \\
 $$
 
 <center>
-$$\text{Between-level model.}$$
+Between-level model.
 </center>
 
 $$
@@ -157,7 +157,9 @@ with `keep_tex = TRUE`.
 mlts_model_paths(ar1_model)
 ```
 
+<center>
 <img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
+</center>
 
 To fit the above model, we pass it together with the data set to
 `mlts_fit()`. The data set for this example is an artificial data set
