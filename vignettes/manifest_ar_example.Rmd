@@ -90,15 +90,15 @@ mlts_model_paths(ar1_model)
 ```
 
 ```{r echo=FALSE, out.width="18%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_1.png"))
+knitr::include_graphics(c("pathmodel_ar1_1.png"))
 ```
 
 ```{r echo=FALSE, out.width="58%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_2.png"))
+knitr::include_graphics(c("pathmodel_ar1_2.png"))
 ```
 
 ```{r echo=FALSE, out.width="36%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_3.png"))
+knitr::include_graphics(c("pathmodel_ar1_3.png"))
 ```
 
 To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
@@ -111,15 +111,13 @@ load("../data/ar1_data.rda")
 head(ar1_data)
 ```
 
-We need to specify the variable in `data` that contains the time-series process in the `ts` argument and the variable that contains the unit identifier in the `id` argument. With the argument `tinterval`, the time interval for approximation of a continuous time process can be specified @Asparouhov2018. We leave it at `NULL` here, but see the Vignette *Approximation of a Continuous Time Model* for more details.
-
+We need to specify the variable in `data` that contains the time-series process in the `ts` argument and the variable that contains the unit identifier in the `id` argument. With the argument `tinterval`, the time interval for approximation of a continuous time process can be specified @Asparouhov2018. We don't specify it here, but see the Vignette *Approximation of a Continuous Time Model* for more details.
 ```{r eval=FALSE}
 ar1_fit <- mlts_fit(
   model = ar1_model,
   data = ar1_data,
   id = "ID",
   ts = "Y1",
-  tinterval = NULL,
   iter = 4000
 )
 ```
@@ -139,14 +137,14 @@ The `Model convergence criteria` provide an overview across convergence diagnost
 For the simple AR1-model, all parameters converged well after 4,000 iterations.
 
 The section `Fixed Effects` provides information about the fixed effects in the model, i.e., $\gamma_{0, \mu_1}$, $\gamma_{0, \phi_{(1)11}}$, and $\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}$ in the above formula.
-For example, the posterior mean of the autoregressive effect parameter `phi(1)_11` is estimated at $\gamma_{0, \phi_{(1)11}} = .275$ with credible interval $[.218, .331]$.
-The log variance of the innovations $\zeta_{1t}$ is estimated at $\gamma_{0,\ln(\sigma^2_{\zeta_{1}})} = -.304$.
-The estimate needs to be exponentiated to be on the original scale: $\gamma_{0,\sigma^2_{\zeta_{1}}} = exp(-.304) = `r round(exp(-.304), 3)`$.
+For example, the posterior mean of the autoregressive effect parameter `phi(1)_11` is estimated at .275 with 95%-credible interval [.218, .331].
+The log variance of the innovations $\zeta_{1t}$ is estimated at -.304.
+The estimate needs to be exponentiated to be on the original scale: exp(-.304) = `r round(exp(-.304), 3)`.
 
 The section `Random Effects SDs` shows standard deviations of the random effects $\upsilon_{\mu_{1},i}$, $\upsilon_{\phi_{(1)11},i}$, and $\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}$.
-The section `Random Effects Correlations` shows correlations between random effects. For example, while random effects of the person mean $\upsilon_{\mu_{1},i}$ and the autoregressive effect $\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, $\widehat{r}(\upsilon_{\mu_{1},i}, \upsilon_{\phi_{(1)11},i}) = `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.phi(1)_11", "mean"], 3)`$,
+The section `Random Effects Correlations` shows correlations between random effects. For example, while random effects of the person mean $\upsilon_{\mu_{1},i}$ and the autoregressive effect $\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.phi(1)_11", "mean"], 3)`,
 there is a positive correlation between the person mean and log innovation variance,
-$\widehat{r}(\upsilon_{\mu_{1},i}, \upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}) = `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`$. This indicates that individuals with a higher person mean in the variable `Y1` also tend to have a higher innovation variance.
+`r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`. This indicates that individuals with a higher person mean in the variable `Y1` also tend to have a higher innovation variance.
 
 ## References
 
