@@ -2,7 +2,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 ){
 
   # make sure object is of class mltsfit
-  if(class(object) != "mltsfit"){
+  # if(class(object) != "mltsfit")
+  if (!inherits(object, "mltsfit")) {
     stop("Input of `object` should be of class 'mltsfit'.")
   }
 
@@ -27,7 +28,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
   re_sds = array(dim = c(chains, iter, n_random))
   N = object$standata$N
   # get SDs of RE predictor variables
-  Wvars_sds = apply(object$standata$W, MARGIN = 2, FUN = sd)
+  Wvars_sds = apply(object$standata$W, MARGIN = 2, FUN = stats::sd)
 
   # get/calculate model-implied RE variances ----
   ## get labels of (residual) random effect SDs
@@ -64,7 +65,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         # get variance of predicted scores in each iteration
         y_pred_var = array(dim = chains*iter)
         for(k in 1:(iter*chains)){
-          y_pred_var[k] = var(y_pred[k,])
+          y_pred_var[k] = stats::var(y_pred[k,])
         }
 
         # add variance of predicted scores to sigma in each iteration
@@ -89,8 +90,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
       # save summary statistics
       re_pred_std[k, result.cols] = round(c(
         mean(unlist(b_std)),
-        sd(unlist(b_std)),
-        quantile(unlist(b_std), c(probs))),digits = digits)
+        stats::sd(unlist(b_std)),
+        stats::quantile(unlist(b_std), c(probs))),digits = digits)
     }
 
     result = rbind(result, re_pred_std)
@@ -103,11 +104,11 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     out_pred_std[,result.cols] = NA
 
     # get SDs of outcomes
-    SDs_out = apply(object$standata$out, FUN = sd, MARGIN = 1)
+    SDs_out = apply(object$standata$out, FUN = stats::sd, MARGIN = 1)
     # add variances of additional covariates used as predictor
     if(object$standata$n_z > 0){
       for(i in 1:object$standata$n_z){
-        Var_RE[[n_random+i]] <- var(object$standata$Z[,i])
+        Var_RE[[n_random+i]] <- stats::var(object$standata$Z[,i])
       }
     }
 
@@ -121,8 +122,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
       # save summary statistics
       out_pred_std[i, result.cols] = round(c(
         mean(unlist(b_std)),
-        sd(unlist(b_std)),
-        quantile(unlist(b_std), c(probs))),digits = digits)
+        stats::sd(unlist(b_std)),
+        stats::quantile(unlist(b_std), c(probs))),digits = digits)
     }
 
     row.names(result) <- NULL
@@ -146,7 +147,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     for(i in 1:infos$q){
       ivar = c()
       for(p in 1:N){
-        ivar[p] = var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
+        ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
       }
       VarYw[i] = mean(ivar)
     }
@@ -175,8 +176,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         b_std <- b[[1]] * sd_x / sd_y
         b_std = round(c(
           mean(unlist(b_std)),
-          sd(unlist(b_std)),
-          quantile(unlist(b_std), c(probs))),digits = digits)
+          stats::sd(unlist(b_std)),
+          stats::quantile(unlist(b_std), c(probs))),digits = digits)
         b_std = cbind.data.frame(
           "Type" = "Dynamic",
           "Param" = par_label,
@@ -210,7 +211,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         if(object$standata$D_np[i] == 1){
           ivar = c()
           for(p in 1:N){
-            ivar[p] = var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
+            ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
           }
           VarYw[i,] = mean(ivar)
         } else {
@@ -245,8 +246,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
           b_std <- b[[1]] * sd_x / sd_y
           b_std = round(c(
             mean(unlist(b_std)),
-            sd(unlist(b_std)),
-            quantile(unlist(b_std), c(probs))),digits = digits)
+            stats::sd(unlist(b_std)),
+            stats::quantile(unlist(b_std), c(probs))),digits = digits)
           b_std = cbind.data.frame(
             "Type" = "Dynamic",
             "Param" = par_label,

@@ -37,7 +37,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
     # first get individual SDs of time series variables
     for(i in 1:infos$q){
       for(pp in 1:N){
-        SD_y_id[i,pp,] = sd(object$data[object$data$num_id == pp, object$standata$ts[i]], na.rm = T)
+        SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[i]], na.rm = T)
       }
     }
     # calculate std estimates per person
@@ -66,15 +66,15 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
       b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
       within_std[j, result.cols] = round(c(
         mean(b_std_average),
-        sd(b_std_average),
-        quantile(b_std_average, c(probs))),digits = digits)
+        stats::sd(b_std_average),
+        stats::quantile(b_std_average, c(probs))),digits = digits)
 
       # get cluster-specific estimates
       for(p in 1:N){
         cluster_std[[p]][j,result.cols] = round(c(
           mean(b_std[p,]),
-          sd(b_std[p,]),
-          quantile(b_std[p,], c(probs))),digits = digits)
+          stats::sd(b_std[p,]),
+          stats::quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
 
@@ -92,7 +92,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
       if(object$standata$D_np[i] == 1){  # for constructs with single-indicator
         q_pos_ts = object$standata$D_pos_is_SI[i]
         for(pp in 1:N){
-          SD_y_id[i,pp,] = sd(object$data[object$data$num_id == pp, object$standata$ts[q_pos_ts]], na.rm = T)
+          SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[q_pos_ts]], na.rm = T)
         }
       } else {  # constructs with multiple indicators
         for(pp in 1:N){
@@ -132,15 +132,15 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
       b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
       within_std[j, result.cols] = round(c(
         mean(b_std_average),
-        sd(b_std_average),
-        quantile(b_std_average, c(probs))),digits = digits)
+        stats::sd(b_std_average),
+        stats::quantile(b_std_average, c(probs))),digits = digits)
 
       # get cluster-specific estimates
       for(p in 1:N){
         cluster_std[[p]][j,result.cols] = round(c(
           mean(b_std[p,]),
-          sd(b_std[p,]),
-          quantile(b_std[p,], c(probs))),digits = digits)
+          stats::sd(b_std[p,]),
+          stats::quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
   }

@@ -243,7 +243,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
   #### sample random effects from multivariate normal distribution and add to bmus
   btw_random = matrix(NA, nrow = N, ncol = infos$n_random)
   if(n_random == 1){
-    btw_random = bmu + rnorm(n = N, mean = 0, sd = cov_mat)
+    btw_random = bmu + stats::rnorm(n = N, mean = 0, sd = cov_mat)
   } else {
     btw_random = bmu + mvtnorm::rmvnorm(n = N, mean = rep(0, infos$n_random), sigma = cov_mat)
   }

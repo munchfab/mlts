@@ -42,7 +42,8 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
   infos <- mlts_model_eval(object$model)
 
   # make sure object is of class mltsfit
-  if(class(object) != "mltsfit"){
+  # if(class(object) != "mltsfit")
+  if (!inherits(object, "mltsfit")) {
     stop("Input of `object` should be of class 'mltsfit'.")
   }
 

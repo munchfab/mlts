@@ -241,7 +241,7 @@ mlts_fit <- function(model,
   data.test$ID = data[,id]
   for(i in 1:length(ts)){
     for(j in 1:length(ids)){
-     if(var(data.test[data.test$ID == ids[j], ts[i]], na.rm = T) == 0){
+     if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = T) == 0){
        stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
      }
     }
