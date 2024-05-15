@@ -157,7 +157,7 @@ with `keep_tex = TRUE`.
 mlts_model_paths(ar1_model)
 ```
 
-<p align = "center">
+<p align="center">
 <img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
 </p>
 
@@ -283,7 +283,7 @@ produced. The `what`-argument controls what parameter types are plotted
 mlts_plot(ar1_fit, type = "fe", what = "Fixed effect")
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/README-ar1_plot-1.png" width="60%" style="display: block; margin: auto;" />
 
 ## References
 

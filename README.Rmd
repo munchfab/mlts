@@ -119,6 +119,7 @@ knitr::include_graphics(c("vignettes/pathmodel_ar1.png"))
 ```
 </p>
 
+
 To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
 
 ```{r}
@@ -163,7 +164,7 @@ there is a positive correlation between the person mean and log innovation varia
 
 The parameter estimates can also be plotted with the `mtls_plot()`-function. By default, forest plots of model parameters are produced. The `what`-argument controls what parameter types are plotted (e.g., fixed effects, random effect standard deviations, and other).
 
-```{r, out.width="60%", fig.align='center'}
+```{r ar1_plot, out.width="60%", fig.align='center'}
 mlts_plot(ar1_fit, type = "fe", what = "Fixed effect")
 ```
 
