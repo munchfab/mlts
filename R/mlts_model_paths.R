@@ -136,7 +136,7 @@ mlts_model_paths <- function(model, file = NULL,
   if (infos$q == 1) {
     dc <- "
     % draw decomposition
-    \\node  [manifest]  (y1t)  {$y_{1,t}$};
+    \\node  [manifest]  (y1t)  {$y_{1,it}$};
     \\node  [latent]  (y1wt)  [above = 2.5em of y1t]  {$y_{1,it}^w$};
     \\node  [latent]  (mu1)  [below = 2.5em of y1t]  {$\\mu_{1,i}$};
 
