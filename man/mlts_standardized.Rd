@@ -7,7 +7,7 @@
 mlts_standardized(
   object,
   what = c("between", "within", "both"),
-  digit = 3,
+  digits = 3,
   prob = 0.95,
   add_cluster_std = FALSE
 )
@@ -18,13 +18,13 @@ mlts_standardized(
 \item{what}{character. Get between-level standardized estimates (\code{what = "between"}, the default),
 within-level standardized estimates averaged over clusters (\code{what = "within"}), or both (\code{what = "both"}).}
 
+\item{digits}{Number of digits. Default is 3.}
+
 \item{prob}{A value between 0 and 1 to indicate the width of the credible
 interval. Default is .95.}
 
 \item{add_cluster_std}{logical. If \code{what = "within"}, within-level standardized effects for each cluster
 are included in the output (defaults to \code{FALSE}).}
-
-\item{digits}{Number of digits. Default is 3.}
 }
 \value{
 An object of class \code{list}.
