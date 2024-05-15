@@ -106,6 +106,7 @@ mlts_model_formula(ar1_model)
 <center>
 $$\text{Decomposition.}$$
 </center>
+
 $$
 \begin{gathered} \begin{bmatrix}
 y_{1, it} \\
@@ -117,15 +118,18 @@ y_{1, it} \\
 y_{1, it}^w \\
 \end{bmatrix} \end{gathered}
 $$
+
 <center>
 $$\text{Within-level model.}$$
 </center>
+
 $$
 \begin{gathered} \begin{bmatrix}
 y_{1, it}^w \\
 \end{bmatrix} = \begin{bmatrix} \phi_{(1)11,i} \\ \end{bmatrix} \begin{bmatrix} y_{1,i(t - 1)}^w \\ \end{bmatrix} +  \begin{bmatrix} \zeta_{1, it} \\ \end{bmatrix} ,\\ 
 \text{with}~\zeta_{1,it} \sim \mathit{N}(0, \sigma^2_{\zeta_{1},i})  \end{gathered}
 $$
+
 <center>
 $$\text{Between-level model.}$$
 </center>
