@@ -157,9 +157,21 @@ with `keep_tex = TRUE`.
 mlts_model_paths(ar1_model)
 ```
 
+<<<<<<< HEAD
 <p align="center">
 <img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
 </p>
+=======
+<<<<<<< HEAD
+<p align = "center">
+<img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
+</p>
+=======
+<center>
+<img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
+</center>
+>>>>>>> 3802b3f2c35d230408f407d30da328ddf944ef57
+>>>>>>> c67e564a1e0232ef0386eaa2e0201daf15f0ddbb
 
 To fit the above model, we pass it together with the data set to
 `mlts_fit()`. The data set for this example is an artificial data set
