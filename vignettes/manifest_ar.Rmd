@@ -93,7 +93,7 @@ mlts_model_paths(ar1_model)
 knitr::include_graphics(c("../vignettes/pathmodel_ar1.png"))
 ```
 
-To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
+By path model convention, rectangles represent observed variables and circles represent latent (i.e., unobserved) variables. A single-headed arrow represents a directed path (i.e., a regression), a double-headed arrow represents (co-)variation, and a dot on a path indicates that this parameter can vary across between-level units. To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
 
 ```{r echo=FALSE}
 load("../data/ar1_data.rda")
