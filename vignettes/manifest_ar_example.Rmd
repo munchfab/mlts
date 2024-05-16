@@ -89,16 +89,8 @@ Furthermore, a path model can also be produced with the function `mlts_model_pat
 mlts_model_paths(ar1_model)
 ```
 
-```{r echo=FALSE, out.width="18%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_ar1_1.png"))
-```
-
-```{r echo=FALSE, out.width="58%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_ar1_2.png"))
-```
-
-```{r echo=FALSE, out.width="36%", fig.align='center'}
-knitr::include_graphics(c("pathmodel_ar1_3.png"))
+```{r echo=FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics(c("../vignettes/pathmodel_ar1.png"))
 ```
 
 To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
@@ -112,6 +104,7 @@ head(ar1_data)
 ```
 
 We need to specify the variable in `data` that contains the time-series process in the `ts` argument and the variable that contains the unit identifier in the `id` argument. With the argument `tinterval`, the time interval for approximation of a continuous time process can be specified @Asparouhov2018. We don't specify it here, but see the Vignette *Approximation of a Continuous Time Model* for more details.
+
 ```{r eval=FALSE}
 ar1_fit <- mlts_fit(
   model = ar1_model,
