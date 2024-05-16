@@ -151,21 +151,6 @@ create_missings <- function(data, tinterval, id, time,
     x = new_data, y = btw_data, by = c("num_id"), all.x = T, sort = F
   )
 
-  # check for duplicates and delete if necessary
-  # duplicates_list <- list()
-  # for (i in 1:length(unique(new_data$num_id))) {
-  #   duplicates_list[[i]] <- duplicated(new_data[new_data$num_id == i, "int_time"])
-  #   if (any(duplicates_list[[i]]) == TRUE) {
-  #     warn_id <- btw_data[btw_data$num_id == i, id]
-  #     warning("Deleted ", sum(duplicates_list[[i]]), " duplicated ", ifelse(
-  #       sum(duplicates_list[[i]]) > 1, paste0("entries"), "entry"
-  #     ), " in ", time, " for id ", warn_id)
-  #   }
-  # }
-  # reduce to data frame
-  # duplicates <- do.call("c", duplicates_list)
-  # new_data <- new_data[!duplicates, ]
-
   return(new_data)
 }
 
@@ -185,7 +170,7 @@ create_missings <- function(data, tinterval, id, time,
 #' added in newly created rows with NAs.
 #'
 #' @return A `data.frame` with missings imputed for use in `prepare_data()`.
-#' @export
+#' @noRd
 #'
 #' @examples
 #' # create some data for example
@@ -329,7 +314,7 @@ create_missings2 <- function(data, tinterval, id, time,
 #'
 #' @return A `data.frame` with missings imputed for use in `prepare_data()`.
 #'
-#' @export
+#' @noRd
 create_missings3 <- function(data, tinterval, id, time,
                              btw_vars = NULL, clean = TRUE) {
 
