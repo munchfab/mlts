@@ -64,7 +64,7 @@
 #' helpful to inspect prepared data used for model estimation (default = TRUE).
 #' @param ... Additional arguments passed to \code{\link[rstan]{sampling}}.
 #'
-#' @return An object of class \code{"mltsfit"}.
+#' @return An object of class \code{mltsfit}.
 #' The object is a list containing the following components:
 #' \item{model}{the model object passed to `mlts_fit`}
 #' \item{data}{the preprocessed data used for fitting the model}

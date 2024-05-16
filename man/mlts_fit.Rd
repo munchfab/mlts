@@ -118,7 +118,7 @@ helpful to inspect prepared data used for model estimation (default = TRUE).}
 \item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }
 \value{
-An object of class \code{"mltsfit"}.
+An object of class \code{mltsfit}.
 The object is a list containing the following components:
 \item{model}{the model object passed to \code{mlts_fit}}
 \item{data}{the preprocessed data used for fitting the model}

@@ -1,3 +1,13 @@
+#' Helper function for standardizing within-level parameters
+#'
+#' @param object `mltsfit`. Output of \code{\link[mlts]{mlts_model}} and related functions.
+#' @param digits Number of digits. Default is 3.
+#' @param prob A value between 0 and 1 to indicate the width of the credible
+#' interval. Default is .95.
+#'
+#' @return An object of class `list`.
+#' @noRd
+#'
 mlts_standardized_btw <- function(object, digits = 3, prob = .95
 ){
 

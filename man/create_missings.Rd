@@ -24,7 +24,7 @@ string).}
 added in newly created rows with NAs.}
 }
 \value{
-A \code{data.frame} with missings imputed for use in \code{prepare_data()}.
+A \code{data.frame} with missings imputed for use in \code{\link{mlts_fit}}.
 }
 \description{
 Create Missings for Approximation of Continuous Time Dynamic Models

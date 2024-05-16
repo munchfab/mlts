@@ -1,3 +1,15 @@
+#' Title
+#'
+#' @param object `mltsfit`. Output of \code{\link[mlts]{mlts_model}} and related functions.
+#' @param digits Number of digits. Default is 3.
+#' @param prob A value between 0 and 1 to indicate the width of the credible
+#' interval. Default is .95.
+#' @param add_cluster_std logical. If `what = "within"`, within-level standardized effects for each cluster
+#' are included in the output (defaults to `FALSE`).
+#'
+#' @return An object of class `list`.
+#' @noRd
+#'
 mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_std = FALSE
 ){
 

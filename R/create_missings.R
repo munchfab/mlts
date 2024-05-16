@@ -12,7 +12,7 @@
 #' @param btw_vars The names of between-level variables in the data to be
 #' added in newly created rows with NAs.
 #'
-#' @return A `data.frame` with missings imputed for use in `prepare_data()`.
+#' @return A `data.frame` with missings imputed for use in \code{\link{mlts_fit}}.
 #' @export
 #'
 #' @examples

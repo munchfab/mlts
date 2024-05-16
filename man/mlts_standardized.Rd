@@ -27,7 +27,7 @@ interval. Default is .95.}
 are included in the output (defaults to \code{FALSE}).}
 }
 \value{
-An object of class \code{list}.
+A \code{list} containing between- and within-level standardized parameters.
 }
 \description{
 Get Standardized Estimates for an mlts Model

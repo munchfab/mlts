@@ -8,7 +8,7 @@
 #' @param digits Number of digits. Default is 3.
 #' @param add_cluster_std logical. If `what = "within"`, within-level standardized effects for each cluster
 #' are included in the output (defaults to `FALSE`).
-#' @return An object of class `list`.
+#' @return A `list` containing between- and within-level standardized parameters.
 #' @export
 #'
 #' @examples

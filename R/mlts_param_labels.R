@@ -2,6 +2,7 @@
 #'
 #' @param model `data frame`. Output of \code{\link[mlts]{mlts_model}} and
 #' related functions.
+#' @return An object of class `data.frame`.
 #' @noRd
 #'
 #' @details
