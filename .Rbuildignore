@@ -4,3 +4,4 @@ rcppExports.cpp
 stanExports_*
 ^LICENSE\.md$
 ^README\.Rmd$
+^cran-comments\.md$
