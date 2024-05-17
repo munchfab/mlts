@@ -69,7 +69,7 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
     # run within-level standardization
     std_within = mlts_standardize_within(object = object, digits = digits, prob = prob,
                             add_cluster_std = add_cluster_std)
-    result[["Within-level standardidzed effects averaged over clusters"]] =
+    result[["Within-level standardized effects averaged over clusters"]] =
       std_within$`Within-level standardidzed effects averaged over clusters`
     if(add_cluster_std == TRUE){
       result[["Within-level standardized effects by cluster"]] =
