@@ -1,6 +1,6 @@
 test_that("Common pathmodels are rendered without errors", {
-  path <- testthat::test_path("testdata")
-  file <- testthat::test_path("testdata", "pathmodel.pdf")
+  path <- "tests/local"
+  file <- "tests/local/pathmodel.pdf"
   # 1 construct, 1 indicator, no lagged effects
   model <- mlts_model(q = 1)
   expect_no_error(

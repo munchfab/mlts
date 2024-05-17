@@ -1,6 +1,6 @@
 test_that("Common model formulas are rendered without errors", {
-  path <- testthat::test_path("testdata")
-  file <- testthat::test_path("testdata", "formula.pdf")
+  path <- "tests/local"
+  file <- "tests/local/test_formula.pdf"
   # 1 construct, 1 indicator, no lagged effects
   model <- mlts_model(q = 1)
   expect_no_error(
@@ -82,5 +82,6 @@ test_that("Common model formulas are rendered without errors", {
   )
   # remove files
   files <- list.files(path, full.names = TRUE)
-  file.remove(files[grep("formula", files)])
+  file.remove(files[grep("test_formula", files)])
 })
+
