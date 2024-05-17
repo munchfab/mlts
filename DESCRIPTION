@@ -1,10 +1,14 @@
 Package: mlts
 Title: Multilevel Latent Time Series Models with R and Stan
 Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: A package for fitting multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
+Authors@R: c(
+  person("Kenneth", "Koslowski", email = "kenneth.koslowski@uni-leipzig.de", role = c("aut", "cre"),
+         comment = c(ORCID = "YOUR-ORCID-ID")),
+  person("Fabian", "Münch", email = "fabian.felix.muench@uni-jena.de", role = "aut"),
+  person("Tobias", "Koch", email = "tobias.koch@uni-jena.de", role = "ctb"),
+  person("Jana", "Holtmann", email = "jana.holtmann@uni-leipzig.de", role = "ctb")
+)
+Description: Fit multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
