@@ -72,6 +72,7 @@ ar1_fit1 <- mlts_fit(
   data = gait_data,
   id = "subject",
   ts = "stride_interval",
+  monitor_person_pars = TRUE,
   iter = 1000
 )
 ```
@@ -84,15 +85,25 @@ ar1_fit1 <- readRDS("../vignettes/betw_preds_fit1.rds")
 summary(ar1_fit1)
 ```
 
-The fixed effect of the subject mean of stride interval is estimated at 1.096. Individual mean stride intervals fluctuate around this fixed effect with a standard deviation of .132 (see `Random Effect SDs`). The fixed effect of the first-order autoregressive effect (see `phi(1)_11` in the section `Fixed Effects`) is estimated at .348, with random effects standard deviation of 0.296. The fixed effect of log innovation variance is estimated at -6.958. To be on the original scale, we have to exponentiate it: exp(-6.958) = `r round(exp(-6.958), 3)`. The random effects' standard deviation of log innovation variance is estimated at 1.553.
+The fixed effect of the subject mean of stride interval is estimated at `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "mu_1", "mean"], 3)`.
+Individual mean stride intervals fluctuate around this fixed effect with a standard deviation of `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "sigma_mu_1", "mean"], 3)` (see `Random Effect SDs`).
+The fixed effect of the first-order autoregressive effect (see `phi(1)_11` in the section `Fixed Effects`) is estimated at `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "phi(1)_11", "mean"], 3)`, with random effects standard deviation of `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "sigma_phi(1)_11", "mean"], 3)`.
+The fixed effect of log innovation variance is estimated at `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "ln.sigma2_1", "mean"], 3)`.
+To be on the original scale, we have to exponentiate it: exp(`r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "sigma_mu_1", "mean"], 3)`) = `r round(exp(-6.958), 3)`.
+The random effects' standard deviation of log innovation variance is estimated at `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "sigma_ln.sigma2_1", "mean"], 3)`.
 
-There is also a substantial correlation between random effects of the person mean (`mu_1`) and log innovation variance (`ln.sigma2_1`) of .480, indicating that subjects with a longer stride interval also display higher variation in their stride interval. Furthermore, there is a substantial negative correlation between the autoregressive effect `phi(1)_11` and log innovation variance, indicating that subjects displaying a higher stability in their stride interval tend to display lower variation and vice versa.
+There is also a substantial correlation between random effects of the person mean (`mu_1`) and log innovation variance (`ln.sigma2_1`) of `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`, indicating that subjects with a longer stride interval also display higher variation in their stride interval.
+Furthermore, there is a substantial negative correlation of `r round(ar1_fit1$pop.pars.summary[ar1_fit1$pop.pars.summary$Param == "r_phi(1)_11.ln.sigma2_1", "mean"], 3)` between the autoregressive effect `phi(1)_11` and log innovation variance, indicating that subjects displaying a higher stability in their stride interval tend to display lower variation and vice versa.
 
 ## Include a predictor for random effects
 
-We can now try to explain differences in model parameters by another covariate. In this example, we will use the subjects health status as explanatory variable, which is binary in our case (i.e., `1` for healthy subjects and `0` for subjects with Parkinson's disease). We will include this covariate on the *between-level* to explain random effect variation, thus it has to be stable *within* subjects. Note furthermore that the variable has to be numeric or integer for Stan to be acceptable.
+We can now try to explain differences in model parameters by another covariate.
+In this example, we will use the subjects health status as explanatory variable, which is binary in our case (i.e., `1` for healthy subjects and `0` for subjects with Parkinson's disease).
+We will include this covariate on the *between-level* to explain random effect variation, thus it has to be stable *within* subjects.
+Note furthermore that the variable has to be numeric or integer for Stan to be acceptable.
 
-We set this model up with `mtls_model()`. To predict all random effects present in the model, we can just provide the variable name in the argument `ranef_pred`:
+We set this model up with `mtls_model()`.
+To predict all random effects present in the model, we can just provide the variable name in the argument `ranef_pred`:
 
 ```{r}
 ar1_model2 <- mlts_model(q = 1, ranef_pred = "healthy")
@@ -114,7 +125,11 @@ mlts_model_paths(ar1_model2)
 knitr::include_graphics(c("../vignettes/pathmodel_betw_preds.png"))
 ```
 
-We fit the model with `mlts_fit()`. We need to provide the unit identifier and the time-series construct we wish to examine. If the explanatory variable is called the same as provided in the call to `mlts_model()`, it does not need to be specified again.
+We fit the model with `mlts_fit()`.
+We need to provide the unit identifier and the time-series construct we wish to examine.
+If the explanatory variable is called the same as provided in the call to `mlts_model()`, it does not need to be specified again.
+To obtain standardized estimates for parameters on the within- and between-level, we set `monitor_person_pars = TRUE`.
+For large models, this may greatly increase sampling times, so this argument is set to `FALSE` by default.
 
 ```{r eval=FALSE}
 ar1_fit2 <- mlts_fit(
@@ -134,7 +149,18 @@ ar1_fit2 <- readRDS("../vignettes/betw_preds_fit2.rds")
 summary(ar1_fit2)
 ```
 
-The `summary()` now shows a new section called `Random Effects Regressed On`, which shows the regression weights of the explanatory variable `healthy`. We can see that subjects' health status has substantial effects on the autoregressive effect `phi(1)_11` and log innovation variance `ln.sigma2_1` (as the 95% credible intervals of regression weights do not include 0). In particular, healthy subjects (with a value of `1` in the variable `healthy`) display, on average, an autoregressive effect that is .286 units higher than for subjects with Parkinson's disease.
+The `summary()` now shows a new section called `Random Effects Regressed On`, which shows the regression weights of the explanatory variable `healthy`.
+We can see that subjects' health status has effects on all between-level model parameters the autoregressive effect `phi(1)_11` and log innovation variance `ln.sigma2_1`.
+However, only for the effect on log innovation variance, the 95% credible intervals of the regression weight does not include 0.
+In particular, healthy subjects' (with a value of `1` in the variable `healthy`) have, on average, a stride interval that is `r round(ar1_fit2$pop.pars.summary[ar1_fit2$pop.pars.summary$Param == "b_mu_1.ON.healthy", "mean"], 3)` seconds shorter than subjects with Parkinson's disease.
+Furthermore, healthy subjects  display, on average, an autoregressive effect that is `r round(ar1_fit2$pop.pars.summary[ar1_fit2$pop.pars.summary$Param == "b_phi(1)_11.ON.healthy", "mean"], 3)` units higher than for subjects with Parkinson's disease.
+At last, the log innovation variance is on average `r round(ar1_fit2$pop.pars.summary[ar1_fit2$pop.pars.summary$Param == "b_ln.sigma2_1.ON.healthy", "mean"], 3)` units lower for healthy subjects in comparison to subjects with Parkinson's disesase.
 
+To obtain standardized estimates of the parameters, we call `mlts_standardized()` on the `mltsfit`-object.
+The argument `what = "both"` controls that standardized estimates are computed for the within- and between level (by default, it is done for the between-level only).
+
+```{r}
+mlts_standardized(ar1_fit2, what = "both")
+```
 
 ## References
