@@ -6,7 +6,7 @@
 \alias{mlts-package}
 \title{mlts: Multilevel Latent Time Series Models with R and Stan}
 \description{
-A package for fitting multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
+Fit multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
 }
 \seealso{
 Useful links:
@@ -17,7 +17,14 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Kenneth Koslowski \email{kenneth.koslowski@uni-leipzig.de}
+
+Authors:
+\itemize{
+  \item Fabian Münch \email{fabian.felix.muench@uni-jena.de}
+  \item Tobias Koch \email{tobias.koch@uni-jena.de}
+  \item Jana Holtmann \email{jana.holtmann@uni-leipzig.de}
+}
 
 }
 \keyword{internal}
