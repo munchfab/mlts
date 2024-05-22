@@ -5,7 +5,7 @@
 #' @param prob A value between 0 and 1 to indicate the width of the credible
 #' interval. Default is .95.
 #'
-#' @return An object of class `list`.
+#' @return An object of class `list` containing between-level standardized estimates.
 #' @noRd
 #'
 mlts_standardized_btw <- function(object, digits = 3, prob = .95

@@ -34,7 +34,8 @@
 #' @param hide_xaxis_text logical. Hide x-axis text if set to `TRUE`.
 #' @param par_labels character vector. User-specified labels for random effect parameters
 #' can be specified.
-#' @param labels_as_expressions logical.
+#' @param labels_as_expressions logical. Should parameter names on plot labels be printed
+#' as mathematical expressions? Defaults to `FALSE`. Still experimental.
 #' @return Returns a `ggplot`-object .
 #'
 #' @export

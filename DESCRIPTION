@@ -1,13 +1,20 @@
 Package: mlts
-Title: Multilevel Latent Time Series Models with R and Stan
+Title: Multilevel Latent Time Series Models with `R` and `Stan`
 Version: 0.0.0.9000
 Authors@R: c(
-    person("Kenneth", "Koslowski", email = "kenneth.koslowski@uni-leipzig.de", role = c("aut", "cre")),
-    person("Fabian", "Münch", email = "fabian.felix.muench@uni-jena.de", role = "aut"),
-    person("Tobias", "Koch", email = "tobias.koch@uni-jena.de", role = "aut"),
-    person("Jana", "Holtmann", email = "jana.holtmann@uni-leipzig.de", role = "aut")
+    person("Kenneth", "Koslowski", email = "kenneth.koslowski@uni-leipzig.de", role = c("aut", "cre", "cph"),
+      comment = c(ORCID="0000-0001-5296-5267")),
+    person("Fabian", "Münch", email = "fabian.felix.muench@uni-jena.de", role = "aut",
+      comment = c(ORCID="0000-0001-5591-9901")),
+    person("Tobias", "Koch", email = "tobias.koch@uni-jena.de", role = "aut",
+      comment = c(ORCID="0000-0002-8143-3566")),
+    person("Jana", "Holtmann", email = "jana.holtmann@uni-leipzig.de", role = "aut",
+      comment = c(ORCID="0000-0001-5296-5267"))
   )
-Description: Fit multilevel manifest or latent time-series models with R and Stan, including popular Dynamic Structural Equation Models (DSEM).
+Description: Fit multilevel manifest or latent time-series models, including popular Dynamic Structural Equation Models (DSEM).
+  The models can be set up and modified with user-friendly functions and are fit to the data using `Stan` for Bayesian inference.
+  Path models and formulas for user-defined models can be easily created with functions using `knitr`.
+References: Asparouhov, Hamaker, & Muthen (2018) <doi:10.1080/10705511.2017.1406803>
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

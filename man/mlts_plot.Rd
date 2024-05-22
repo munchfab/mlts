@@ -83,7 +83,8 @@ true population parameter values can be plotted as reference by setting the argu
 \item{par_labels}{character vector. User-specified labels for random effect parameters
 can be specified.}
 
-\item{labels_as_expressions}{logical.}
+\item{labels_as_expressions}{logical. Should parameter names on plot labels be printed
+as mathematical expressions? Defaults to \code{FALSE}. Still experimental.}
 }
 \value{
 Returns a \code{ggplot}-object .
