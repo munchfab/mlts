@@ -7,7 +7,7 @@
 #' @param add_cluster_std logical. If `what = "within"`, within-level standardized effects for each cluster
 #' are included in the output (defaults to `FALSE`).
 #'
-#' @return An object of class `list`.
+#' @return An object of class `list` containing within-level standardized estimates.
 #' @noRd
 #'
 mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_std = FALSE
