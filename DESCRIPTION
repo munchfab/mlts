@@ -1,6 +1,6 @@
 Package: mlts
 Title: Multilevel Latent Time Series Models with `R` and `Stan`
-Version: 0.0.0.9000
+Version: 1.0.0
 Authors@R: c(
     person("Kenneth", "Koslowski", email = "kenneth.koslowski@uni-leipzig.de", role = c("aut", "cre", "cph"),
       comment = c(ORCID="0000-0001-5296-5267")),
