@@ -6,3 +6,4 @@ stanExports_*
 ^README\.Rmd$
 ^cran-comments\.md$
 .github
+^CRAN-SUBMISSION$

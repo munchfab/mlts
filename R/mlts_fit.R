@@ -81,7 +81,7 @@
 #' @references
 #' Asparouhov, T., Hamaker, E. L., & Muthén, B. (2018). Dynamic Structural Equation
 #' Models. Structural Equation Modeling: *A Multidisciplinary Journal*, *25*(3), 359–388.
-#' \url{https://doi.org/10.1080/10705511.2017.1406803}
+#' \doi{10.1080/10705511.2017.1406803}
 #'
 #' @export
 #'

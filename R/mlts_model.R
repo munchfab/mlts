@@ -77,7 +77,7 @@
 #' Hamaker, E. L., Asparouhov, T., Brose, A., Schmiedek, F., & Muthén, B. (2018).
 #' At the frontiers of modeling intensive longitudinal data: Dynamic structural equation models
 #' for the affective measurements from the COGITO study. *Multivariate behavioral research*, *53*(6), 820-841.
-#' \url{https://doi.org/10.1080/00273171.2018.1446819}
+#' \doi{10.1080/00273171.2018.1446819}
 #' @export
 #'
 #' @examples
