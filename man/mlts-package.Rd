@@ -4,7 +4,7 @@
 \name{mlts-package}
 \alias{mlts}
 \alias{mlts-package}
-\title{mlts: Multilevel Latent Time Series Models with `R` and `Stan`}
+\title{mlts: Multilevel Latent Time Series Models with `r` and `stan`}
 \description{
 Fit multilevel manifest or latent time-series models, including popular Dynamic Structural Equation Models (DSEM). The models can be set up and modified with user-friendly functions and are fit to the data using `Stan` for Bayesian inference. Path models and formulas for user-defined models can be easily created with functions using `knitr`.
 }
@@ -17,13 +17,13 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Kenneth Koslowski \email{kenneth.koslowski@uni-leipzig.de} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID}) [copyright holder]
+\strong{Maintainer}: Kenneth Koslowski \email{kenneth.koslowski@uni-leipzig.de} (\href{https://orcid.org/0000-0001-5296-5267}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
   \item Fabian Münch \email{fabian.felix.muench@uni-jena.de} (\href{https://orcid.org/0000-0001-5591-9901}{ORCID})
   \item Tobias Koch \email{tobias.koch@uni-jena.de} (\href{https://orcid.org/0000-0002-8143-3566}{ORCID})
-  \item Jana Holtmann \email{jana.holtmann@uni-leipzig.de} (\href{https://orcid.org/0000-0000-0000-0000}{ORCID})
+  \item Jana Holtmann \email{jana.holtmann@uni-leipzig.de} (\href{https://orcid.org/0000-0002-7949-0772}{ORCID})
 }
 
 }
