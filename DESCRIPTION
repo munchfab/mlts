@@ -32,7 +32,7 @@ Imports:
     rlang,
     rmarkdown,
     rstan (>= 2.32.3),
-    rstantools (>= 2.3.1.1),
+    rstantools (>= 2.4.0),
     stats
 Suggests: 
     knitr,
