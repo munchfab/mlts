@@ -4,9 +4,9 @@
 \name{mlts-package}
 \alias{mlts}
 \alias{mlts-package}
-\title{mlts: Multilevel Latent Time Series Models with `r` and `stan`}
+\title{mlts: Multilevel Latent Time Series Models with 'r' and 'stan'}
 \description{
-Fit multilevel manifest or latent time-series models, including popular Dynamic Structural Equation Models (DSEM). The models can be set up and modified with user-friendly functions and are fit to the data using `Stan` for Bayesian inference. Path models and formulas for user-defined models can be easily created with functions using `knitr`.
+Fit multilevel manifest or latent time-series models, including popular Dynamic Structural Equation Models (DSEM). The models can be set up and modified with user-friendly functions and are fit to the data using 'Stan' for Bayesian inference. Path models and formulas for user-defined models can be easily created with functions using 'knitr'. Asparouhov, Hamaker, & Muthen (2018) \doi{10.1080/10705511.2017.1406803}.
 }
 \seealso{
 Useful links:
