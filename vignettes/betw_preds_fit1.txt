@@ -1,0 +1,45 @@
+Call:
+mlts_model(q = 1, max_lag = 1)
+Time series variables as indicated by parameter subscripts: 
+   1 --> stride_interval
+Data: 9144 observations in 15 IDs
+Model convergence criteria: 
+  Maximum Potential Scale Reduction Factor (PSR; Rhat): 1.006 (should be < 1.01)
+  Minimum Bulk ESS: 482 (should be > 200, 100 per chain) 
+  Minimum Tail ESS: 506 (should be > 200, 100 per chain) 
+  Number of divergent transitions: 0 (should be 0) 
+
+Fixed Effects:
+             Post. Mean Post. Median Post. SD   2.5%  97.5%  Rhat Bulk_ESS
+        mu_1      1.096        1.096    0.033  1.029  1.157 1.004      747
+   phi(1)_11      0.348        0.348    0.080  0.185  0.512 1.006      723
+ ln.sigma2_1     -6.958       -6.959    0.397 -7.777 -6.216 1.003      622
+ Tail_ESS
+      713
+      506
+      587
+
+Random Effects SDs:
+             Post. Mean Post. Median Post. SD  2.5% 97.5%  Rhat Bulk_ESS
+        mu_1      0.132        0.128    0.028 0.091 0.200 1.001      778
+   phi(1)_11      0.296        0.287    0.065 0.200 0.450 1.003      664
+ ln.sigma2_1      1.553        1.509    0.310 1.073 2.275 1.002      678
+ Tail_ESS
+      785
+      635
+      681
+
+Random Effects Correlations:
+                       Post. Mean Post. Median Post. SD   2.5%  97.5%  Rhat
+        mu_1.phi(1)_11      0.015        0.018    0.246 -0.463  0.491 1.002
+      mu_1.ln.sigma2_1      0.480        0.499    0.197  0.058  0.801 1.001
+ phi(1)_11.ln.sigma2_1     -0.459       -0.487    0.196 -0.774 -0.029 1.002
+ Bulk_ESS Tail_ESS
+      714      685
+      554      695
+      539      718
+
+Samples were drawn using NUTS on Thu May 16 15:17:38 2024.
+For each parameter, Bulk_ESS and Tail_ESS are measures of effective
+sample size, and Rhat is the potential scale reduction factor
+on split chains (at convergence, Rhat = 1).
