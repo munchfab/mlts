@@ -32,7 +32,7 @@ update_model_REcors <- function(model) {
       "Param_Label" = "RE Cor",
       "isRandom" = 0
     )
-    model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = T))
+    model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = TRUE))
   } else if (n_rand == 1) {
     model <- model[model$Type != "RE Cor", ]
   }
@@ -61,7 +61,7 @@ replace_model_row <- function(model, row, replacement) {
   return(model)
 }
 
-extract_indicator_info <- function(model, level = "Within", type = "Loading", incl.pos_p = F) {
+extract_indicator_info <- function(model, level = "Within", type = "Loading", incl.pos_p = FALSE) {
   # a helper function to extract indicator information
 
   # create a table where all indocators are present
@@ -78,15 +78,15 @@ extract_indicator_info <- function(model, level = "Within", type = "Loading", in
 
   ind.info <- data.frame(
     "q" = unlist(lapply(inds, function(x) {
-      strsplit(x, split = ".", fixed = T)[[1]][1]
+      strsplit(x, split = ".", fixed = TRUE)[[1]][1]
     })),
     "p" = unlist(lapply(inds, function(x) {
-      strsplit(x, split = ".", fixed = T)[[1]][2]
+      strsplit(x, split = ".", fixed = TRUE)[[1]][2]
     }))
   )
 
   # add general indicator number
-  if (incl.pos_p == T) {
+  if (incl.pos_p == TRUE) {
     ind.info$p_pos <- 1:nrow(ind.info)
   }
   # add parameter

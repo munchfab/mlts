@@ -56,7 +56,7 @@
 #' }
 #'
 
-mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
+mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
                      seed.true = 1, btw.var.sds = NULL){
 
   set.seed(seed.true)
@@ -75,7 +75,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
 
 
   # use some default settings for parameter values
-  if(default==T){
+  if(default==TRUE){
     model$true.val = NA
 
     # MEASUREMENT MODEL PARAMETERS =============================================
@@ -83,19 +83,19 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     Model = "Measurement"
     model$true.val[model$Model == Model & model$Type == "Item intercepts" & model$Constraint == "= 0"] = 0
     model$true.val[model$Model == Model & model$Type == "Item intercepts" & model$Constraint == "free"] =
-      sample(x = seq(0.5, 2, by = 0.5), size = infos$n_alphafree, replace = T)
+      sample(x = seq(0.5, 2, by = 0.5), size = infos$n_alphafree, replace = TRUE)
     model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
     model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "free"] =
-      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadWfree, replace = T)
+      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadWfree, replace = TRUE)
     model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
     model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "free"] =
-      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = T)
+      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = TRUE)
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
-      sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = T)
+      sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = TRUE)
     model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
     model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
-      sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = T)
+      sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = TRUE)
 
     # Fixed effects ========
     model.type = "Fixed effect"
@@ -109,9 +109,9 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     phis$true.val = NA
     ## start with lag 1 ARs
     n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
-    phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = T, size = n_sample)
+    phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = TRUE, size = n_sample)
     n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
-    phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = T, size = n_sample)
+    phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = TRUE, size = n_sample)
     ## add higher order effects
     if(infos$maxLag>1){
       for(i in 1:nrow(phis)){
@@ -137,7 +137,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     model.type = "Random effect SD"
     ## Mus
     model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
-      x = seq(from= 0.7, to = 1.2, by = 0.1), size = n_traits, replace = T)
+      x = seq(from= 0.7, to = 1.2, by = 0.1), size = n_traits, replace = TRUE)
     ## Phis
     model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
     ## log innovation variances
@@ -150,19 +150,19 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     ## set all to zero for now
     model.type = "RE correlation"
     model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.2, to = 0.2, by = 0.025),3)), replace = T,
+      c(round(seq(from = -0.2, to = 0.2, by = 0.025),3)), replace = TRUE,
       size = sum(model$Type == model.type))
 
     # RE as OUTCOME =========================
     model.type = "RE prediction"
     model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.2, to = 0.2, by = 0.05),3)), replace = T,
+      c(round(seq(from = -0.2, to = 0.2, by = 0.05),3)), replace = TRUE,
       size = sum(model$Type == model.type))
 
     # OUTCOME PREDICTION ===================
     model.type = "Outcome prediction"
     model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = T,
+      c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = TRUE,
       size = sum(model$Type == model.type))
     # scale true values for AR and CL as predictor
     model$true.val[model$Type == model.type & grepl(pattern = "phi",model$Param)] <-
@@ -353,7 +353,7 @@ mlts_sim <- function(model, default = F, N, TP, burn.in = 50, seed = NULL,
     within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
 
     # add trait scores (for manifest indicators)
-    if(infos$isLatent == F){
+    if(infos$isLatent == FALSE){
       for(j in 1:infos$q){
         within[within$ID==i,y_cols[j]] = btw[i,j] + within[within$ID==i,y_cols[j]]
       }

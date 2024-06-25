@@ -111,7 +111,7 @@ mlts_fit <- function(model,
                      covariates = NULL,
                      outcomes = NULL,
                      outcome_pred_btw = NULL,
-                     center_covs = T,
+                     center_covs = TRUE,
                      time = NULL,
                      tinterval = NULL,
                      beep = NULL,
@@ -121,11 +121,11 @@ mlts_fit <- function(model,
                      iter = 500,
                      chains = 2,
                      cores = 2,
-                     monitor_person_pars = F,
-                     get_SD_latent = F,
-                     fit_model = T,
-                     print_message = T,
-                     print_warning = T,
+                     monitor_person_pars = FALSE,
+                     get_SD_latent = FALSE,
+                     fit_model = TRUE,
+                     print_message = TRUE,
+                     print_warning = TRUE,
                      ...
 ){
 
@@ -136,7 +136,7 @@ mlts_fit <- function(model,
 
   # print information on indicators per dimension
   # print information on variables used for model estimation
-  if(infos$isLatent == F){
+  if(infos$isLatent == FALSE){
     call_inds = c(
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
@@ -144,7 +144,7 @@ mlts_fit <- function(model,
       }))
     )
   }
-  if(infos$isLatent == T){
+  if(infos$isLatent == TRUE){
     call_inds = c(
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
@@ -159,12 +159,12 @@ mlts_fit <- function(model,
   data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
   # check if data is class "mlts_simdata"
-  if(data.simulated == T) {
+  if(data.simulated == TRUE) {
     message("Simulated data provided:",
     "\nTrue scores used in the data generation will be added to the returned object.")
 
     par_labels <- merge(x = par_labels, data$model[,c("Param", "true.val")],
-                       by = "Param", sort = F)
+                       by = "Param", sort = FALSE)
 
     # store true values of indivdual parameters
     re.trues <- data$RE.pars
@@ -241,7 +241,7 @@ mlts_fit <- function(model,
   data.test$ID = data[,id]
   for(i in 1:length(ts)){
     for(j in 1:length(ids)){
-     if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = T) == 0){
+     if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = TRUE) == 0){
        stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
      }
     }
@@ -274,7 +274,7 @@ mlts_fit <- function(model,
   # VAR(1) Models -------------------------------------------------------------
 
   ## Single-indicator VAR(1) model
-  if(isLatent == F){
+  if(isLatent == FALSE){
     # data preprocessing
     standata <- VARprepare(model = model, data = data, ts = ts,
                           covariates = covariates, outcomes = outcomes,
@@ -284,7 +284,7 @@ mlts_fit <- function(model,
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
-    if(monitor_person_pars == T){
+    if(monitor_person_pars == TRUE){
       pars = c(pars, "b_free")
     }
 
@@ -321,7 +321,7 @@ mlts_fit <- function(model,
   }
 
   ## Multiple-indicator Model ==================================================
-  if(isLatent == T){
+  if(isLatent == TRUE){
     # data preprocessing
     standata <- VARprepare(model = model, data = data, ts = ts,
                            covariates = covariates, outcomes = outcomes,
@@ -329,7 +329,7 @@ mlts_fit <- function(model,
                            center_covs = center_covs)
     # latent variable SDs requested?
     standata$standardized = ifelse(get_SD_latent == T, 1, 0)
-    if(get_SD_latent == F & print_message == T){
+    if(get_SD_latent == FALSE & print_message == TRUE){
       message("\n Set get_SD_latent = TRUE to obtain standardized parameter estimates using mlts_standardized in a subsequent step.")
     }
 
@@ -337,12 +337,12 @@ mlts_fit <- function(model,
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out",
               "alpha", "loadB", "sigmaB", "loadW", "sigmaW", "SD_etaW", "SD_etaW_i")
-    if(monitor_person_pars == T){
+    if(monitor_person_pars == TRUE){
       pars = c(pars, "b_free")
     }
 
     if(standata$n_inno_cors == 0){
-      if(fit_model==T){
+      if(fit_model==TRUE){
         stanfit <- rstan::sampling(
           stanmodels$VAR_latent,
           data = standata,
@@ -378,9 +378,9 @@ mlts_fit <- function(model,
   # ============================================================================
 
 
-  if(fit_model == T){
+  if(fit_model == TRUE){
     # add posteriors with adapted names
-    posteriors <- rstan::extract(stanfit, inc_warmup = F, permuted = F,
+    posteriors <- rstan::extract(stanfit, inc_warmup = FALSE, permuted = FALSE,
                              pars = par_labels$Param_stan)
     dimnames(posteriors)$parameters <- par_labels$Param
 
@@ -394,14 +394,14 @@ mlts_fit <- function(model,
 
     # add model parameter labels
     sums$Param_stan = row.names(sums)
-    pop.sums <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
+    pop.sums <- merge(par_labels, y = sums, by = "Param_stan", sort = FALSE)
 
     # create individual parameter summary table
     if(monitor_person_pars == TRUE){
       sums.i = sums[startsWith(sums$Param_stan, "b_free"),1:ncol(sums)]
 
       # extract infos
-      pars <- gsub(sums.i$Param_stan, pattern = "b_free[", replacement = "", fixed = T)
+      pars <- gsub(sums.i$Param_stan, pattern = "b_free[", replacement = "", fixed = TRUE)
       pars <- gsub(pars, pattern = "]", replacement = "", fixed = T)
       ID_new <- sapply(pars, function(x){strsplit(x,split = ",")[[1]][1]})
       pars <- sapply(pars, function(x){as.integer(strsplit(x,split = ",")[[1]][2])})
@@ -416,19 +416,19 @@ mlts_fit <- function(model,
       )
 
       # if simulated data were used, add true values of person parameters
-      if(data.simulated == T){
+      if(data.simulated == TRUE){
         sums.i.true = data.frame(
           "num_id" = rep(1:nrow(re.trues), ncol(re.trues)),
           "Param" = rep(colnames(re.trues), each = nrow(re.trues)),
           "true.val" = as.vector(re.trues)
         )
-        sums.i = merge(x = sums.i.true, sums.i, by = c("num_id", "Param"), all = T)
+        sums.i = merge(x = sums.i.true, sums.i, by = c("num_id", "Param"), all = TRUE)
       }
 
 
       # add original subject identifier
       id.match = unique(data[c(id, "num_id")])
-      sums.i = merge(id.match, y = sums.i, by = "num_id", all = T)
+      sums.i = merge(id.match, y = sums.i, by = "num_id", all = TRUE)
 
 
 

@@ -66,10 +66,10 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
                       facet_ncol = 1, dot_size = 1, dot_color = "black", dot_shape = 1,
                       errorbar_color = "black", errorbar_width = 0.3,
                       add_true = FALSE, true_color = "red", true_shape = 22, true_size = 1,
-                      hide_xaxis_text = T,
-                      par_labels = NULL, labels_as_expressions = F){
+                      hide_xaxis_text = TRUE,
+                      par_labels = NULL, labels_as_expressions = FALSE){
 
-  what <- match.arg(what, several.ok = T)
+  what <- match.arg(what, several.ok = TRUE)
   type <- match.arg(type)
   bpe <- match.arg(bpe)
 
@@ -112,7 +112,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
           ggplot2::geom_errorbar(aes(xmin = .data$`2.5%`, xmax = .data$`97.5%`),
                                  color = errorbar_color,
                                  width = errorbar_width) +
-          ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = T) +
+          ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = TRUE) +
           ggplot2::labs(x = xlab, y = ylab) +
           ggplot2::scale_x_continuous(n.breaks = 8) +
           ggplot2::theme_bw()
@@ -267,7 +267,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
         p_list[[i]] <- ggplot2::ggplot(df, ggplot2::aes(x = .data$x, y = .data$y)) +
           ggplot2::geom_point(color = dot_color, shape = dot_shape, fill = "grey") +
           ggplot2::theme_classic() +
-          ggplot2::stat_smooth(method = "lm", se = F) +
+          ggplot2::stat_smooth(method = "lm", se = FALSE) +
           ggplot2::scale_x_continuous(n.breaks = 7) +
           ggplot2::scale_y_continuous(n.breaks = 7) +
           ggplot2::theme(strip.placement = "outside",

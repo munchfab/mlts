@@ -63,7 +63,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
                                   fixef_zero = NULL, ranef_zero = NULL
 ){
 
-  if(fix_dynamics == T){
+  if(fix_dynamics == TRUE){
 
     # update indentifier column
     model$isRandom[grepl(model$Param_Label, pattern = "Dynamic")] = 0
@@ -74,7 +74,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
   }
 
 
-  if(fix_inno_vars == T){
+  if(fix_inno_vars == TRUE){
 
     # update indentifier column
     model$isRandom[grepl(model$Param, pattern = "ln.sigma2_")] = 0
@@ -111,7 +111,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
 
-  if(inno_covs_zero == T){
+  if(inno_covs_zero == TRUE){
     model = model[!grepl(model$Param_Label, pattern = "Covariance"),]
     model = model[!grepl(model$Param, pattern = "r.zeta"),]
   }
@@ -154,7 +154,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
   model = update_model_REcors(model)
 
   # update priors =============================================================
-  model = mlts_model_priors(model = model, default = T)
+  model = mlts_model_priors(model = model, default = TRUE)
 
 
   return(model)

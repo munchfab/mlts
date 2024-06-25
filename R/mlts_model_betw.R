@@ -36,7 +36,7 @@
 #'   model = ar_model, ranef_pred = list("mu_1" = "x")
 #' )
 #'
-#' # predict outcomes with (all) random parameters in the model
+#' # predict outcomes using (all) random parameters in the model
 #' ar_model3 <- mlts_model_betw(model = ar_model, out_pred = "y")
 #'
 #' # to use only specific random parameter, provide a named list
@@ -109,7 +109,7 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
     )
 
     # add priors
-    RE.PRED = mlts_model_priors(RE.PRED, default = T)
+    RE.PRED = mlts_model_priors(RE.PRED, default = TRUE)
 
     # add to model
     model = dplyr::bind_rows(model, RE.PRED)

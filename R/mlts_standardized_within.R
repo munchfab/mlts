@@ -45,11 +45,11 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
     cluster_std[[p]] = infos$fix_pars_dyn[ ,c("Type", "Param")]
   }
 
-  if(infos$isLatent == F){
+  if(infos$isLatent == FALSE){
     # first get individual SDs of time series variables
     for(i in 1:infos$q){
       for(pp in 1:N){
-        SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[i]], na.rm = T)
+        SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[i]], na.rm = TRUE)
       }
     }
     # calculate std estimates per person
@@ -104,7 +104,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
       if(object$standata$D_np[i] == 1){  # for constructs with single-indicator
         q_pos_ts = object$standata$D_pos_is_SI[i]
         for(pp in 1:N){
-          SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[q_pos_ts]], na.rm = T)
+          SD_y_id[i,pp,] = stats::sd(object$data[object$data$num_id == pp, object$standata$ts[q_pos_ts]], na.rm = TRUE)
         }
       } else {  # constructs with multiple indicators
         for(pp in 1:N){

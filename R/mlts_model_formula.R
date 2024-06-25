@@ -18,7 +18,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # build a simple vector-autoregressive mlts model with two time-series variables
 #' var_model <- mlts_model(q = 2)
 #'
@@ -81,7 +81,7 @@ mlts_model_formula <- function(model, file = NULL,
   dcf_caption <- "Decomposition."
 
   # for manifest time-series constructs
-  if (infos$isLatent == F) {
+  if (infos$isLatent == FALSE) {
     ts_vec <- c()
     between_vec <- c()
     within_vec <- c()
@@ -319,7 +319,7 @@ mlts_model_formula <- function(model, file = NULL,
   # left hand side
   for (i in 1:infos$q) {
     dvs_vec <- c(dvs_vec, ifelse(
-      infos$isLatent == T,
+      infos$isLatent == TRUE,
       paste0("\\eta_{", i, ", it}^w \\\\"),
       paste0("y_{", i, ", it}^w \\\\")
     ))
@@ -417,7 +417,7 @@ mlts_model_formula <- function(model, file = NULL,
     for (j in 1:infos$maxLag) {
       ts_vec <- c(
         ts_vec, paste0(
-          ifelse(infos$isLatent == T, "\\eta_{", "y_{"),
+          ifelse(infos$isLatent == TRUE, "\\eta_{", "y_{"),
           i, ",i(t - ", j, ")}^w \\\\"
         )
       )

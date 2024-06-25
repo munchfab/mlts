@@ -23,7 +23,7 @@ mlts_model_eval <- function(model){
   isPHI = which(startsWith(model$Param, "phi("))
   model$Lag = NA
   model$Lag[isPHI] = as.integer(substr(model$Param[isPHI], 5, 5))
-  maxLag = max(model$Lag, na.rm = T)
+  maxLag = max(model$Lag, na.rm = TRUE)
 
   # create additional columns
   ars = paste0("phi(",rep(1:3,each = 9),")_", 1:9, 1:9) # attention: max lag of 3 is hard-coded
@@ -70,7 +70,7 @@ mlts_model_eval <- function(model){
 
 
   # number of indicators per latent construct
-  if (isLatent == T) {
+  if (isLatent == TRUE) {
     # the following is probably not needed because we have extract_indicator_info()
     # separate measurement model intercepts
     # alphas <- model[model$Model == "Measurement" &
@@ -86,7 +86,7 @@ mlts_model_eval <- function(model){
 
     # extract indicator information
     ## start with within-part (which always contains all indicators)
-    ind_base = extract_indicator_info(model, level = "Within", type = "Loading", incl.pos_p = T)
+    ind_base = extract_indicator_info(model, level = "Within", type = "Loading", incl.pos_p = TRUE)
 
     # extract number of indicators
     p <- as.numeric(stats::aggregate(p ~ q, data = ind_base, FUN = max)$p)
@@ -123,7 +123,7 @@ mlts_model_eval <- function(model){
     if(nrow(ind_means)>0){
       ind_means$mu_isFree = 1
       # add to indicator infos
-      indicators = merge(indicators, y = ind_means, by = c("q","p"), all.x = T)
+      indicators = merge(indicators, y = ind_means, by = c("q","p"), all.x = TRUE)
     }
 
     # add etaB label for matching
@@ -148,11 +148,11 @@ mlts_model_eval <- function(model){
     )
 
     # prepare infos to be passed to stan model ---------------------------------
-    n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = T)
-    n_loadWfree = sum(indicators$lambdaW_isFree, na.rm = T)
-    n_alphafree = sum(indicators$alpha_isFree, na.rm = T)
-    n_sigmaBfree = sum(indicators$sigmaB_isFree, na.rm = T)
-    n_sigmaWfree = sum(indicators$sigmaW_isFree, na.rm = T)
+    n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = TRUE)
+    n_loadWfree = sum(indicators$lambdaW_isFree, na.rm = TRUE)
+    n_alphafree = sum(indicators$alpha_isFree, na.rm = TRUE)
+    n_sigmaBfree = sum(indicators$sigmaB_isFree, na.rm = TRUE)
+    n_sigmaWfree = sum(indicators$sigmaW_isFree, na.rm = TRUE)
 
     pos_loadBfree = which(indicators$lambdaB_isFree == 1)
     pos_loadWfree = which(indicators$lambdaW_isFree == 1)
@@ -161,7 +161,7 @@ mlts_model_eval <- function(model){
     pos_sigmaWfree = which(indicators$sigmaW_isFree == 1)
 
     #
-    n_YB_free = sum(indicators$sigmaB_isFree, na.rm = T)
+    n_YB_free = sum(indicators$sigmaB_isFree, na.rm = TRUE)
     YB_free_pos = indicators$YB_free_pos
     mu_is_etaB = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree), 0, 1)
     mu_etaB_pos = indicators$etaB_pos
@@ -244,9 +244,9 @@ mlts_model_eval <- function(model){
   if(nrow(RE.PREDS)>0){
     # which REs to regress on
     RE.PREDS$re_as_dv = substring(
-      RE.PREDS$Param, 3,regexpr(RE.PREDS$Param,pattern = ".ON.", fixed = T)-1)
+      RE.PREDS$Param, 3,regexpr(RE.PREDS$Param,pattern = ".ON.", fixed = TRUE)-1)
     RE.PREDS$re_preds = substring(
-      RE.PREDS$Param, regexpr(RE.PREDS$Param,pattern = ".ON.", fixed = T)+4)
+      RE.PREDS$Param, regexpr(RE.PREDS$Param,pattern = ".ON.", fixed = TRUE)+4)
     RE.PREDS$re_no = sapply(RE.PREDS$re_as_dv, function(x){
       re_pars$par_no[which(re_pars$Param == x)]})
     RE.PREDS$re_pred_b_no = 1:nrow(RE.PREDS)
@@ -273,8 +273,8 @@ mlts_model_eval <- function(model){
   # OUTCOME PREDICTION ========================================================
   OUT = model[model$Type=="Outcome prediction" & startsWith(model$Param, "b_"),]
   if(nrow(OUT) > 0){
-    OUT$Var = substring(OUT$Param,3,regexpr(OUT$Param,pattern = ".ON.", fixed = T)-1)
-    OUT$Pred = substring(OUT$Param, regexpr(OUT$Param,pattern = ".ON.", fixed = T)+4)
+    OUT$Var = substring(OUT$Param,3,regexpr(OUT$Param,pattern = ".ON.", fixed = TRUE)-1)
+    OUT$Pred = substring(OUT$Param, regexpr(OUT$Param,pattern = ".ON.", fixed = TRUE)+4)
     OUT$Pred_Z = ifelse(!(OUT$Pred %in% fix_pars$Param), OUT$Pred, NA)
     n_z_vars = unique(OUT$Pred_Z[!is.na(OUT$Pred_Z)])
     n_z = length(n_z_vars)

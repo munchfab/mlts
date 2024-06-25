@@ -20,7 +20,7 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # build a simple vector-autoregressive mlts model with two time-series variables
 #' var_model <- mlts_model(q = 2)
 #'

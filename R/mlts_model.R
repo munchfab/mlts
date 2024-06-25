@@ -131,8 +131,8 @@
 
 mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
-                          fix_dynamics = F, fix_inno_vars = F,
-                          fix_inno_covs = T, inno_covs_zero = F,
+                          fix_dynamics = FALSE, fix_inno_vars = FALSE,
+                          fix_inno_covs = TRUE, inno_covs_zero = FALSE,
                           inno_covs_dir = NULL,
                           fixef_zero = NULL, ranef_zero = NULL,
                           ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL){
@@ -158,7 +158,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   }
 
 
-  if(q == 2 & inno_covs_zero == F & fix_inno_covs == F){
+  if(q == 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
     if(is.null(inno_covs_dir)){
       stop(
         "For a bivariate VAR model with person-specific innovation covariances, ",
@@ -300,18 +300,18 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     model = rbind(FE, RE, REcors)
   }
 
-  # TESTING WHAT HAPPENS IF WE ADD ADDITIONAL CONTRAINT COLUMN HERE
-  if(q == 2 & inno_covs_zero == F & fix_inno_covs == F){
+  # ---
+  if(q == 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
     model$Constraint[model$Type == "Fixed effect" & grepl(pattern = "Covariance", model$Param_Label)] = inno_covs_dir
   }
 
 
   # ADD DEFAULT PRIORS ========================================================
-  model = mlts_model_priors(model = model, default = T)
+  model = mlts_model_priors(model = model, default = TRUE)
 
   # CONSTRAINTS ===============================================================
 
-  if(q > 1 & inno_covs_zero == T){
+  if(q > 1 & inno_covs_zero == TRUE){
     inno_covs_zero = TRUE
   } else {
     inno_covs_zero = FALSE
@@ -323,7 +323,7 @@ stop("Note: At this point, specifying a VAR(1) model with person-specific innova
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
      fix_inno_covs == TRUE | !is.null(fixef_zero) |
-     !is.null(ranef_zero) | inno_covs_zero == T) {
+     !is.null(ranef_zero) | inno_covs_zero == TRUE) {
     model = mlts_model_constraint(
       model = model,
       fix_dynamics = fix_dynamics, fix_inno_vars = fix_inno_vars,

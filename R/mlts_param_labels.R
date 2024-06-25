@@ -50,11 +50,11 @@ mlts_param_labels <- function(model){
     for(i in 1:length(rand_pars)){
       REcors$Param_stan = gsub(REcors$Param_stan,
                                pattern = rand_pars[i],
-                               replacement = rand_pars_pos[i], fixed = T)
+                               replacement = rand_pars_pos[i], fixed = TRUE)
     }
-    REcors$Param_stan = gsub(REcors$Param_stan, fixed = T,
+    REcors$Param_stan = gsub(REcors$Param_stan, fixed = TRUE,
                                  pattern = ".", replacement = ",")
-    REcors$Param_stan = gsub(REcors$Param_stan, fixed = T,
+    REcors$Param_stan = gsub(REcors$Param_stan, fixed = TRUE,
                                  pattern = "r_", replacement = "bcorr[")
     REcors$Param_stan = paste0(REcors$Param_stan,"]")
   }
@@ -73,7 +73,7 @@ mlts_param_labels <- function(model){
     infos$RE.PREDS$Param_stan = paste0("b_re_pred[",infos$RE.PREDS$re_pred_b_no,"]")
     REpred$Param_stan <- NULL
     REpred = merge(REpred,y = infos$RE.PREDS[,c("Param", "Param_stan")],
-                   by = "Param", sort = F)
+                   by = "Param", sort = FALSE)
   }
 
   ###### OUTCOME PREDICTION ====================================================
@@ -87,7 +87,7 @@ mlts_param_labels <- function(model){
     # add the helper columns
     OUTpred$Param_stan <- NULL
     OUTpred = merge(OUTpred, y = infos$OUT[,c("Param", "out_var_no", "Param_stan")],
-                    by = c("Param"), all = T, sort = F)
+                    by = c("Param"), all = T, sort = FALSE)
 
     for(i in 1:infos$n_out){
       OUTpred$out_var_no[endsWith(OUTpred$Param, infos$out_var[i])] = i
@@ -103,7 +103,7 @@ mlts_param_labels <- function(model){
   }
 
   ### MEASUREMENT MODEL PARAMETERS =============================================
-  if(infos$isLatent == T){
+  if(infos$isLatent == TRUE){
     N_inds = nrow(infos$indicators)
     alphas = data.frame(
       "Param" = paste0("alpha_",infos$indicators$q, ".",infos$indicators$p),
@@ -137,7 +137,7 @@ mlts_param_labels <- function(model){
   #### COMBINE
   par_tab = rbind(FEints, FEdyn, Fix.Covs, FEsigma, REsds, REcors, REpred, OUTpred)
 
-  if(infos$isLatent == T){
+  if(infos$isLatent == TRUE){
     # par_tab = plyr::rbind.fill(par_tab, mm.pars)
     par_tab <- dplyr::bind_rows(par_tab, mm.pars)
   }

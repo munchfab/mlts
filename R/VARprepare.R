@@ -38,7 +38,7 @@
 #'
 #'
 VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
-                       outcome_pred_btw = NULL, center_covs = T
+                       outcome_pred_btw = NULL, center_covs = TRUE
 ){
 
 
@@ -57,7 +57,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   })
   n_miss_D = as.array(n_miss_D)
   # NA positions as matrix
-  pos_miss_D = matrix(0, nrow = D, ncol = max(n_miss_D), byrow = T)
+  pos_miss_D = matrix(0, nrow = D, ncol = max(n_miss_D), byrow = TRUE)
   for(i in 1:D){
     if(n_miss_D[i] > 0){
       pos_miss_D[i,1:n_miss_D[i]] = which(is.na(data[,ts[i]]))
@@ -118,7 +118,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
       for(p in 1:N){
         W[p,i] = unique(data[data$num_id == p, names(covariates)[cov.use]])
       }
-      if(center_covs==T){
+      if(center_covs==TRUE){
         W[,i] = W[,i] - mean(W[,i])
       }
     }
@@ -213,7 +213,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     # alternative missing data indexing
     n_miss = sum(data[,ts] == -Inf)           # overall number of NAs
     n_miss_p = as.array(sapply(ts, FUN = function(x){sum(data[,x] == -Inf)}))
-    pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = T)
+    pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = TRUE)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
         pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts[i]] == -Inf)

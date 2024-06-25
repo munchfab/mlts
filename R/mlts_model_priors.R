@@ -7,9 +7,9 @@
 #' @return An object of class `data.frame`.
 #' @noRd
 #'
-mlts_model_priors <- function(model, default = F){
+mlts_model_priors <- function(model, default = FALSE){
 
-  if(default == T){
+  if(default == TRUE){
 
     # initialise columns
     cols = c("prior_type", "prior_location", "prior_scale")

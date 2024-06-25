@@ -58,10 +58,10 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # get CIs based on prob
   # create a summary table using the monitor-function in rstan
   par_labels = mlts_param_labels(object$model)
-  sums <- rstan::monitor(object$stanfit, probs = probs, print = F)
+  sums <- rstan::monitor(object$stanfit, probs = probs, print = FALSE)
   sums <- round(sums[1:dim(sums)[1], 1:ncol(sums)], digits)
   sums$Param_stan = row.names(sums)
-  pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = F)
+  pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = FALSE)
 
   # add significance flags
   pop_pars$signif = ifelse(
@@ -76,20 +76,20 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
                                  pop_pars$prior_scale, ")"))
 
   # choose columns to print
-  if(se == T){
+  if(se == TRUE){
     colnames(pop_pars)[which(colnames(pop_pars) == "se_mean")] <- "MC.SE"
     cols = c("Param", bpe, "sd", "MC.SE", prob.cols)
   } else {
     cols = c("Param", bpe, "sd", prob.cols)
   }
 
-  if(flag_signif == T){
+  if(flag_signif == TRUE){
     cols = c(cols, "signif", "Rhat", "Bulk_ESS", "Tail_ESS")
   } else {
     cols = c(cols, "Rhat", "Bulk_ESS", "Tail_ESS")
   }
 
-  if(priors == T) {
+  if(priors == TRUE) {
     cols = c(cols, "prior")
   }
 
@@ -116,7 +116,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   )
 
   # print information on variables used for model estimation
-  if(infos$isLatent == F){
+  if(infos$isLatent == FALSE){
     call_inds = c(
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
@@ -124,7 +124,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
       }))
     )
   }
-  if(infos$isLatent == T){
+  if(infos$isLatent == TRUE){
     call_inds = c(
       "Time series variables as indicated by parameter subscripts: \n",
       unlist(lapply(1:infos$q, function(x){
@@ -296,7 +296,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   )
 
   # model convergence info
-  conv = rstan::monitor(object$stanfit, print = F, probs = prob)
+  conv = rstan::monitor(object$stanfit, print = FALSE, probs = prob)
   convergence <- paste0(
     "Model convergence criteria: \n",
     "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
@@ -392,11 +392,11 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   if(nrow(outcomes) > 0) {
     cat("\nOutcome Prediction:\n")
     outcomes <- rbind(outcomes, outcomes_sds)
-    print(outcomes, row.names = F)
+    print(outcomes, row.names = FALSE)
   }
   if(nrow(ranef_preds) > 0) {
     cat("\nRandom Effects Regressed On:\n")
-    print(ranef_preds, row.names = F)
+    print(ranef_preds, row.names = FALSE)
   }
   if (nrow(mm_pars) > 0) {
     cat("\nMeasurement Model Parameters:\n")

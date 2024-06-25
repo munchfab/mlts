@@ -81,7 +81,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
   if(is.null(btw_model)){
     btw_model = list()
     for(i in 1:q){
-      if(btw_factor == T){
+      if(btw_factor == TRUE){
         btw_model[[i]] = c(1:p[i])
       } else {
         btw_model[[i]] = c(NA)
@@ -153,8 +153,8 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       rand = mus.rand
     }
     # replacement
-    fix = mlts_model_priors(fix, default = T)    # add default priors
-    rand = mlts_model_priors(rand, default = T)
+    fix = mlts_model_priors(fix, default = TRUE)    # add default priors
+    rand = mlts_model_priors(rand, default = TRUE)
 
     row_to_repl = which(model$Param %in% c(paste0("mu_",i), paste0("etaB_",i)) & model$Type == "Fixed effect")
     model = replace_model_row(model, row_to_repl, fix)
@@ -251,7 +251,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
   # ]
 
   ## add default priors
-  mm.pars = mlts_model_priors(model = mm.pars, default = T)
+  mm.pars = mlts_model_priors(model = mm.pars, default = TRUE)
 
 
   # add to structural part

@@ -145,7 +145,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
   isLatent <- ifelse(sum(object$model$Model == "Measurement")>0,TRUE,FALSE)
 
   # run standardization for single-indicator models ----------------------------
-  if(isLatent == F){
+  if(isLatent == FALSE){
   # check that for each dimension:
   # all dynamic parameters are fixed
   # all innovation variances of dependent and independent dimensions are fixed
@@ -157,7 +157,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     for(i in 1:infos$q){
       ivar = c()
       for(p in 1:N){
-        ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
+        ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=TRUE)
       }
       VarYw[i] = mean(ivar)
     }
@@ -202,11 +202,11 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 
 
   # run standardization for multiple-indicator models --------------------------
-  if(isLatent == T & object$standata$standardized == 0){
+  if(isLatent == TRUE & object$standata$standardized == 0){
     warning("Variance of latent factor scores not available for standardization
             of dynamic model parameters. Refit the model with get_SD_latent = TRUE
             to obtain standardized estimates.")
-  } else if(isLatent == T & object$standata$standardized == 1){
+  } else if(isLatent == TRUE & object$standata$standardized == 1){
 
     # check that for each dimension:
     # all dynamic parameters are fixed
@@ -221,7 +221,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         if(object$standata$D_np[i] == 1){
           ivar = c()
           for(p in 1:N){
-            ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=T)
+            ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=TRUE)
           }
           VarYw[i,] = mean(ivar)
         } else {
