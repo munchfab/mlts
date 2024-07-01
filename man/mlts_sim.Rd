@@ -6,7 +6,7 @@
 \usage{
 mlts_sim(
   model,
-  default = F,
+  default = FALSE,
   N,
   TP,
   burn.in = 50,

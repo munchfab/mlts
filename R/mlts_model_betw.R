@@ -60,9 +60,6 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
       )
   }
 
-  ##### ACHTUNG AKTUELL IST ES NOCH MÖGLICH FIXED PARAMETERS IN DIE OUTCOME
-  ##### PREDICTION ZU INTEGRIEREN
-
 
   # get number of random effects in model
   n_random = nrow(model[model$Type == "Fixed effect" & model$isRandom == 1,])
@@ -171,7 +168,7 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
       startsWith(OUT.PRED$Param, "alpha_"),"intercept",OUT.PRED$Param_Label)
 
     # add priors
-    OUT.PRED = mlts_model_priors(OUT.PRED, default = T)
+    OUT.PRED = mlts_model_priors(OUT.PRED, default = TRUE)
 
     # add to model
     model = dplyr::bind_rows(model, OUT.PRED)

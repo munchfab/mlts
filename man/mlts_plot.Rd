@@ -24,9 +24,9 @@ mlts_plot(
   true_color = "red",
   true_shape = 22,
   true_size = 1,
-  hide_xaxis_text = T,
+  hide_xaxis_text = TRUE,
   par_labels = NULL,
-  labels_as_expressions = F
+  labels_as_expressions = FALSE
 )
 }
 \arguments{

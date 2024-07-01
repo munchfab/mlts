@@ -1,9 +1,10 @@
 ## Resubmission
 This is a resubmission. In this version we have:
 
-* Deleted the References field from the description file and just left the reference itself.
-* Placed software in straigt instead of directed quotes.
-* Changed `r` in the title field to uppercase 'R'.
+* Changed all 'T' and 'F' to 'TRUE' and 'FALSE', respectively.
+* Replaced \dontrun{} with \donttest{} in mlts_model_formula.R and mlts_model_paths.R.
+
+Thank you for your feedback!
 
 ## R CMD check results
 

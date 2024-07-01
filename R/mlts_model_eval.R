@@ -51,8 +51,8 @@ mlts_model_eval <- function(model){
   }
   # lagged relations between constructs
   N_pred = table(fix_pars_dyn$Dout) # number of lagged preds in each dimension
-  D_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = T)
-  Lag_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = T)
+  D_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
+  Lag_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
   Dpos1 = c()
   Dpos2 = c()
   for(i in 1:q){
@@ -93,23 +93,23 @@ mlts_model_eval <- function(model){
 
     ## step-wise addition: ---------------------------------------------------
     indicators = merge(
-      x = ind_base, y = extract_indicator_info(model, level = "Within", type = "Measurement Error SD"), all.x = T)
+      x = ind_base, y = extract_indicator_info(model, level = "Within", type = "Measurement Error SD"), all.x = TRUE)
 
     add = extract_indicator_info(model, level = "Between", type = "Item intercepts")
     if(nrow(add)>0){
-      indicators = merge(x = indicators, y = add, all.x = T)
+      indicators = merge(x = indicators, y = add, all.x = TRUE)
     } else {
       indicators$alpha_isFree = 0
     }
     add = extract_indicator_info(model, level = "Between", type = "Loading")
     if(nrow(add)>0){
-      indicators = merge(x = indicators, y = add, all.x = T)
+      indicators = merge(x = indicators, y = add, all.x = TRUE)
     } else {
       indicators$lambdaB_isFree = 0
     }
     add = extract_indicator_info(model, level = "Between", type = "Measurement Error SD")
     if(nrow(add)>0){
-      indicators = merge(x = indicators, y = add, all.x = T)
+      indicators = merge(x = indicators, y = add, all.x = TRUE)
       indicators$sigmaB_isFree[is.na(indicators$sigmaB_isFree)] = 0
     } else {
       indicators$sigmaB_isFree = 0
@@ -211,7 +211,7 @@ mlts_model_eval <- function(model){
 
 
   n_pars = sum((model$Type == "Fixed effect" & !startsWith(model$Param, "r.zeta")))
-  n_random = sum(model$isRandom, na.rm = T)
+  n_random = sum(model$isRandom, na.rm = TRUE)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
   is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)

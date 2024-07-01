@@ -117,7 +117,7 @@ mlts_fit <- function(model,
                      beep = NULL,
                      days = NULL,
                      n_overnight_NAs,
-                     na.rm = F,
+                     na.rm = FALSE,
                      iter = 500,
                      chains = 2,
                      cores = 2,
@@ -328,7 +328,7 @@ mlts_fit <- function(model,
                            outcome_pred_btw = outcome_pred_btw,
                            center_covs = center_covs)
     # latent variable SDs requested?
-    standata$standardized = ifelse(get_SD_latent == T, 1, 0)
+    standata$standardized = ifelse(get_SD_latent == TRUE, 1, 0)
     if(get_SD_latent == FALSE & print_message == TRUE){
       message("\n Set get_SD_latent = TRUE to obtain standardized parameter estimates using mlts_standardized in a subsequent step.")
     }
@@ -357,7 +357,7 @@ mlts_fit <- function(model,
       }
     } else if(standata$n_inno_cors > 0){
         pars = c(pars,"bcorr_inn")
-        if(fit_model==T){
+        if(fit_model==TRUE){
           stanfit <- rstan::sampling(
             stanmodels$VAR_latentCovsFix,
             data = standata,
@@ -385,7 +385,7 @@ mlts_fit <- function(model,
     dimnames(posteriors)$parameters <- par_labels$Param
 
     # create a summary table using the monitor-function in rstan
-    sums <- rstan::monitor(stanfit, print = F)
+    sums <- rstan::monitor(stanfit, print = FALSE)
 
     # get a subset of outputs
     cols <- c("mean", "sd", "2.5%", "50%", "97.5%", "n_eff",
@@ -402,7 +402,8 @@ mlts_fit <- function(model,
 
       # extract infos
       pars <- gsub(sums.i$Param_stan, pattern = "b_free[", replacement = "", fixed = TRUE)
-      pars <- gsub(pars, pattern = "]", replacement = "", fixed = T)
+      pars <- gsub(pars, pattern = "]", replacement = "", fixed = TRUE
+                   )
       ID_new <- sapply(pars, function(x){strsplit(x,split = ",")[[1]][1]})
       pars <- sapply(pars, function(x){as.integer(strsplit(x,split = ",")[[1]][2])})
       pars <- sapply(pars, function(x){infos$re_pars$Param[x]})

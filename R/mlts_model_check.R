@@ -23,9 +23,4 @@ mlts_model_check <- function(model, data, ts, covariates, outcomes){
   if(sum(check) > 0){
     warning("Not all entries in outcomes can be found in the data.")
   }
-
-  #
-
-
-
 }

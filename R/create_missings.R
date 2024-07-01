@@ -143,12 +143,12 @@ create_missings <- function(data, tinterval, id, time,
 
   # join with existing data set
   # with base R, somewhat slower than with dplyr
-  new_data <- merge(x = imp_data, y = data, by = c("num_id", time), all = T)
+  new_data <- merge(x = imp_data, y = data, by = c("num_id", time), all = TRUE)
   # sort by num_id and int_time
   new_data <- new_data[order(new_data$num_id, new_data$int_time), ]
   # add between-level variables again
   new_data <- merge(
-    x = new_data, y = btw_data, by = c("num_id"), all.x = T, sort = F
+    x = new_data, y = btw_data, by = c("num_id"), all.x = TRUE, sort = FALSE
   )
 
   return(new_data)

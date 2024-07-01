@@ -41,7 +41,7 @@ An RMarkdown file that is automatically rendered to a pdf document.
 Create TeX Model Formula from mlts model object
 }
 \examples{
-\dontrun{
+\donttest{
 # build a simple vector-autoregressive mlts model with two time-series variables
 var_model <- mlts_model(q = 2)
 
