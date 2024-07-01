@@ -15,5 +15,4 @@ pathmodel.pdf
 pathmodel.rmd
 inst/doc
 !init.cpp
-/doc/
-/Meta/
+s/Meta/

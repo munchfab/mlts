@@ -1,0 +1,187 @@
+---
+title: "Include Predictors for Random Effects on the Between Level"
+output: rmarkdown::html_vignette
+bibliography: bibliography.bib
+csl: apa.csl
+vignette: >
+  %\VignetteIndexEntry{Include Predictors for Random Effects on the Between Level}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(mlts)
+```
+
+For this example, we use data from the website [PhysioNet](https://physionet.org/) [@Goldberger2000], which hosts open data for physiological research. The data come from a study by @Hausdorff1996, who examined walking stride intervals (gait) of 15 subjects (5 healthy young adults, age 23 -- 29; 5 healthy old adults, age 71 -- 77; and 5 older adults with Parkinson's disease). On the [data website](https://physionet.org/content/gaitdb/1.0.0/), the description regarding walking stride intervals read:
+
+> Subjects walked continuously on level ground around an obstacle-free path. The stride interval was measured using ultra-thin, force sensitive resistors placed inside the shoe. The analog force signal was sampled at 300 Hz with a 12 bit A/D converter, using an ambulatory, ankle-worn microcomputer that also recorded the data. Subsequently, the time between foot-strikes was automatically computed. The method for determining the stride interval is a modification of a previously validated method that has been shown to agree with force-platform measures, a “gold” standard.
+Data were collected from the healthy subjects as they walked in a roughly circular path for 15 minutes, and from the subjects with Parkinson’s disease as they walked for 6 minutes up and down a long hallway.
+
+We will model subjects' walking stride intervals in an autoregressive model. Furthermore, we will examine if subjects' health status (healthy or Parkinson's disease) can explain variation in random model parameters (i.e., mean stride interval $\mu_1$, autoregressive effect $\phi_{(1)11}$, or log innovation variance $\ln(\sigma^2_{\zeta_{1}})$).
+
+```{r}
+load("gait_data.rda")
+head(gait_data)
+```
+
+The variables included in this data set are
+
+* `subject`: the unit identifier (ID)
+* `age`: subjects' age in years
+* `group`: group variable with levels `healthy_old`, `healthy_young`, and `pd_old` (for old adults with Parkinson's disease)
+* `time`: the variable containing the measurement point after begin of the study, in seconds. It starts after a brief "warm-up" period 
+* `stride_interval`: subjects' stride interval in seconds (i.e., the time between heel strikes)
+
+## Autoregressive model without predictors
+
+First, we will fit a simple autoregressive model for the stride interval time series. The model setup is the same as in the vignette "A Simple Example: Multilevel Manifest AR(1) Model". We set it up with
+
+```{r}
+ar1_model1 <- mlts_model(q = 1)
+```
+
+We can check the parameters present in the model by just calling the object:
+
+```{r}
+ar1_model1
+```
+
+For convenience, we can furthermore check the associated path model:
+
+```{r eval=FALSE}
+mlts_model_paths(ar1_model1)
+```
+
+```{r echo=FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics(c("../vignettes/pathmodel_ar1.png"))
+```
+
+We fit the model with `mlts_fit()`. We need to provide the unit identifier and the time-series construct we wish to examine:
+
+```{r eval=FALSE}
+ar1_fit1 <- mlts_fit(
+  model = ar1_model1,
+  data = gait_data,
+  id = "subject",
+  ts = "stride_interval",
+  monitor_person_pars = TRUE,
+  iter = 1000
+)
+```
+
+```{r echo=FALSE}
+load("../vignettes/ar1_fit1.rda")
+```
+
+
+```{r eval=FALSE}
+summary(ar1_fit1)
+```
+
+```{r echo=FALSE}
+cat(readLines("../vignettes/betw_preds_fit1.txt"), sep = "\n")
+```
+
+The fixed effect of the subject mean of stride interval is estimated at `r round(ar1_fit1[ar1_fit1$Param == "mu_1", "mean"], 3)`.
+Individual mean stride intervals fluctuate around this fixed effect with a standard deviation of `r round(ar1_fit1[ar1_fit1$Param == "sigma_mu_1", "mean"], 3)` (see `Random Effect SDs`).
+The fixed effect of the first-order autoregressive effect (see `phi(1)_11` in the section `Fixed Effects`) is estimated at `r round(ar1_fit1[ar1_fit1$Param == "phi(1)_11", "mean"], 3)`, with random effects standard deviation of `r round(ar1_fit1[ar1_fit1$Param == "sigma_phi(1)_11", "mean"], 3)`.
+The fixed effect of log innovation variance is estimated at `r round(ar1_fit1[ar1_fit1$Param == "ln.sigma2_1", "mean"], 3)`.
+To be on the original scale, we have to exponentiate it: exp(`r round(ar1_fit1[ar1_fit1$Param == "sigma_mu_1", "mean"], 3)`) = `r round(exp(-6.958), 3)`.
+The random effects' standard deviation of log innovation variance is estimated at `r round(ar1_fit1[ar1_fit1$Param == "sigma_ln.sigma2_1", "mean"], 3)`.
+
+There is also a substantial correlation between random effects of the person mean (`mu_1`) and log innovation variance (`ln.sigma2_1`) of `r round(ar1_fit1[ar1_fit1$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`, indicating that subjects with a longer stride interval also display higher variation in their stride interval.
+Furthermore, there is a substantial negative correlation of `r round(ar1_fit1[ar1_fit1$Param == "r_phi(1)_11.ln.sigma2_1", "mean"], 3)` between the autoregressive effect `phi(1)_11` and log innovation variance, indicating that subjects displaying a higher stability in their stride interval tend to display lower variation and vice versa.
+
+## Include a predictor for random effects
+
+We can now try to explain differences in model parameters by another covariate.
+In this example, we will use the subjects health status as explanatory variable, which is binary in our case (i.e., `1` for healthy subjects and `0` for subjects with Parkinson's disease).
+We will include this covariate on the *between-level* to explain random effect variation, thus it has to be stable *within* subjects.
+Note furthermore that the variable has to be numeric or integer for Stan to be acceptable.
+
+We set this model up with `mtls_model()`.
+To predict all random effects present in the model, we can just provide the variable name in the argument `ranef_pred`:
+
+```{r}
+ar1_model2 <- mlts_model(q = 1, ranef_pred = "healthy")
+```
+
+We can see that three new parameters are added on the between level, specifying the regression weights for predicition of random effects (i.e., `b_mu_1.ON.healthy` is the regression weight of the predictor `healthy` on the dependent variable `mu_1`):
+
+```{r}
+ar1_model2
+```
+
+For convenience, we can plot the path model (note that only the between-level model is shown here, as decomposition and within-level model are the same as before):
+
+```{r eval=FALSE}
+mlts_model_paths(ar1_model2)
+```
+
+```{r echo=FALSE, out.width="30%", fig.align='center'}
+knitr::include_graphics(c("../vignettes/pathmodel_betw_preds.png"))
+```
+
+We fit the model with `mlts_fit()`.
+We need to provide the unit identifier and the time-series construct we wish to examine.
+If the explanatory variable is called the same as provided in the call to `mlts_model()`, it does not need to be specified again.
+Explanatory variables for random effects are grand-mean-centered per default.
+As our group variable is dichotomous, we set the argument `center_covs` to `FALSE` so that we can interpret the intercept of the random model parameters as mean parameter in the group of subjects with Parkinson's disease and the effect of the explanatory variable as group difference.
+To obtain standardized estimates for parameters on the within- and between-level, we set `monitor_person_pars = TRUE`.
+For large models, this may greatly increase sampling times, so this argument is set to `FALSE` by default.
+
+```{r eval=FALSE}
+ar1_fit2 <- mlts_fit(
+  model = ar1_model2,
+  data = gait_data,
+  id = "subject",
+  ts = "stride_interval",
+  center_covs = FALSE,
+  monitor_person_pars = TRUE,
+  iter = 1000
+)
+```
+
+```{r echo=FALSE}
+load("../vignettes/ar1_fit2.rda")
+```
+
+```{r eval=FALSE}
+summary(ar1_fit2)
+```
+
+```{r echo=FALSE}
+cat(readLines("../vignettes/betw_preds_fit2.txt"), sep = "\n")
+```
+
+The `summary()` now shows a new section called `Random Effects Regressed On`, which shows the regression weights of the explanatory variable `healthy`.
+We can see that subjects' health status has effects on all between-level model parameters the autoregressive effect `phi(1)_11` and log innovation variance `ln.sigma2_1`.
+However, only for the effect on log innovation variance, the 95% credible intervals of the regression weight does not include 0.
+In particular, healthy subjects' (with a value of `1` in the variable `healthy`) have, on average, a stride interval that is `r round(ar1_fit2[ar1_fit2$Param == "b_mu_1.ON.healthy", "mean"], 3)` seconds shorter than subjects with Parkinson's disease.
+Furthermore, healthy subjects  display, on average, an autoregressive effect that is `r round(ar1_fit2[ar1_fit2$Param == "b_phi(1)_11.ON.healthy", "mean"], 3)` units higher than for subjects with Parkinson's disease.
+At last, the log innovation variance is on average `r round(ar1_fit2[ar1_fit2$Param == "b_ln.sigma2_1.ON.healthy", "mean"], 3)` units lower for healthy subjects in comparison to subjects with Parkinson's disesase.
+
+To obtain standardized estimates of the parameters, we call `mlts_standardized()` on the `mltsfit`-object.
+The argument `what = "both"` controls that standardized estimates are computed for the within- and between level (by default, it is done for the between-level only).
+
+```{r echo=FALSE}
+load("../vignettes/ar1_fit2_std.rda")
+```
+
+```{r eval=FALSE}
+mlts_standardized(ar1_fit2, what = "both")
+```
+
+```{r echo=FALSE}
+ar1_fit2_std
+```
+
+## References

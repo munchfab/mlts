@@ -1,0 +1,146 @@
+---
+title: "A Simple Example: Multilevel Manifest AR(1) Model"
+output: rmarkdown::html_vignette
+bibliography: bibliography.bib
+csl: apa.csl
+vignette: >
+  %\VignetteIndexEntry{manifest_ar_example}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r setup}
+library(mlts)
+```
+
+One of the simplest models we can fit with `mlts` is a multilevel first order autoregressive model with only one observed variable. We start by specifying the model with `mlts_model()`. The argument `q` controls the number of time-series constructs. For this simple model, the following call is sufficient:
+
+```{r}
+ar1_model <- mlts_model(q = 1)
+```
+
+We can check the parameters present in the model by just calling the object:
+
+```{r}
+ar1_model
+```
+
+When `mlts_model()` sets up this model, all model parameters are free (i.e., not constrained) by default. On the within level, there are three fixed effects: the grand mean (`mu_1`) of the outcome, the autoregressive effect (`phi(1)_11`), and the natural log of the innovation variance (`ln.sigma2_1`). The `(1)` in brackets for the autoregressive effect parameter indicates a lag of first order, and the `_11` subscript denotes that the first construct is as well predicted by the first construct. Note that for the innovation variance, the natural log is used to prevent the variance from dropping below zero. For each of these effects, random effects are also estimated on the between level, which are drawn from a multivariate normal distribution with zero mean. Standard deviations of random effects are indicated with a `sigma_` prefix, and random effect correlations are indicated with an `r_` prefix.
+
+A TeX formula for the above model can be obtained by calling the `mlts_model_formula()` function on the model object. By default, the function produces an RMarkdown file and renders it to a pdf file using `knitr`. However, the TeX file can also be kept by calling `keep_tex = TRUE` within the function call.
+
+```{r eval=FALSE}
+mlts_model_formula(ar1_model)
+```
+
+<center>
+\[\text{Decomposition.}\]
+</center>
+\[
+\begin{gathered} \begin{bmatrix}
+y_{1, it} \\
+\end{bmatrix} = \begin{bmatrix}
+\mu_{1,i} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+y_{1, it}^w \\
+\end{bmatrix} \end{gathered}
+\]
+\vspace{1em}
+<center>
+\[\text{Within-level model.}\]
+</center>
+\[
+\begin{gathered} \begin{bmatrix}
+y_{1, it}^w \\
+\end{bmatrix} = \begin{bmatrix} \phi_{(1)11,i} \\ \end{bmatrix} \begin{bmatrix} y_{1,i(t - 1)}^w \\ \end{bmatrix} +  \begin{bmatrix} \zeta_{1, it} \\ \end{bmatrix} ,\\ 
+\text{with}~\zeta_{1,it} \sim \mathit{N}(0, \sigma^2_{\zeta_{1},i})  \end{gathered}
+\]
+\vspace{1em}
+<center>
+\[\text{Between-level model.}\]
+</center>
+\[
+\begin{gathered} \begin{bmatrix} \mu_{1,i}\\
+\phi_{(1)11,i}\\
+\ln(\sigma^2_{\zeta_{1},i})\\ \end{bmatrix} = \begin{bmatrix} \gamma_{0,\mu_{1}}\\
+\gamma_{0,\phi_{(1)11}}\\
+\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}\\ \end{bmatrix} +
+  \begin{bmatrix} \upsilon_{\mu_{1},i}\\
+\upsilon_{\phi_{(1)11},i}\\
+\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}\\ \end{bmatrix} ,\\ 
+\text{with}~
+  \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega})  \end{gathered}
+\]
+\vspace{1em}
+
+Furthermore, a path model can also be produced with the function `mlts_model_paths()`. Again, the function produces an RMarkdown and pdf file by default. A png file for each level can also be produced by calling `add_png = TRUE` and the TeX code for the path model can be kept with `keep_tex = TRUE`.
+
+```{r eval=FALSE}
+mlts_model_paths(ar1_model)
+```
+
+```{r echo=FALSE, out.width="75%", fig.align='center'}
+knitr::include_graphics(c("../vignettes/pathmodel_ar1.png"))
+```
+
+By path model convention, rectangles represent observed variables and circles represent latent (i.e., unobserved) variables. A single-headed arrow represents a directed path (i.e., a regression), a double-headed arrow represents (co-)variation, and a dot on a path indicates that this parameter can vary across between-level units. To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
+
+```{r echo=FALSE}
+load("../data/ar1_data.rda")
+```
+
+```{r}
+head(ar1_data)
+```
+
+We need to specify the variable in `data` that contains the time-series process in the `ts` argument and the variable that contains the unit identifier in the `id` argument. With the argument `tinterval`, the time interval for approximation of a continuous time process can be specified @Asparouhov2018. We don't specify it here, but see the Vignette *Approximation of a Continuous Time Model* for more details.
+
+```{r eval=FALSE}
+ar1_fit <- mlts_fit(
+  model = ar1_model,
+  data = ar1_data,
+  id = "ID",
+  ts = "Y1",
+  iter = 4000
+)
+```
+
+```{r echo=FALSE}
+ar1_fit <- readRDS("../vignettes/ar1_fit.rds")
+```
+
+The model `summary()` shows general information about the model and data:
+
+```{r}
+summary(ar1_fit)
+```
+
+The line `Time series variables as indicated by parameter subscripts: 1 --> Y1` shows that model parameters indexed by a `1` refer to the variable `Y1` in the data set.
+The `Model convergence criteria` provide an overview across convergence diagnostics for all model parameters (i.e., also parameters which are not printed in the `summary()` by default).
+For the simple AR1-model, all parameters converged well after 4,000 iterations.
+
+The section `Fixed Effects` provides information about the fixed effects in the model, i.e., $\gamma_{0, \mu_1}$, $\gamma_{0, \phi_{(1)11}}$, and $\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}$ in the above formula.
+For example, the posterior mean of the autoregressive effect parameter `phi(1)_11` is estimated at .275 with 95%-credible interval [.218, .331].
+The log variance of the innovations $\zeta_{1t}$ is estimated at -.304.
+The estimate needs to be exponentiated to be on the original scale: exp(-.304) = `r round(exp(-.304), 3)`.
+
+The section `Random Effects SDs` shows standard deviations of the random effects $\upsilon_{\mu_{1},i}$, $\upsilon_{\phi_{(1)11},i}$, and $\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}$.
+The section `Random Effects Correlations` shows correlations between random effects. For example, while random effects of the person mean $\upsilon_{\mu_{1},i}$ and the autoregressive effect $\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.phi(1)_11", "mean"], 3)`,
+there is a positive correlation between the person mean and log innovation variance,
+`r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`. This indicates that individuals with a higher person mean in the variable `Y1` also tend to have a higher innovation variance.
+
+## References
+
+
+
+
