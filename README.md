@@ -25,8 +25,18 @@ inspected, and model parameters can be plotted.
 
 ## Installation
 
-You can install the development version of mlts from
-[GitHub](https://github.com/) with:
+The most recent `mlts` release can be installed from CRAN via
+
+``` r
+install.packages("mlts")
+```
+
+To install the development version from [GitHub](https://github.com/),
+you need to install the `rstan`-package first and configure your R
+installation to be able to compile C++ code. You can find instructions
+for both steps on the [RStan
+GitHub](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started).
+Afterwards, you can install the development version of `mlts` with
 
 ``` r
 # install.packages("devtools")
