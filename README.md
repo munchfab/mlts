@@ -4,6 +4,12 @@
 # mlts
 
 <!-- badges: start -->
+
+<figure>
+<img src="https://cranlogs.r-pkg.org/badges/Rcpp%7D" alt="Alt text" />
+<figcaption aria-hidden="true">Alt text</figcaption>
+</figure>
+
 <!-- badges: end -->
 
 ## Overview
