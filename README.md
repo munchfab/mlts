@@ -5,10 +5,7 @@
 
 <!-- badges: start -->
 
-<figure>
-<img src="https://cranlogs.r-pkg.org/badges/Rcpp%7D" alt="Alt text" />
-<figcaption aria-hidden="true">Alt text</figcaption>
-</figure>
+[![](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
 
 <!-- badges: end -->
 
@@ -302,7 +299,7 @@ mlts_plot(ar1_fit, type = "fe", what = "Fixed effect")
 ## References
 
 <div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0" line-spacing="2">
+line-spacing="2">
 
 <div id="ref-Asparouhov2018" class="csl-entry">
 
