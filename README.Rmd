@@ -18,6 +18,9 @@ knitr::opts_chunk$set(
 # mlts
 
 <!-- badges: start -->
+
+[![](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
+
 <!-- badges: end -->
 
 ## Overview
