@@ -27,10 +27,13 @@ data {
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
-  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
-  int Dpos1[D];  // index positions of danymic effect parameters
+  int<lower=0> D_pred[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int<lower=0> Lag_pred[D,max(N_pred)];  // matrix to index lag of used predictors
+  int Dpos1[D];  // index positions of dynamic effect parameters
   int Dpos2[D];
+  int n_int;
+  int D_pred2[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int Lag_pred2[D,max(N_pred)];  // matrix to index lag of used predictors
 
   // - time-invariant variables:
   // covariates as predictors of random effects
@@ -86,8 +89,8 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector<lower = 0>[N] sd_noise[D];
-  vector<lower = 0>[N] sd_inncov[n_inno_covs];
+  vector[N] sd_noise[D];
+  vector[N] sd_inncov[n_inno_covs];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
  // REs regressed on covariates
@@ -197,29 +200,36 @@ model {
 
     for(d in 1:D){ // start loop over dimensions
       // build prediction matrix for specific dimensions
-      {
-      matrix[(obs_id-maxLag),N_pred[d]+n_inno_covs] b_mat; // adjust for non-fully crossed models
+      int n_cols; // matrix dimensions
+      n_cols = (n_inno_covs>0 && d<3) ? N_pred[d]+n_inno_covs : N_pred[d];
 
+      {
+      matrix[(obs_id-maxLag),n_cols] b_mat;
+      vector[n_cols] b_use;
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
-          int lag_use = Lag_pred[d,nd];
+         int lag_use = Lag_pred[d,nd];
+         if(D_pred2[d,nd] == -99){
           b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+         } else {
+          int lag_use2 = Lag_pred2[d,nd];
+          b_mat[,nd] = y_cen[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
+                       y_cen[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
+         }
       }
-      if(n_inno_covs>0){
-          b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
-          // use build predictor matrix to calculate latent time-series means
-          vector[N_pred[d]+1] b_use;
-          b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-          b_use[N_pred[d]+1] = inno_cov_load[d];
-          mus[d,] =  b[pp,d] + b_mat * b_use;
-        } else{
-          mus[d,] =  b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
-        }
+      b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+
+      if(n_inno_covs>0 && d < 3){  // add latent factor scores
+         b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
+         b_use[N_pred[d]+1] = inno_cov_load[d];
+         }
+
+      mus[d,] = b[pp,d] + b_mat * b_use;
       }
 
       // sampling statement
       y_merge[d,(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
       }
-     }
+    }
     // update index variables
     pos = pos + obs_id;
     pos_cov = pos_cov + obs_id - maxLag;

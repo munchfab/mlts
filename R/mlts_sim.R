@@ -61,13 +61,13 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
   set.seed(seed.true)
 
-  ### start with a check that sds are entered for all between variables
+  # add check that sds are entered for all between variables are availabe
 
 
   # simulate data based on model
 
-  ### write separate function for specification of true parameter values
-  ### for now use fixed values
+  ### in a later verion, write separate function for specification of true parameter values
+  ### for now use partly fixed values
 
 
   # use helper function to read out information on model
@@ -123,6 +123,26 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     }
     model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = round(phis$true.val,3)
 
+    ## t0-effect
+    t0_effect = infos$fix_pars_dyn[startsWith(infos$fix_pars_dyn$Param,"phi(0"),]
+    if(nrow(t0_effect) > 0){
+      for(i in 1:nrow(t0_effect)){
+        # choose value according to the respective lagged effect - if present
+        lag_value = model$true.val[model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
+        if(is.numeric(lag_value)){
+#          model$true.val[model$Param == t0_effect$Param[i]] <- lag_value
+          model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
+        } else {
+          model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
+        }
+      }
+    }
+
+    # interaction effects
+    if(infos$n_int > 0){
+      model$true.val[startsWith(model$Param, prefix = "phi(i)")] <- sample(x = seq(from=-0.1,to=0.1,by=0.025),size = infos$n_int)
+    }
+
 
     ## log innovation variances
     model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.3
@@ -140,6 +160,8 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
       x = seq(from= 0.7, to = 1.2, by = 0.1), size = n_traits, replace = TRUE)
     ## Phis
     model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
+    ## smaller for interaction effects
+    model$true.val[model$Type==model.type & startsWith(model$Param, "phi(i)")] = 0.1
     ## log innovation variances
     model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = 0.25
     ## log innovation covaraince(s)
@@ -281,8 +303,13 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
   # get positions to fill transition matrix
   dyn = infos$fix_pars_dyn
+  dyn_int = dyn[dyn$isINT == 1,]
+  dyn = dyn[dyn$isINT != 1,]
   dyn$tran_pos = NA
-  dyn$tran_pos = as.integer(dyn$Dpred) + q*(dyn$Lag-1)
+  dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
+  # remove t0-effects at this points
+  dyn_t0 = dyn[dyn$Lag == 0,]
+  dyn = dyn[dyn$Lag!=0,]
 
   for(i in 1:N){
     # build person-specific transition matrix
@@ -291,9 +318,13 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
     # build person-specific prediction error matrix
     innoVars.i = btw[i,infos$innos_pos]
-    for(d in 1:q){ # loop over number of constructs
 
-      transition[d,as.integer(dyn$tran_pos[dyn$Dout==d])] = btw[i,infos$Dpos1[d]:infos$Dpos2[d]]
+    for(d in 1:q){ # loop over number of constructs
+      # parameter positions on btw-matrix
+      par_pos = dyn$no[dyn$Dout==d]
+      # fill transition matrix with person-specific parameter values
+      transition[d,as.integer(dyn$tran_pos[dyn$Dout==d])] = btw[i,par_pos]
+
       if(infos$innos_rand[d] == 1){
         innoVars.i[d] = exp(innoVars.i[d]) # retransform log innovations
       } else{
@@ -322,34 +353,66 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
       }
     }
 
+    # generate the within-level process in a loop over time points
     for(t in 1:NT){
-      # use means as starting values
+
       if(t <= infos$maxLag){
+        # starting values
         init = mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat)
         y[t,] = init
-      } else {
+
+        # start the process when sufficient initial values are generated
+        } else {
         y_lag = c()
-        y_lag = as.vector(y[t-1,1:q])
-        if(infos$maxLag>1){
+        y_lag = as.vector(y[t-1,1:q])            # create a lagged vector
+
+        if(infos$maxLag>1){                      # ... extend for higher-order
           for(ll in 2:infos$maxLag){
             y_lag = c(y_lag, as.vector(y[t-ll,1:q]))
           }
         }
 
         if(q > 1 | infos$maxLag > 1){
-          y[t,1:q] = y_lag %*% t(transition) # get expected values
+          # get expected values using matrix multiplication
+          y[t,1:q] = y_lag %*% t(transition)
         } else {
+          # or for AR(1):
           y[t,] = y_lag * transition
         }
-        y[t,] = y[t,] + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat) # add error
 
+        # add innovations
+        y[t,] = y[t,] + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat)
 
-        if(infos$q == 2 & infos$n_inno_covs == 1){
+        # add contemporaneous effects
+        if(nrow(dyn_t0) != 0){
+          for(k in 1:nrow(dyn_t0)){
+            dv <- as.integer(dyn_t0$Dout[k])
+            iv <- as.integer(dyn_t0$Dpred[k])
+            y[t,dv] = y[t,dv] + btw[i,dyn_t0$no[k]] * y[t,iv]
+          }
+        }
+
+        # add interaction effects
+        if(nrow(dyn_int) > 0){
+          for(k in 1:nrow(dyn_int)){
+            dv <- as.integer(dyn_int$Dout[k])
+            iv1 <- as.integer(dyn_int$Dpred[k])
+            iv2 <- as.integer(dyn_int$Dpred2[k])
+            lag1 <- as.integer(dyn_int$Lag[k])
+            lag2 <- as.integer(dyn_int$Lag2[k])
+            y[t,dv] = y[t,dv] + btw[i,dyn_int$no[k]] * y[t-lag1,iv1] * y[t-lag2,iv2]
+          }
+        }
+
+        # for bivariate VAR-models with random innovation covariance factor:
+        if(infos$q >= 2 & infos$n_inno_covs == 1){
           inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
-          y[t,] = y[t,] + infos$inno_cov_load * inno_t
+          y[t,1:2] = y[t,1:2] + infos$inno_cov_load * inno_t
         }
       }
     }
+
+    # remove burn-in
     within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
 
     # add trait scores (for manifest indicators)
@@ -360,9 +423,6 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     }
   }
 
-  # # remove burn.in
-  # within$time = within$time - burn.in
-  # within = within[within$time>0,]
   # --------
 
 

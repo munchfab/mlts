@@ -32,10 +32,13 @@ data {
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
-  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
+  int<lower=0> D_pred[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int<lower=0> Lag_pred[D,max(N_pred)];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
   int Dpos2[D];
+  int n_int;
+  int D_pred2[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int Lag_pred2[D,max(N_pred)];  // matrix to index lag of used predictors
 
   // - time-invariant variables:
   // covariates as predictors of random effects
@@ -130,7 +133,7 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector<lower = 0>[D] sd_noise[N];
+  vector[D] sd_noise[N];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -264,7 +267,13 @@ model {
 
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
         int lag_use = Lag_pred[d,nd];
-        b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+        if(D_pred2[d,nd] == -99){
+          b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+        } else {
+          int lag_use2 = Lag_pred2[d,nd];
+          b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
+                       etaW_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
+        }
       }
 
       // use build predictor matrix to calculate latent time-series means

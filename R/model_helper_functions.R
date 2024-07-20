@@ -99,8 +99,86 @@ extract_indicator_info <- function(model, level = "Within", type = "Loading", in
 change_colnames <-  function(data, cols) {
   names <- colnames(data)
   names[grepl("Param", colnames(data))] <- ""
-  names[grepl("50%", colnames(data))] <- "Post. Median"
-  names[grepl("mean", colnames(data))] <- "Post. Mean"
-  names[grepl("sd", colnames(data))] <- "Post. SD"
+  names[grepl("50%", colnames(data))] <- "Median"
+  names[grepl("mean", colnames(data))] <- "Mean"
+  names[grepl("sd", colnames(data))] <- "SD"
   return(names)
+}
+
+# function to evaluate input of t0_effects
+eval_t0_effects <- function(t0_input, q){
+
+  # initial check
+  check1 <- sum(startsWith(prefix = "phi(0)_", x = t0_input))
+  if(check1 != length(t0_input)){
+    stop("Invalid input of 'incl_t0_effects', see ?mlts_model.")
+  }
+
+  t0_effs <- lapply(t0_input, function(x){
+    df <- data.frame(
+      "DV" = strsplit(strsplit(x, split = "_")[[1]][2], split = "")[[1]][1],
+      "IV" = strsplit(strsplit(x, split = "_")[[1]][2], split = "")[[1]][2]
+    )
+    df
+  })
+  t0_effs <- do.call(rbind, t0_effs)
+
+  # post sanity checks
+  # bidirectional effects
+  n_bi <- paste0(t0_effs$DV,t0_effs$IV)  %in% paste0(t0_effs$IV,t0_effs$DV)
+
+  if(sum(n_bi)>0){
+    stop("Invalid input of 'incl_t0_effects': bidrectional paths are not allowed (e.g., phi(0)_21 and phi(0)_12.")
+  }
+
+  if(max(t0_effs$DV) > q | max(t0_effs$IV) > q){
+    stop("Invalid input of 'incl_t0_effects': input refers to variables outside the number of included constructs ('q').")
+  }
+
+
+  return(t0_effs)
+}
+
+
+# function to evaluate input of incl_interaction_effects
+eval_int_effects <- function(int_input, q){
+
+  # initial input check
+  checks = list()
+  checks[[1]] <- sum(startsWith(prefix = "phi(i)_", x = int_input))
+  checks[[2]] <- sum(unlist(lapply(int_input, function(x){substr(x, 9,9) == "."})))
+  checks[[3]] <- sum(unlist(lapply(int_input, function(x){substr(x, 11,11) == "("})))
+  checks[[4]] <- sum(unlist(lapply(int_input, function(x){substr(x, 13,13) == ")"})))
+  checks[[5]] <- sum(unlist(lapply(int_input, function(x){substr(x, 15,15) == "("})))
+  checks[[6]] <- sum(unlist(lapply(int_input, function(x){substr(x, 17,17) == ")"})))
+  if(any(unlist(checks) != length(int_input))){
+    stop("Invalid input of 'incl_interaction_effects', see ?mlts_model.")
+  }
+
+  int_effs <- lapply(int_input, function(x){
+    # remove prefix
+    df <- data.frame(
+      "Param" = x,
+      "DV"  = substr(x, 8,8),
+      "IV1" = substr(x, 10,10),
+      "IV1lag" = substr(x, 12,12),
+      "IV2" = substr(x, 14,14),
+      "IV2lag" = substr(x, 16,16)
+    )
+    df
+  })
+  int_effs <- do.call(rbind, int_effs)
+
+  # post sanity checks
+  # main effects included?
+
+  # all variables in model?
+  if(max(as.integer(int_effs$DV)) > q |
+     max(as.integer(int_effs$IV1)) > q |
+     max(as.integer(int_effs$IV2)) > q){
+    stop("Invalid input of 'incl_t0_effects': input refers to variables outside the number of included constructs ('q').")
+  }
+
+
+  return(int_effs)
 }

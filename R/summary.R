@@ -59,6 +59,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # create a summary table using the monitor-function in rstan
   par_labels = mlts_param_labels(object$model)
   sums <- rstan::monitor(object$stanfit, probs = probs, print = FALSE)
+  conv <- sums # backup to use for convergence checks
   sums <- round(sums[1:dim(sums)[1], 1:ncol(sums)], digits)
   sums$Param_stan = row.names(sums)
   pop_pars <- merge(par_labels, y = sums, by = "Param_stan", sort = FALSE)
@@ -296,7 +297,6 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   )
 
   # model convergence info
-  conv = rstan::monitor(object$stanfit, print = FALSE, probs = prob)
   convergence <- paste0(
     "Model convergence criteria: \n",
     "  Maximum Potential Scale Reduction Factor (PSR; Rhat): ", round(max(conv$Rhat),3), " (should be < 1.01)\n",
@@ -378,7 +378,7 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   cat(data_info)
   cat(convergence)
   if (nrow(fixef_params) > 0) {
-    cat("\nFixed Effects:\n")
+    cat("\nPosterior Summary Statistics\nFixed Effects:\n")
     print(fixef_params, row.names = FALSE)
   }
   if (nrow(ranef_sds) > 0) {

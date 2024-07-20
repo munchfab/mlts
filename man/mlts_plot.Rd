@@ -6,7 +6,7 @@
 \usage{
 mlts_plot(
   fit,
-  type = c("fe", "re", "re.cor"),
+  type = c("fe", "re", "re.cor", "int"),
   bpe = c("median", "mean"),
   what = c("all", "Fixed effect", "Random effect SD", "RE correlation",
     "Outcome prediction", "RE prediction", "Item intercepts", "Loading",
@@ -37,6 +37,8 @@ type = "fe" (Default)
 Forest-plot of model coefficients.
 type = "re"
 Plot of individual (random) effects
+type = "int"
+Experimental: Plot within-level interactions.
 type = "re.cor"
 Combined plot depicting the distribution of individual parameter
 estimates (posterior summary statistics as provided by \code{bpe}), as

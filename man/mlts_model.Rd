@@ -20,7 +20,9 @@ mlts_model(
   ranef_zero = NULL,
   ranef_pred = NULL,
   out_pred = NULL,
-  out_pred_add_btw = NULL
+  out_pred_add_btw = NULL,
+  incl_t0_effects = NULL,
+  incl_interaction_effects = NULL
 )
 }
 \arguments{
@@ -93,6 +95,22 @@ in \code{model$Param} will be treated as additional between-level predictors.}
 \item{out_pred_add_btw}{A character vector. If \code{out_pred} is a character (vector), all
 inputs will be treated as between-level covariates to be used as additional predictors of
 all outcomes specified in \code{out_pred}.}
+
+\item{incl_t0_effects}{A character vector. Experimental: Add contemporaneous effects to the model.
+For example, to include an effect of the first construct on the second construct at time $t$,
+following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
+specifying \verb{phi(0)_21} where the \code{0} indicates the lag, the first subscript letter (\code{2}) the dependent,
+and the latter subscript (\code{1}) the independent construct. The respective within-level correlation/covariance
+of innovations between involved constructs will be excluded from the model accordingly.}
+
+\item{incl_interaction_effects}{A character vector. Experimental: Add interaction terms on
+the dynamic within-level. For example, to add an interaction term between first
+construct at time $t$ (lag of 0) and the second construct at $t-1$ (lag of 1) to
+the prediction of the second construct at time $t$ specify \verb{incl_interaction_effects = phi(i)_2.2(1)1(0)}.
+where the \code{i} indicates an interaction effect, the first subscript letter (\code{2}) the dependent,
+and the latter subscripts after the dot (i.e., \code{2(1)} and \code{1(0)}) the independent constructs involved
+in the interaction each followed by the respective lag in brackets. Note, that in this case the
+respective lag 0 effects need to be included separately using \code{incl_t0_effects}.}
 }
 \value{
 An object of class \code{data.frame} with the following columns:

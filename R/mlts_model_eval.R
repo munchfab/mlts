@@ -21,14 +21,16 @@ mlts_model_eval <- function(model){
 
   # extract included lag-order
   isPHI = which(startsWith(model$Param, "phi("))
+  isINT = which(startsWith(model$Param, "phi(i"))
   model$Lag = NA
-  model$Lag[isPHI] = as.integer(substr(model$Param[isPHI], 5, 5))
-  maxLag = max(model$Lag, na.rm = TRUE)
+  model$Lag[isPHI] = substr(model$Param[isPHI], 5, 5)
+
 
   # create additional columns
   ars = paste0("phi(",rep(1:3,each = 9),")_", 1:9, 1:9) # attention: max lag of 3 is hard-coded
   model$isAR = ifelse(model$Param %in% ars,1,0)
-
+  model$isINT = ifelse(startsWith(model$Param,"phi(i"),1,0)
+  n_int = sum(model$isINT)
 
   # check if measurement model is entered
   isLatent = nrow(model[model$Model == "Measurement",])
@@ -45,25 +47,46 @@ mlts_model_eval <- function(model){
   fix_pars$no = 1:nrow(fix_pars)
   fix_pars_dyn = fix_pars[fix_pars$Param_Label == "Dynamic",]
   n_dyn.pars = nrow(fix_pars_dyn)
+  n_int = sum(fix_pars_dyn$isINT)
   if(q < 10){  ### ACHTUNG AKTUELLE LÖSUNG FUNKTIONIERT NUR MIT D < 10
-    fix_pars_dyn$Dout = substr(fix_pars_dyn$Param, start = 8, stop = 8)
-    fix_pars_dyn$Dpred = substr(fix_pars_dyn$Param, start = 9, stop = 9)
+    fix_pars_dyn$Dout = -99
+    fix_pars_dyn$Dpred = -99
+    fix_pars_dyn$Dpred2 = -99
+    fix_pars_dyn$Lag2 = -99
+    for(i in 1:n_dyn.pars){
+      if(fix_pars_dyn$isINT[i] == 0){
+        fix_pars_dyn$Dout[i] = substr(fix_pars_dyn$Param[i], start = 8, stop = 8)
+        fix_pars_dyn$Dpred[i] = substr(fix_pars_dyn$Param[i], start = 9, stop = 9)
+      } else {
+        fix_pars_dyn$Dout[i] = substr(fix_pars_dyn$Param[i], start = 8, stop = 8)
+        fix_pars_dyn$Dpred[i] = substr(fix_pars_dyn$Param[i], start = 10, stop = 10)
+        fix_pars_dyn$Lag[i] = substr(fix_pars_dyn$Param[i], start = 12, stop = 12)
+        fix_pars_dyn$Dpred2[i] = substr(fix_pars_dyn$Param[i], start = 14, stop = 14)
+        fix_pars_dyn$Lag2[i] = substr(fix_pars_dyn$Param[i], start = 16, stop = 16)
+      }
+    }
   }
+  maxLag = max(as.numeric(fix_pars_dyn$Lag), na.rm = TRUE)
+
   # lagged relations between constructs
   N_pred = table(fix_pars_dyn$Dout) # number of lagged preds in each dimension
-  D_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
-  Lag_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
+  D_pred = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  D_pred2 = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  Lag_pred = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  Lag_pred2 = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
   Dpos1 = c()
   Dpos2 = c()
   for(i in 1:q){
     D_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred[fix_pars_dyn$Dout == i])
+    D_pred2[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred2[fix_pars_dyn$Dout == i])
     Lag_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag[fix_pars_dyn$Dout == i])
+    Lag_pred2[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag2[fix_pars_dyn$Dout == i])
     if(i == 1){
       Dpos1[i] = n_mus+1
       Dpos2[i] = n_mus+N_pred[i]
     } else {
-      Dpos1[i] = Dpos2[i-1] +1
-      Dpos2[i] = Dpos2[i-1] +N_pred[i]
+      Dpos1[i] = Dpos2[i-1]+1
+      Dpos2[i] = Dpos2[i-1]+N_pred[i]
     }
   }
 
@@ -391,9 +414,12 @@ mlts_model_eval <- function(model){
     fix_pars,
     fix_pars_dyn,
     n_dyn.pars,
+    n_int,
     N_pred,
     D_pred,
+    D_pred2,
     Lag_pred,
+    Lag_pred2,
     Dpos1,
     Dpos2,
     innos_rand,

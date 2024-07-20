@@ -39,10 +39,13 @@ data {
 
   // - dynamic model specification per D
   int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
-  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
+  int<lower=0> D_pred[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int<lower=0> Lag_pred[D,max(N_pred)];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
   int Dpos2[D];
+  int n_int;
+  int D_pred2[D,max(N_pred)];    // matrix to index predictors to use per dimension
+  int Lag_pred2[D,max(N_pred)];  // matrix to index lag of used predictors
 
   // - time-invariant variables:
   // covariates as predictors of random effects
@@ -139,8 +142,8 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector<lower = 0>[N] sd_noise[D];
-  vector<lower = 0>[N] sd_inncov[n_inno_covs];
+  vector[N] sd_noise[D];
+  vector[N] sd_inncov[n_inno_covs];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -281,18 +284,24 @@ model {
       }
 
     for(d in 1:D){ // start loop over dimensions
-
       // build prediction matrix for specific dimensions
-      matrix[(obs_id-maxLag),(N_pred[d]+n_inno_covs)] b_mat;  // adjust for non-fully crossed models
-      vector[N_pred[d]+n_inno_covs] b_use;
+      int n_cols = (n_inno_covs>0 && d<3) ? N_pred[d]+n_inno_covs : N_pred[d];
+      matrix[(obs_id-maxLag),n_cols] b_mat;
+      vector[n_cols] b_use;
       b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
 
       for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
         int lag_use = Lag_pred[d,nd];
-        b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+        if(D_pred2[d,nd] == -99){
+          b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+          } else {
+           int lag_use2 = Lag_pred2[d,nd];
+           b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
+                        etaW_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
         }
+      }
 
-      if(n_inno_covs>0){
+      if(n_inno_covs>0&&d<3){
          b_use[N_pred[d]+1] = inno_cov_load[d];
          b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
         }

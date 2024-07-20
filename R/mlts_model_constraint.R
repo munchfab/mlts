@@ -92,7 +92,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
 
   }
 
-  if(fix_inno_covs == T){
+  if(fix_inno_covs == TRUE){
 
     # update indentifier column
     model$isRandom[model$Param_Label == "Log Innovation Covariance"] = 0
@@ -149,6 +149,7 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
       model[model$Param %in% ranef_zero, "Param"],
       pattern = "ln.sigma_", replacement = "r.zeta_")
   }
+
 
   # update RE correlations
   model = update_model_REcors(model)

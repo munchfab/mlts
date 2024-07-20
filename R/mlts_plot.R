@@ -6,6 +6,8 @@
 #'                  Forest-plot of model coefficients.
 #'             type = "re"
 #'                  Plot of individual (random) effects
+#'             type = "int"
+#'                  Experimental: Plot within-level interactions.
 #'             type = "re.cor"
 #'                  Combined plot depicting the distribution of individual parameter
 #'                  estimates (posterior summary statistics as provided by `bpe`), as
@@ -58,7 +60,7 @@
 #' # inspect model summary
 #' mlts_plot(fit, type = "fe", what = "Fixed effect")
 #' }
-mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "mean"),
+mlts_plot <- function(fit, type = c("fe", "re", "re.cor", "int"), bpe = c("median", "mean"),
                       what = c("all", "Fixed effect", "Random effect SD", "RE correlation",
                                "Outcome prediction", "RE prediction", "Item intercepts",
                                "Loading", "Measurement Error SD"),
@@ -297,6 +299,72 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor"), bpe = c("median", "me
     })
 
   }
+
+
+  if(type == "int"){
+
+    stop("Work in progress!")
+
+    # check if interactions are involved
+    if(fit$standata$n_int==0){
+      stop("Model does not contain interaction effects on the dynamic within level.")
+    }
+
+    # evaluate model
+    infos <- mlts_model_eval(fit$model)
+
+    # Interaction plot
+    ## unstandardized effects
+
+    ## 1. calculate predicted scores of y using the range of the observed scores
+    int_pars = infos$fix_pars_dyn[infos$fix_pars_dyn$isINT == 1,]
+    int_y = as.integer(int_pars$Dout)
+    int_x1 = as.integer(int_pars$Dpred)
+    int_x2 = as.integer(int_pars$Dpred2)
+
+    # range of
+#    x_axis =
+
+    ## for now: only plot standardized effects
+#    mlts_standardized(fit, what = "both")
+    x_axis = seq(-3,3, by = 0.01)
+
+
+    # general setup for interaction plot
+    # 1. extract samples
+#    b_samples =
+
+    # 2. specify range to plot
+    x_axis <- seq(-3,3, by = 0.01)
+
+    # 3. calculate predicted scores
+    # pred_mean <-  b_std[,6] %*% t(x_axis)
+    # pred_SDup <-  b_std[,6] %*% t(x_axis) + b_std[,7]%*% t(x_axis)
+    # pred_SDdown <-  b_std[,6] %*% t(x_axis) - b_std[,7]%*% t(x_axis)
+    #
+    # fit_mean <- as.vector(colMeans(pred_mean))
+    # fit_SDup <- as.vector(colMeans(pred_SDup))
+    # fit_SDdown <- as.vector(colMeans(pred_SDdown))
+    #
+    # tmp <-data.frame(rep(x_axis,3),c(fit_SDup,fit_mean,fit_SDdown),c(rep("+1SD",length(x_axis)),rep("mean",length(x_axis)),rep("-1SD",length(x_axis))) )
+    # names(tmp) <- c("Mindful_attention","Negative_Affect","PA_previous")
+    #
+    # fit_mean_2.5 <- as.vector(apply(pred_mean,2,function(x) quantile(x, probs=0.025)))
+    # fit_mean_97.5 <- as.vector(apply(pred_mean,2,function(x) quantile(x, probs=0.975)))
+    # fit_SDupT_2.5 <- as.vector(apply(pred_SDup,2,function(x) quantile(x, probs=0.025)))
+    # fit_SDupT_97.5 <- as.vector(apply(pred_SDup,2,function(x) quantile(x, probs=0.975)))
+    # fit_SDdownT_2.5 <- as.vector(apply(pred_SDdown,2,function(x) quantile(x, probs=0.025)))
+    # fit_SDdownT_97.5 <- as.vector(apply(pred_SDdown,2,function(x) quantile(x, probs=0.975)))
+    # tmp$CI2.5 <- c(fit_SDupT_2.5,fit_mean_2.5,fit_SDdownT_2.5)
+    # tmp$CI97.5 <- c(fit_SDupT_97.5,fit_mean_97.5,fit_SDdownT_97.5)
+
+
+
+
+
+
+  }
+
 
 
   return(P)
