@@ -11,6 +11,7 @@ mlts_model(
   max_lag = c(1, 2, 3),
   btw_factor = TRUE,
   btw_model = NULL,
+  equal_loads_levels = FALSE,
   fix_dynamics = FALSE,
   fix_inno_vars = FALSE,
   fix_inno_covs = TRUE,
@@ -22,7 +23,9 @@ mlts_model(
   out_pred = NULL,
   out_pred_add_btw = NULL,
   incl_t0_effects = NULL,
-  incl_interaction_effects = NULL
+  incl_interaction_effects = NULL,
+  censor_left = NULL,
+  censor_right = NULL
 )
 }
 \arguments{
@@ -47,6 +50,10 @@ from a joint multivariate normal distribution.}
 \item{btw_model}{A list to indicate for which manifest indicator variables a common
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
+
+\item{equal_loads_levels}{Logical. For multiple-indicator model with \code{btw_factor = TRUE}, if \code{TRUE},
+factor loadings of the same indicators are assumed to be equal across levels. Note, that the first indicator
+loading parameters remain fixed to \code{1}.}
 
 \item{fix_dynamics}{Logical. Fix all random effect variances of autoregressive and
 cross-lagged effects to zero (constraining parameters to be equal across clusters).}
@@ -111,6 +118,18 @@ where the \code{i} indicates an interaction effect, the first subscript letter (
 and the latter subscripts after the dot (i.e., \code{2(1)} and \code{1(0)}) the independent constructs involved
 in the interaction each followed by the respective lag in brackets. Note, that in this case the
 respective lag 0 effects need to be included separately using \code{incl_t0_effects}.}
+
+\item{censor_left}{Numeric. Developmental. If an input is provided (i.e., a single numeric value) a left-censored
+version of the model will be estimated by treating all observations (of manifest indicators)
+at the censoring threshold (i.e., usually the lower bound of the scale) to be treated as missing during model estimation.
+These missing values (observations at the value of \code{censor_left}) are replaced with imputed values (declared as parameters
+in the stan model) with an upper limit of \code{censor_left} (see https://mc-stan.org/docs/stan-users-guide/truncation-censoring.html).
+Note that all manifest variables are affected by the censoring. To prevent
+individual variables from being treated as censored you could change the scale
+of the respective variable(s) so that all values exceed the censoring threshold.}
+
+\item{censor_right}{Numeric. Developmental. Similar to \code{censor_left} but assumes variables to be censored
+on the upper bound of the scale. Can be combined with \code{censor_left}.}
 }
 \value{
 An object of class \code{data.frame} with the following columns:

@@ -49,7 +49,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
   if(2 %in% p){
     message(
       "Note: For constructs with two indicators (p = 2), additional constraints \n",
-      "      may be necessary, e.g. fixing loading parameters of both indicators to 1.")
+      "      may be necessary, e.g. fixing loading parameters of both indicators to equa.")
   }
 
   if(length(p) == 1){

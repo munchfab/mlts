@@ -90,7 +90,15 @@ extract_indicator_info <- function(model, level = "Within", type = "Loading", in
     ind.info$p_pos <- 1:nrow(ind.info)
   }
   # add parameter
-  ind.info[, paste0(param, "_isFree")] <- ifelse(info$Constraint == "free", 1, 0)
+  if(level== "Within" & type == "Loading"){
+    ind.info[, paste0(param, "_isFree")] <- ifelse(info$Constraint != "= 1" , 1, 0)
+  } else {
+    ind.info[, paste0(param, "_isFree")] <- ifelse(info$Constraint == "free", 1, 0)
+  }
+  # add loading parameter constraints
+  if(type == "Loading"){
+    ind.info[, paste0(param, "_isEqual")] <- info$Constraint
+  }
 
   return(ind.info)
 }

@@ -172,12 +172,16 @@ mlts_model_eval <- function(model){
 
     # prepare infos to be passed to stan model ---------------------------------
     n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = TRUE)
+    n_loadB = sum(indicators$lambdaB_isEqual != "= 1", na.rm = TRUE)
+    n_loadB_equalW = sum(indicators$lambdaB_isEqual != "= 1" & indicators$lambdaB_isEqual != "free", na.rm = TRUE)
     n_loadWfree = sum(indicators$lambdaW_isFree, na.rm = TRUE)
+    n_loadW = sum(indicators$lambdaW_isEqual != "= 1", na.rm = TRUE)
     n_alphafree = sum(indicators$alpha_isFree, na.rm = TRUE)
     n_sigmaBfree = sum(indicators$sigmaB_isFree, na.rm = TRUE)
     n_sigmaWfree = sum(indicators$sigmaW_isFree, na.rm = TRUE)
 
     pos_loadBfree = which(indicators$lambdaB_isFree == 1)
+    pos_loadB_equalW = which(indicators$lambdaB_isEqual != "= 1" & indicators$lambdaB_isEqual != "free")
     pos_loadWfree = which(indicators$lambdaW_isFree == 1)
     pos_alphafree = which(indicators$alpha_isFree == 1)
     pos_sigmaBfree = which(indicators$sigmaB_isFree == 1)
@@ -196,7 +200,7 @@ mlts_model_eval <- function(model){
     prior_loadB = matrix(ncol = 2, nrow = n_loadBfree)
     prior_loadB = model[model$Type == "Loading" & model$Level == "Between" & model$Constraint == "free",cols]
     prior_loadW = matrix(ncol = 2, nrow = n_loadWfree)
-    prior_loadW = model[model$Type == "Loading" & model$Level == "Within" & model$Constraint == "free",cols]
+    prior_loadW = model[model$Type == "Loading" & model$Level == "Within" & model$Constraint != "= 1",cols]
     prior_sigmaB = matrix(ncol = 2, nrow = n_sigmaBfree)
     prior_sigmaB = model[model$Type == "Measurement Error SD" & model$Level == "Between" & model$Constraint == "free",cols]
     prior_sigmaW = matrix(ncol = 2, nrow = n_sigmaWfree)
@@ -206,11 +210,15 @@ mlts_model_eval <- function(model){
     p <- 1
     indicators = NA
     n_loadBfree = 0
+    n_loadB = 0
+    n_loadB_equalW = 0
     n_loadWfree = 0
+    n_loadW = 0
     n_alphafree = 0
     n_sigmaWfree = 0
     n_sigmaBfree = 0
     pos_loadBfree = 0
+    pos_loadB_equalW = 0
     pos_loadWfree = 0
     pos_alphafree = 0
     pos_sigmaBfree = 0
@@ -442,8 +450,8 @@ mlts_model_eval <- function(model){
     n_z, n_z_vars,
 
     # measurement model parameters
-    isLatent, indicators, n_loadBfree, n_loadWfree, n_alphafree, n_sigmaWfree, n_sigmaBfree,
-    pos_loadBfree, pos_loadWfree, pos_alphafree, pos_sigmaBfree, pos_sigmaWfree,
+    isLatent, indicators, n_loadBfree, n_loadB, n_loadB_equalW, n_loadWfree, n_loadW, n_alphafree, n_sigmaWfree, n_sigmaBfree,
+    pos_loadBfree, pos_loadB_equalW, pos_loadWfree, pos_alphafree, pos_sigmaBfree, pos_sigmaWfree,
     n_YB_free, YB_free_pos, mu_is_etaB, mu_etaB_pos,
 
     # priors

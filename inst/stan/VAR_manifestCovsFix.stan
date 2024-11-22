@@ -17,6 +17,16 @@ data {
   int n_miss_D[D];                 // missings per D
   int pos_miss_D[D,max(n_miss_D)]; // array of missings' positions
 
+  // censored models
+  real censL_val;
+  int n_censL;                      // total number of obs at LB across D
+  int n_censL_D[D];                 // obs at LB per D
+  int pos_censL_D[D,max(n_censL_D)]; // array of obs at LBs' positions
+  real censR_val;
+  int n_censR;                      // total number of obs at LB across D
+  int n_censR_D[D];                 // obs at LB per D
+  int pos_censR_D[D,max(n_censR_D)]; // array of obs at LBs' positions
+
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
@@ -78,6 +88,8 @@ parameters {
   cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
   cholesky_factor_corr[D] L_inno;        // cholesky factor of prediction errors
   vector[n_miss] y_impute;               // vector to store imputed values
+  vector<upper=censL_val>[n_censL] y_impute_censL;
+  vector<lower=censR_val>[n_censR] y_impute_censR;
   row_vector[n_random] gammas;           // fixed effect (intercepts)
   vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
   vector[n_fixed] b_fix;
@@ -126,6 +138,8 @@ transformed parameters {
 model {
   int pos = 1;       // initialize position indicator
   int p_miss = 1;    // running counter variable to index positions on y_impute
+  int p_censL = 1;
+  int p_censR = 1;
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   vector[N_obs] y_merge[D];
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
@@ -139,6 +153,22 @@ model {
     p_miss = p_miss + n_miss_D[i];    // update counter for next indicator i+1
   }
   }
+  // replace values at censor thresholds
+  if(n_censL>0){
+    for(i in 1:D){
+    // add imputed values for observations at floor (threshold for censoring)
+    y_merge[i,pos_censL_D[i,1:n_censL_D[i]]] = segment(y_impute_censL, p_censL, n_censL_D[i]);
+    p_censL = p_censL + n_censL_D[i];    // update counter for next indicator i+1
+    }
+  }
+  if(n_censR>0){
+    for(i in 1:D){
+    // add imputed values for observations at ceiling (threshold for censoring)
+    y_merge[i,pos_censR_D[i,1:n_censR_D[i]]] = segment(y_impute_censR, p_censR, n_censR_D[i]);
+    p_censR = p_censR + n_censR_D[i];    // update counter for next indicator i+1
+    }
+  }
+
 
   // (Hyper-)Priors
   gammas ~ normal(prior_gamma[,1],prior_gamma[,2]);

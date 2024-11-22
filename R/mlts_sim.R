@@ -85,11 +85,24 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     model$true.val[model$Model == Model & model$Type == "Item intercepts" & model$Constraint == "free"] =
       sample(x = seq(0.5, 2, by = 0.5), size = infos$n_alphafree, replace = TRUE)
     model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
-    model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint == "free"] =
+    model$true.val[model$Level == "Within" & model$Type == "Loading" & model$Constraint != "= 1"] =
       sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadWfree, replace = TRUE)
     model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "= 1"] = 1
-    model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint == "free"] =
-      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadBfree, replace = TRUE)
+    model$true.val[model$Level == "Between" & model$Type == "Loading" & model$Constraint != "= 1"] =
+      sample(x = seq(0.7, 0.9, by = 0.05), size = infos$n_loadB, replace = TRUE)
+
+    # evaluate equality constraints on loading parameters across levels
+    equal = unique(model$Constraint[model$Type == "Loading" & !(model$Constraint %in% c("= 1", "free"))])
+    n_equal = length(equal)
+    if(n_equal>0){
+      for(z in equal){
+        # set all loadings with the same equality constraint to the same value
+        val = model$true.val[model$Constraint %in% z]
+        model$true.val[model$Constraint %in% z] <- val[1]
+      }
+    }
+
+
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = TRUE)
@@ -117,7 +130,7 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
       for(i in 1:nrow(phis)){
         if(phis$Lag[i] > 1){
           phi.lag1 = phis$true.val[phis$Param == paste0("phi(1)_",phis$Dout[i],phis$Dpred[i])]
-          phis$true.val[i] = phi.lag1/phis$Lag[i]
+          phis$true.val[i] = phi.lag1/as.numeric(phis$Lag[i])
         }
       }
     }
@@ -503,6 +516,26 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
   }
 
 
+  # add censored versions of variables if requested
+  y_cols = colnames(within)[startsWith(colnames(within),"Y")]
+  if(!is.null(attr(model, which = "censor_left"))){
+
+    # get censoring threshold
+    censor_LB <- attr(model, which = "censor_left")
+
+    within[,paste0(y_cols,"_cens")] <- within[,y_cols]
+    within[,paste0(y_cols,"_cens")][within[,y_cols] <= censor_LB] <- censor_LB
+  }
+
+  if(!is.null(attr(model, which = "censor_right"))){
+
+    # get censoring threshold
+    censor_UB <- attr(model, which = "censor_right")
+    if(is.null(attr(model, which = "censor_left"))){
+      within[,paste0(y_cols,"_cens")] <- within[,y_cols]
+      }
+    within[,paste0(y_cols,"_cens")][within[,paste0(y_cols,"_cens")] >= censor_UB] <- censor_UB
+  }
 
   # combine information =======================================================
   data = within

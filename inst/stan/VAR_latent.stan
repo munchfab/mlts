@@ -22,6 +22,16 @@ data {
   int n_miss_p[n_p];                 // missings per indicator
   int pos_miss_p[n_p,max(n_miss_p)]; // array of missings' positions
 
+  // censored models
+  real censL_val;
+  int n_censL;                         // total number of obs at LB across D
+  int n_censL_p[n_p];                  // obs at LB per D
+  int pos_censL_p[n_p,max(n_censL_p)]; // array of obs at LBs' positions
+  real censR_val;
+  int n_censR;                         // total number of obs at LB across D
+  int n_censR_p[n_p];                  // obs at LB per D
+  int pos_censR_p[n_p,max(n_censR_p)]; // array of obs at LBs' positions
+
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
@@ -67,11 +77,13 @@ data {
   // indexing information on constraints
   int n_etaW_free;
   int n_loadBfree;
+  int n_loadB_equalW;
   int n_loadWfree;
   int n_alphafree;
   int n_sigmaBfree;
   int n_sigmaWfree;
   int pos_loadBfree[n_loadBfree]; // positions in relation to the 1:n_p indicators
+  int pos_loadB_equalW[n_loadB_equalW];
   int pos_loadWfree[n_loadWfree];
   int pos_alphafree[n_alphafree];
   int pos_sigmaBfree[n_sigmaBfree];
@@ -121,6 +133,8 @@ parameters {
   vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
   cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
   vector[n_miss] y_impute;               // vector to store imputed values
+  vector<upper=censL_val>[n_censL] y_impute_censL;
+  vector<lower=censR_val>[n_censR] y_impute_censR;
   row_vector[n_random] gammas;           // fixed effect (intercepts)
   vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
   vector[n_fixed] b_fix;
@@ -128,7 +142,6 @@ parameters {
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
   vector[n_obs_cov] eta_cov[n_inno_covs];
-
   // measurement model parameters
   vector[n_loadBfree] loadB_free;
   vector[n_loadWfree] loadW_free;
@@ -137,6 +150,7 @@ parameters {
   vector<lower=0>[n_sigmaWfree] sigmaW_free;
   vector[N_obs] etaW_free[n_etaW_free];
   vector[N] YB_free[n_YB_free];
+
 }
 
 transformed parameters {
@@ -189,8 +203,9 @@ transformed parameters {
  }
 
   // replace values for parameters to estimate
-  loadB[pos_loadBfree] = loadB_free;
   loadW[pos_loadWfree] = loadW_free;
+  loadB[pos_loadBfree] = loadB_free;
+  loadB[pos_loadB_equalW] = loadW[pos_loadB_equalW];
   alpha[pos_alphafree] = alpha_free;
   sigmaB[pos_sigmaBfree] = sigmaB_free;
   sigmaW[pos_sigmaWfree] = sigmaW_free;
@@ -200,6 +215,8 @@ model {
   int pos = 1;       // initialize position indicator
   int pos_cov = 1;   // covariance position
   int p_miss = 1;    // running counter variable to index positions on y_impute
+  int p_censL = 1;
+  int p_censR = 1;
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
   vector[N_obs] y_merge[n_p];
@@ -213,6 +230,23 @@ model {
     p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
     }
   }
+
+  // replace values at censor thresholds
+  if(n_censL>0){
+    for(i in 1:n_p){
+    // add imputed values for observations at floor (threshold for censoring)
+    y_merge[i,pos_censL_p[i,1:n_censL_p[i]]] = segment(y_impute_censL, p_censL, n_censL_p[i]);
+    p_censL = p_censL + n_censL_p[i];    // update counter for next indicator i+1
+    }
+  }
+  if(n_censR>0){
+    for(i in 1:n_p){
+    // add imputed values for observations at ceiling (threshold for censoring)
+    y_merge[i,pos_censR_p[i,1:n_censR_p[i]]] = segment(y_impute_censR, p_censR, n_censR_p[i]);
+    p_censR = p_censR + n_censR_p[i];    // update counter for next indicator i+1
+    }
+  }
+
 
   // (Hyper-)Priors
   gammas ~ normal(prior_gamma[,1],prior_gamma[,2]);
