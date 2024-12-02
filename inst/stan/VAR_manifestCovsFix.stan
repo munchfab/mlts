@@ -2,10 +2,11 @@
 data {
   int<lower=1> N; 	// number of observational units
   int<lower=1> D; 	// number of time-varying constructs
+  int<lower=1> D_cen;
   int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	// observations in total: N * TP
   int<lower=1> n_pars;
-  int<lower=D> n_random;   // number of random effects
+  int<lower=1> n_random;   // number of random effects
   int n_fixed;
   int is_fixed[1,n_fixed];
   int is_random[n_random];  // which parameters to model person-specific
@@ -30,13 +31,13 @@ data {
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
-  int<lower=0,upper=1> innos_rand[D];
+  int<lower=0,upper=1> innos_rand[D_cen];
   int n_innos_fix;
-  int innos_fix_pos[D];
-  int innos_pos[D];
+  int innos_fix_pos[D_cen];
+  int innos_pos[D_cen];
 
   // - dynamic model specification per D
-  int<lower=1> N_pred[D];     // Number of predictors per dimension
+  int<lower=0> N_pred[D];     // Number of predictors per dimension
   int<lower=0> D_pred[D,max(N_pred)];    // matrix to index predictors to use per dimension
   int<lower=0> Lag_pred[D,max(N_pred)];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
@@ -77,7 +78,9 @@ data {
   // int<lower=1> n_inno_covs; // number of potential innovation covs to include
   // int<lower=0,upper=1> inno_cov0;    // fixed to zero
   // int<lower=0,upper=1> inno_cov_fix; // fixed to zero
-
+  // addon for time-varying exogenous variables
+  int<lower=0,upper=1> is_wcen[D];
+  int<lower=0,upper=D> D_cen_pos[D];
 }
 
 
@@ -86,7 +89,7 @@ parameters {
   vector<lower=0>[n_random] sd_R;        // random effect SD
   vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
   cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
-  cholesky_factor_corr[D] L_inno;        // cholesky factor of prediction errors
+  cholesky_factor_corr[D_cen] L_inno;        // cholesky factor of prediction errors
   vector[n_miss] y_impute;               // vector to store imputed values
   vector<upper=censL_val>[n_censL] y_impute_censL;
   vector<lower=censR_val>[n_censR] y_impute_censR;
@@ -102,7 +105,7 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector[D] sd_noise[N];
+  vector[D_cen] sd_noise[N];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
  // REs regressed on covariates
@@ -126,7 +129,7 @@ transformed parameters {
   }
 
   // transformation of log-innovation variances if modeled as person-specific
-  for(i in 1:D){
+  for(i in 1:D_cen){
     if(innos_rand[i] == 0){
       sd_noise[,i] = to_array_1d(rep_vector(sigma[innos_fix_pos[i]],N));
     } else {
@@ -143,7 +146,7 @@ model {
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   vector[N_obs] y_merge[D];
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
-  matrix[D, D] SIGMA_inno = diag_pre_multiply(sd_noise[1,], L_inno);
+  matrix[D_cen, D_cen] SIGMA_inno = diag_pre_multiply(sd_noise[1,], L_inno);
 
   y_merge = y;      // add observations
   if(n_miss>0){
@@ -196,7 +199,7 @@ model {
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
-    vector[D] y_use[obs_id - maxLag];
+    vector[D_cen] y_use[obs_id - maxLag];
 
     // individual parameters from (multivariate) normal distribution
     if(n_random == 1){
@@ -206,16 +209,23 @@ model {
     }
 
     // local variable declaration: array of predicted values
-    vector[D] mus[obs_id-maxLag];
+    vector[D_cen] mus[obs_id-maxLag];
 
     // create latent mean centered versions of observations
     vector[obs_id] y_cen[D];
 
     for(d in 1:D){ // start loop over dimensions
-      y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,d];
+      if(is_wcen[d] == 1){
+        y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,D_cen_pos[d]];
+      } else {
+        y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)];
+      }
     }
 
     for(d in 1:D){ // start loop over dimensions
+
+      if(is_wcen[d] == 1){
+
       // build prediction matrix for specific dimensions
       matrix[(obs_id-maxLag),N_pred[d]] b_mat; // adjust for non-fully crossed models
 
@@ -231,12 +241,13 @@ model {
       }
 
       // use build predictor matrix to calculate latent time-series means
-      mus[,d] =  to_array_1d(b[pp,d] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]));
-      y_use[,d] = to_array_1d(segment(y_merge[d,], (pos+maxLag), (obs_id-maxLag)));
+      mus[,D_cen_pos[d]] =  to_array_1d(b[pp,D_cen_pos[d]] + b_mat * to_vector(b[pp, Dpos1[d]:Dpos2[d]]));
+      y_use[,D_cen_pos[d]] = to_array_1d(segment(y_merge[d,], (pos+maxLag), (obs_id-maxLag)));
+      }
     }
 
     // sampling statement
-    if(n_innos_fix == D){
+    if(n_innos_fix == D_cen){
       y_use ~ multi_normal_cholesky(mus, SIGMA_inno);
     } else {
       y_use ~ multi_normal_cholesky(mus, diag_pre_multiply(sd_noise[pp,], L_inno));
@@ -261,7 +272,7 @@ model {
 
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
-  matrix[D,D] bcorr_inn; // random coefficients correlation matrix
+  matrix[D_cen,D_cen] bcorr_inn; // random coefficients correlation matrix
   bcorr = multiply_lower_tri_self_transpose(L);
   bcorr_inn = multiply_lower_tri_self_transpose(L_inno);
 }

@@ -15,6 +15,7 @@
 #' @param btw_model A list to indicate for which manifest indicator variables a common
 #' between-level factor should be modeled (see Details for detailed instructions).
 #' At this point restricted to one factor per latent construct.
+#' @param silent logical. Set to `TRUE` to suppress warnings and messages.
 #' @return An object of class `data.frame`.
 #' @details Update a `model`-object.
 #' @noRd
@@ -36,9 +37,9 @@
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
 #'
-mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL){
+mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL, silent = FALSE){
 
-  if(1 %in% p){
+  if(1 %in% p & silent == F){
     message(
       "Note: Constructs with a single indicator (p = 1), are assumed to be free \n",
       "      of measurement error. For the respective variable(s), the following \n",
@@ -46,7 +47,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       "      and measurement error variances = 0.")
   }
 
-  if(2 %in% p){
+  if(2 %in% p & silent == F){
     message(
       "Note: For constructs with two indicators (p = 2), additional constraints \n",
       "      may be necessary, e.g. fixing loading parameters of both indicators to equa.")
@@ -54,7 +55,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
 
   if(length(p) == 1){
     p = rep(p, times = q)
-    if (q > 1) {
+    if (q > 1 & silent == F) {
       warning(
         "Note: The number of indicators is assumed to be ", p[1], "\n",
         "      for each latent variable. If this is not intended, please \n",
@@ -66,14 +67,14 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
 
   # print a warning if model already contains a measurement model
   if("Measurement" %in% model$Model){
-    message("model already contains a measurement model specification which will be overwritten.")
+    if(silent == F){message("model already contains a measurement model specification which will be overwritten.")}
     model = model[model$Model != "Measurement",]
   }
 
 
   # print a warning, if model already contains a between-level structure
   if(sum(grepl(model$Type, pattern = "prediction"))>0){
-    warning("Between-level prediction models are removed when changes to the measurement model are made.")
+    if(silent == F){warning("Between-level prediction models are removed when changes to the measurement model are made.")}
     model = model[grepl(model$Type, pattern = "prediction"),]
   }
 

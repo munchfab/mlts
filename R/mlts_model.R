@@ -57,6 +57,12 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
+#' @param fixef_group A character vector (developmental). Add a binary coded (0 vs. 1) variable to include
+#' group differences in fixed effects (intercepts). When dynamic or variance parameters
+#' are allowed to vary by cluster, you can enter the grouping variable to `re_pred`.
+#' @param is_exogenous Integer or a vector of integers (developmental). Indicate if any of the constructs
+#' should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
+#' Adding a dichotomous time-varying predictor variable.
 #' @param incl_t0_effects A character vector. Experimental: Add contemporaneous effects to the model.
 #' For example, to include an effect of the first construct on the second construct at time $t$,
 #' following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
@@ -81,6 +87,7 @@
 #' of the respective variable(s) so that all values exceed the censoring threshold.
 #' @param censor_right Numeric. Developmental. Similar to `censor_left` but assumes variables to be censored
 #' on the upper bound of the scale. Can be combined with `censor_left`.
+#' @param silent logical. Set to `TRUE` to suppress warnings and messages.
 #' @return An object of class `data.frame` with the following columns:
 #' \item{Model}{Indicates if the parameter in the respective row is part of the structural, or
 #' the measurement model (if multiple indicators per construct are provided)}
@@ -164,9 +171,11 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           inno_covs_dir = NULL,
                           fixef_zero = NULL, ranef_zero = NULL,
                           ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL,
+                          fixef_group = NULL,
+                          is_exogenous = NULL,
                           incl_t0_effects = NULL,
                           incl_interaction_effects = NULL,
-                          censor_left = NULL, censor_right = NULL){
+                          censor_left = NULL, censor_right = NULL, silent = FALSE){
 
   if(length(max_lag) == 3){
     max_lag = 1
@@ -175,11 +184,13 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   if(length(p) == 1){
     p = rep(p, times = q)
     if (q > 1) {
+      if(silent == FALSE){
       warning("Note: The number of indicators is assumed to be ", p[1],
               " for each latent variable. If this is not intended, please",
               " specify a vector of length q containing the number of",
               " indicators for each latent construct",
               " (see Vignettes for examples).")
+      }
     }
   }
   if (length(p) != q & !is.null(p)) {
@@ -188,6 +199,9 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
          " indicators for each latent construct (see Vignettes for examples).")
   }
 
+  if(!is.null(p) & !is.null(is_exogenous) & any(p[is_exogenous] > 1)){
+    stop("Measurment model specification for exogenous construct is not supported.")
+  }
 
   if(q >= 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
     if(is.null(inno_covs_dir)){
@@ -196,7 +210,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
         "a latent variable appraoch will be used to capture the shared variance of ",
         "innovations (for now restricted to the first two constructs). ",
         "This affords putting a restriction ",
-        "on the loading parameters of the latent innovation covariance factor,",
+        "on the loading parameters of the latent innovation covariance factor, ",
         "specifying the association of innovations as either positive (inno_covs_dir == 'pos') ",
         "or negative (inno_covs_dir = 'neg').")
     }
@@ -214,10 +228,10 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   # check for contemporaneous effects
   if(!is.null(incl_t0_effects)){
     if(q == 1){
-     warning("Input of 'incl_t0_effects' will be ignored in AR models (q = 1).")
+     if(silent == F){warning("Input of 'incl_t0_effects' will be ignored in AR models (q = 1).")}
     }
     if(q > 1){
-      warning("Models including contemporaneous effects are still developemental.")
+      if(silent == F){warning("Models including contemporaneous effects are still developemental.")}
       t0_effs = eval_t0_effects(t0_input = incl_t0_effects, q = q)
 
       if(fix_inno_covs == TRUE & inno_covs_zero == FALSE){
@@ -230,13 +244,18 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   # check for interaction effects on the within-level
   if(!is.null(incl_interaction_effects)){
     if(q == 1){
-      warning("Input of 'incl_interaction_effects' will be ignored in AR models (q = 1).")
+      if(silent == F){warning("Input of 'incl_interaction_effects' will be ignored in AR models (q = 1).")}
     }
     if(q > 1){
-      warning("Models including interaction effects on the dynamic within-level are still developemental.")
+      if(silent == F){warning("Models including interaction effects on the dynamic within-level are still developemental.")}
       int_effs = eval_int_effects(int_input = incl_interaction_effects, q = q)
     }
   }
+
+  if(q > 2 & fix_inno_covs == FALSE & any(is_exogenous < 3)){
+    stop("For this type of model, setting is_exogenous < 3 is not allowed. You can just reorder the variables.")
+  }
+
 
   # check for censoring inputs
 
@@ -388,7 +407,6 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
       "isRandom" = 0
     )
 
-
     ## combine
     model = rbind(FE, RE, REcors)
   }
@@ -412,11 +430,11 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     inno_covs_zero = FALSE
   }
   if(inno_covs_zero == FALSE & q > 2 & fix_inno_covs == FALSE){
-    warning(
-     "Note: The inclusion of person-specific innovation covariances is restricted ",
-     "to one latent innovation covariance factor which will load on the first two ",
-     "constructs. The innovations of additional constructs will be modeled to stem ",
-     "from a univariate normal distribution.")
+    if(silent == F){message(
+     "Note: The inclusion of person-specific innovation covariances is restricted \n",
+     "      to one latent innovation covariance factor which will load on the first two \n",
+     "      constructs. The innovations of additional constructs will be modeled to stem \n",
+     "      from a univariate normal distribution.")}
    }
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
@@ -433,7 +451,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   if(!is.null(p)){
     model = mlts_model_measurement(
       model = model, q = q, p = p,
-      btw_factor = btw_factor, btw_model = btw_model)
+      btw_factor = btw_factor, btw_model = btw_model, silent = silent)
 
     # update equality constraints on loading parameters across levels
     if(equal_loads_levels == T){
@@ -466,16 +484,38 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   row.names(model) <- model$Param
   attr(model, which = "mlts_class") <- class
   if(!is.null(censor_left)){
-    warning("Censored VAR models are still considered developmental.")
+    if(silent == F){warning("Censored VAR models are still considered developmental.")}
     attr(model, which = "censor_left") <- censor_left
   }
 
   if(!is.null(censor_right)){
     if(is.null(censor_left)){
-      warning("Censored VAR models are still considered developemental.")
+      if(silent == F){warning("Censored VAR models are still considered developemental.")}
     }
     attr(model, which = "censor_right") <- censor_right
   }
+
+
+  # Fixed effect - Group Differences ===========================================
+  if(!is.null(fixef_group)){
+    # add parameters to the model
+    FEdiffs <- model[model$Type == "Fixed effect", ]
+    # update
+    FEdiffs$Type <- "FE Group Diff"
+    FEdiffs$Param <- paste0(FEdiffs$Param,"_diff")
+
+    # add to model
+    model = rbind(model, FEdiffs)
+
+  }
+
+
+  # Any exogenous variables? ===================================================
+  if(!is.null(is_exogenous)){
+    model <- mod_update_exo(model, is_exo = is_exogenous)
+  }
+
+
 
   return(model)
 }

@@ -73,6 +73,10 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # model specific information: ------------------------------------------------
   infos = mlts_model_eval(model)
 
+  D_cen = infos$D_cen
+  D_cen_pos = infos$D_cen_pos
+  is_wcen = infos$is_wcen
+
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
@@ -100,7 +104,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   # dynamic model specification by dimension (D)
   maxLag = infos$maxLag
-  N_pred = infos$N_pred
+  N_pred = as.array(infos$N_pred)
   D_pred = infos$D_pred
   D_pred2 = infos$D_pred2
   Lag_pred = infos$Lag_pred
@@ -241,7 +245,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # combine all information
   standata = rstan::nlist(
     # data specifications
-    N, D,maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
+    N, D, D_cen, D_cen_pos, is_wcen, maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
     # model specifications
     n_pars, n_random, n_fixed, is_random, is_fixed,
     N_pred, D_pred, D_pred2, Lag_pred, Lag_pred2, n_int, Dpos1, Dpos2,
@@ -268,6 +272,9 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   # for latent models:
   if(infos$isLatent == TRUE){
+    standata$Dp_cen_pos <- infos$Dp_cen_pos
+    standata$p_is_wcen <- infos$p_is_wcen
+    standata$p_is_wcen_pos <- infos$p_is_wcen_pos
     standata$D = infos$q
     standata$D_np = as.array(infos$p)
     standata$n_p = nrow(infos$indicators)

@@ -38,6 +38,9 @@ update_model_REcors <- function(model) {
   }
 
 
+  # add row labels
+  row.names(model) <- model$Param
+
   return(model)
 }
 
@@ -190,3 +193,74 @@ eval_int_effects <- function(int_input, q){
 
   return(int_effs)
 }
+
+mod_update_exo <- function(model, is_exo){
+
+  # changes to model is any variable is exogenous:
+
+  ## Remove mean and innovation variance
+  for(i in is_exo){
+    model <- model[!(startsWith(model$Param, prefix = paste0("mu_",i))),]
+  }
+  model <- model[!(model$Param %in% paste0("etaB_",is_exo)),]
+  model <- model[!(model$Param %in% paste0("ln.sigma2_",is_exo)),]
+  model <- model[!(model$Param %in% paste0("sigma_",is_exo)),]
+
+  # remove all dynamic effects on exogenous construct
+  for(i in 1:length(is_exo)){
+    model <- model[!(model$Param %in% paste0("phi(0)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("phi(1)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("phi(2)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("phi(3)_",is_exo[i],1:9)),]
+  }
+
+  # innovation correlation / covariance
+  for(i in 1:length(is_exo)){
+    model <- model[!(model$Param %in% paste0("r.zeta_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("r.zeta_",1:9,is_exo[i])),]
+  }
+
+  ## remove random effect SDs
+  for(i in is_exo){
+    model <- model[!(startsWith(model$Param, prefix = paste0("sigma_mu_",i))),]
+  }
+  model <- model[!(model$Param %in% paste0("sigma_etaB_",is_exo)),]
+  model <- model[!(model$Param %in% paste0("sigma_ln.sigma2_",is_exo)),]
+
+  for(i in 1:length(is_exo)){
+    model <- model[!(model$Param %in% paste0("sigma_phi(0)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("sigma_phi(1)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("sigma_phi(2)_",is_exo[i],1:9)),]
+    model <- model[!(model$Param %in% paste0("sigma_phi(3)_",is_exo[i],1:9)),]
+  }
+
+ # remove predictors on those random effects
+ for(i in is_exo){
+   model <- model[!(startsWith(x = model$Param, prefix = paste0("b_mu_",i))),]
+   model <- model[!(startsWith(x = model$Param, prefix = paste0("b_ln.sigma2_",i))),]
+   for(j in 1:9){
+     for(l in 1:3){
+      model <- model[!(startsWith(x = model$Param, prefix = paste0("b_phi(",l,")_",i,j))),]
+     }
+   }
+ }
+
+  # remove those random effects as outcome predictors
+  for(i in is_exo){
+    model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.mu_",i))),]
+    model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.ln.sigma2_",i))),]
+    for(j in 1:9){
+      for(l in 1:3){
+        model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.phi(",l,")_",i,j))),]
+      }
+    }
+  }
+
+
+  ## update random effect correlations
+  model <- update_model_REcors(model)
+
+  model
+}
+
+

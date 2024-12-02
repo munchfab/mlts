@@ -153,15 +153,17 @@ mlts_fit <- function(model,
       }))
     )
   }
-  cat(call_inds)
+
+  if(print_message == TRUE){cat(call_inds)}
 
   # simulated data used
   data.simulated = ifelse(class(data)[1] == "mlts_simdata", TRUE, FALSE)
 
   # check if data is class "mlts_simdata"
   if(data.simulated == TRUE) {
-    message("Simulated data provided:",
-    "\nTrue scores used in the data generation will be added to the returned object.")
+
+    if(print_message == TRUE){message("Simulated data provided:",
+    "\nTrue scores used in the data generation will be added to the returned object.")}
 
     par_labels <- merge(x = par_labels, data$model[,c("Param", "true.val")],
                        by = "Param", sort = FALSE)

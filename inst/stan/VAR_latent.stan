@@ -2,6 +2,7 @@
 data {
   int<lower=1> N; 	        // number of observational units
   int<lower=1> D;           // number of latent constructs
+  int<lower=1> D_cen;
   int<lower=1> D_np[D];     // number of indicators per construct
   int<lower=1> n_p; 	      // number of manifest indicators
   int D_perP[n_p];          // indicate dimension per indicator
@@ -10,7 +11,7 @@ data {
   int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
-  int<lower=D> n_random;    // number of random effects
+  int<lower=D_cen> n_random;    // number of random effects
   int n_fixed;
   int is_fixed[1,n_fixed];
   int is_random[n_random];  // which parameters to model person-specific
@@ -35,10 +36,10 @@ data {
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
-  int<lower=0,upper=1> innos_rand[D];
+  int<lower=0,upper=1> innos_rand[D_cen];
   int n_innos_fix;
-  int innos_fix_pos[D];
-  int innos_pos[D];
+  int innos_fix_pos[D_cen];
+  int innos_pos[D_cen];
 
   // - covariances of innovations:
   int n_inno_covs; // number of potential innovation covs to include
@@ -48,7 +49,7 @@ data {
 
 
   // - dynamic model specification per D
-  int<lower=1> N_pred[D];     // Number of predictors per dimension
+  int<lower=0> N_pred[D];     // Number of predictors per dimension
   int<lower=0> D_pred[D,max(N_pred)];    // matrix to index predictors to use per dimension
   int<lower=0> Lag_pred[D,max(N_pred)];  // matrix to index lag of used predictors
   int Dpos1[D];  // index positions of danymic effect parameters
@@ -106,25 +107,24 @@ data {
   matrix[n_out,2] prior_alpha_out;
   matrix[n_out_bs_sum,2] prior_b_out;
   matrix[n_out,2] prior_sigma_out;
-
-
   matrix[n_alphafree,2] prior_alpha;
   matrix[n_loadBfree,2] prior_loadB;
   matrix[n_loadWfree,2] prior_loadW;
   matrix[n_sigmaBfree,2] prior_sigmaB;
   matrix[n_sigmaWfree,2] prior_sigmaW;
+
+  int<lower=0,upper=1> is_wcen[D];
+  int<lower=0,upper=1> p_is_wcen[n_p];
+  int<lower=0,upper=n_p> p_is_wcen_pos[n_p];
+  int<lower=0,upper=D> D_cen_pos[D];
+  int<lower=0,upper=n_p> Dp_cen_pos[D];
 }
 
 transformed data{
   int n_SD_etaW_all;
   int n_SD_etaW_i;
-  if(standardized == 1){
-    n_SD_etaW_all = n_etaW_free;
-    n_SD_etaW_i = N;
-  } else {
-    n_SD_etaW_all = 0;
-    n_SD_etaW_i = 0;
-  }
+  n_SD_etaW_all = standardized == 1 ? n_etaW_free : 0;
+  n_SD_etaW_i = standardized == 1 ? N : 0;
 }
 
 parameters {
@@ -156,7 +156,7 @@ parameters {
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector[N] sd_noise[D];
+  vector[N] sd_noise[D_cen];
   vector[N] sd_inncov[n_inno_covs];
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
@@ -187,7 +187,7 @@ transformed parameters {
   }
 
   // transformation of log-innovation variances if modeled as person-specific
-  for(i in 1:D){
+  for(i in 1:D_cen){
     if(innos_rand[i] == 0){
       sd_noise[i,] = rep_vector(sigma[innos_fix_pos[i]],N);
     } else {
@@ -279,7 +279,9 @@ model {
 
   // indicator between-part
   for(i in 1:n_p){
-    if(mu_is_etaB[i] == 1){
+    if(p_is_wcen[i] == 0){
+      YB[i,] = rep_vector(0,N);
+    } else if(mu_is_etaB[i] == 1){
       YB[i,] = b[,mu_etaB_pos[i]];
     } else {
       YB[i,] = YB_free[YB_free_pos[i],];
@@ -292,7 +294,9 @@ model {
     int pos_etaW_free = 1;    // running counter variable to index positition on etaW_free
     vector[obs_id] etaW_id[D];
     for(d in 1:D){
-      if(D_np[d] == 1){
+      if(is_wcen[d] == 0){
+        etaW_id[d,] = segment(y_merge[Dp_cen_pos[d],], pos, obs_id);
+      } else if(D_np[d] == 1){
         etaW_id[d,] = segment(y_merge[D_pos_is_SI[d],], pos, obs_id) - YB[D_pos_is_SI[d],pp];
       } else {
         etaW_id[d,] = segment(etaW_free[pos_etaW_free,],pos, obs_id);
@@ -308,7 +312,7 @@ model {
     }
 
     // dynamic process
-    vector[obs_id-maxLag] mus[D];
+    vector[obs_id-maxLag] mus[D_cen];
     vector[obs_id-maxLag] eta_cov_id[n_inno_covs];
     if(n_inno_covs > 0){
        for(i in 1:n_inno_covs){
@@ -318,6 +322,8 @@ model {
       }
 
     for(d in 1:D){ // start loop over dimensions
+      if(is_wcen[d] == 1){
+
       // build prediction matrix for specific dimensions
       int n_cols = (n_inno_covs>0 && d<3) ? N_pred[d]+n_inno_covs : N_pred[d];
       matrix[(obs_id-maxLag),n_cols] b_mat;
@@ -342,20 +348,23 @@ model {
 
       // use build predictor matrix to calculate latent time-series means
       if(D_np[d] == 1){
-        mus[d,] =  YB[D_pos_is_SI[d],pp] + b_mat * b_use;
-        y_merge[D_pos_is_SI[d],(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[d,], sd_noise[d,pp]);
+        mus[D_cen_pos[d],] =  YB[D_pos_is_SI[d],pp] + b_mat * b_use;
+        y_merge[D_pos_is_SI[d],(pos+maxLag):(pos+(obs_id-1))] ~ normal(mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
       } else {
-        mus[d,] = b_mat * b_use;
-        etaW_id[d,(1+maxLag):obs_id] ~ normal(mus[d,], sd_noise[d,pp]);
+        mus[D_cen_pos[d],] = b_mat * b_use;
+        etaW_id[d,(1+maxLag):obs_id] ~ normal(mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
+        }
       }
     }
 
     // expected indicator scores
     for(i in 1:n_p){
-      if(is_SI[i] == 0){
-      Ymus[i,(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW_id[D_perP[i],];
-      } else {
-      Ymus[i,(pos):(pos-1+obs_id)] = rep_vector(0, obs_id);
+      if(p_is_wcen[i] == 1){
+        if(is_SI[i] == 0){
+          Ymus[p_is_wcen_pos[i],(pos):(pos-1+obs_id)] = YB[i,pp] + loadW[i] * etaW_id[D_perP[i],];
+        } else {
+          Ymus[p_is_wcen_pos[i],(pos):(pos-1+obs_id)] = rep_vector(0, obs_id);
+        }
       }
     }
     // update index variables
@@ -365,11 +374,13 @@ model {
 
     // sampling statements
     for(i in 1:n_p){
-      if(mu_is_etaB[i] == 0){
-        YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
-      }
-      if(is_SI[i] == 0){
-        y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
+      if(p_is_wcen[i] == 1){
+        if(mu_is_etaB[i] == 0){
+          YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
+        }
+        if(is_SI[i] == 0){
+          y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
+        }
       }
     }
 

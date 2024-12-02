@@ -61,10 +61,20 @@ mlts_param_labels <- function(model){
 
   ###### INNOVATION COVARIANCE =================================================
   Fix.Covs = model[startsWith(model$Param, prefix = "r.zeta"),]
+
   if(nrow(Fix.Covs)>0){
+    if(infos$D_cen == infos$q){
     Fix.Covs$Param_stan = paste0("bcorr_inn[",
                                  substr(Fix.Covs$Param, start = 8, 8),",",
                                  substr(Fix.Covs$Param, start = 9, 9),"]")
+    } else {
+      D1 = as.integer(substr(Fix.Covs$Param, start = 8, 8))
+      D2 = as.integer(substr(Fix.Covs$Param, start = 9, 9))
+      # replace
+      D1 = unlist(lapply(D1, function(x){infos$D_cen_pos[x]}))
+      D2 = unlist(lapply(D2, function(x){infos$D_cen_pos[x]}))
+      Fix.Covs$Param_stan = paste0("bcorr_inn[",D1,",",D2,"]")
+      }
     }
 
   ###### RE on BETWEEN-LEVEL COVARIATES ========================================
