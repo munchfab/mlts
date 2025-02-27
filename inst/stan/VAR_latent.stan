@@ -22,6 +22,8 @@ data {
   int n_miss;                        // total number of missings across indicators
   int n_miss_p[n_p];                 // missings per indicator
   int pos_miss_p[n_p,max(n_miss_p)]; // array of missings' positions
+  int n_obs_p[n_p];
+  int pos_obs_p[n_p, max(n_obs_p)];
 
   // censored models
   real censL_val;
@@ -224,10 +226,11 @@ model {
   vector[N] YB[n_p];
 
   y_merge = y;          // add observations
-  if(n_miss>0){         // add imputed values for missings on each indicator
-    for(i in 1:n_p){
-    y_merge[i,pos_miss_p[i,1:n_miss_p[i]]] = segment(y_impute, p_miss, n_miss_p[i]);
-    p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
+  // add imputed values for missings on each indicator
+  for(i in 1:n_p){
+    if(n_miss_p[i]>0){
+      y_merge[i,pos_miss_p[i,1:n_miss_p[i]]] = segment(y_impute, p_miss, n_miss_p[i]);
+      p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
     }
   }
 
@@ -379,7 +382,7 @@ model {
           YB[i,] ~ normal(alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
         }
         if(is_SI[i] == 0){
-          y_merge[i,] ~ normal(Ymus[i,], sigmaW[i]);
+          y_merge[i, pos_obs_p[i,1:n_obs_p[i]]] ~ normal(Ymus[i,pos_obs_p[i,1:n_obs_p[i]]], sigmaW[i]);
         }
       }
     }

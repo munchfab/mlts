@@ -289,14 +289,31 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     standata$n_etaW_free = sum(infos$p > 1)
 
     # alternative missing data indexing
-    n_miss = sum(data[,ts] == -Inf)           # overall number of NAs
-    n_miss_p = as.array(sapply(ts, FUN = function(x){sum(data[,x] == -Inf)}))
+    n_miss = sum(data[,ts[standata$is_SI == 1]] == -Inf)           # overall number of NAs
+    n_miss_p = rep(0, length(ts))
+    if(any(standata$is_SI == 1)){
+      n_miss_p[standata$is_SI == 1] = sapply(ts[standata$is_SI == 1], FUN = function(x){sum(data[,x] == -Inf)})
+    }
+    n_miss_p = as.array(n_miss_p)
     pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = TRUE)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
         pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts[i]] == -Inf)
       }
     }
+
+    # alternative missing data indexing
+    n_obs_p = rep(0, time = length(ts))
+    if(any(standata$is_SI == 0)){
+    n_obs_p[standata$is_SI == 0] = sapply(ts[standata$is_SI == 0], FUN = function(x){sum(data[,x] != -Inf)})
+    }
+    pos_obs_p = matrix(0, nrow = length(ts), ncol = max(n_obs_p))
+    for(i in 1:standata$n_p){
+      if(n_obs_p[i]>0){
+        pos_obs_p[i, 1:n_obs_p[i]] <- which(data[,ts[i]] != -Inf)
+      }
+    }
+
 
     ##### CENSORING --------------------------------------------------------------
     if(!is.null(attr(model, which = "censor_left"))){
@@ -367,6 +384,8 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     standata$n_miss <- n_miss
     standata$n_miss_p <- n_miss_p
     standata$pos_miss_p <- pos_miss_p
+    standata$n_obs_p <- n_obs_p
+    standata$pos_obs_p <- pos_obs_p
 
     standata$censL_val = censL_val
     standata$n_censL = n_censL

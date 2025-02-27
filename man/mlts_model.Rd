@@ -22,10 +22,12 @@ mlts_model(
   ranef_pred = NULL,
   out_pred = NULL,
   out_pred_add_btw = NULL,
+  is_exogenous = NULL,
   incl_t0_effects = NULL,
   incl_interaction_effects = NULL,
   censor_left = NULL,
   censor_right = NULL
+  silent = FALSE
 )
 }
 \arguments{
@@ -130,6 +132,8 @@ of the respective variable(s) so that all values exceed the censoring threshold.
 
 \item{censor_right}{Numeric. Developmental. Similar to \code{censor_left} but assumes variables to be censored
 on the upper bound of the scale. Can be combined with \code{censor_left}.}
+
+\item{silent}{logical. Set to \code{TRUE} to suppress warnings and messages.}
 }
 \value{
 An object of class \code{data.frame} with the following columns:

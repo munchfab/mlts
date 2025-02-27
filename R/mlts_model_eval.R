@@ -100,8 +100,8 @@ mlts_model_eval <- function(model){
 
   # based on N_pred check which construct is exogenous
   D_cen = sum(N_pred != 0)
-  is_wcen = ifelse(N_pred == 0, 0, 1)
-  D_cen_pos = cumsum(is_wcen)
+  is_wcen = as.array(ifelse(N_pred == 0, 0, 1))
+  D_cen_pos = as.array(cumsum(is_wcen))
 
 
   # number of indicators per latent construct
@@ -208,7 +208,7 @@ mlts_model_eval <- function(model){
     # addition for exogenous variables
     indicators$D_is_Wcen <- ifelse(is_wcen[as.integer(indicators$q)] == 0, 0,1)
     indicators$Dp_cen_pos <- ifelse(indicators$D_is_Wcen == 0, indicators$p_pos, 0)
-    Dp_cen_pos <- indicators[indicators$p == 1, "Dp_cen_pos"]
+    Dp_cen_pos <- as.array(indicators[indicators$p == 1, "Dp_cen_pos"])
     p_is_wcen <- indicators$D_is_Wcen
     p_is_wcen_pos <- cumsum(indicators$D_is_Wcen)
 
