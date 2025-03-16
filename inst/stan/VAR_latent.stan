@@ -2,64 +2,64 @@
 data {
   int<lower=1> N; 	        // number of observational units
   int<lower=1> D;           // number of latent constructs
-  int<lower=1> D_np[D];     // number of indicators per construct
+  array[D] int<lower=1> D_np;     // number of indicators per construct
   int<lower=1> n_p; 	      // number of manifest indicators
-  int D_perP[n_p];          // indicate dimension per indicator
-  int is_SI[n_p];           // indicate if single-indicator per construct
-  int D_pos_is_SI[D];       // indicate position of single-indicator per construct
+  array[n_p] int D_perP;          // indicate dimension per indicator
+  array[n_p] int is_SI;           // indicate if single-indicator per construct
+  array[D] int D_pos_is_SI;       // indicate position of single-indicator per construct
   int<lower=1, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
   int<lower=D> n_random;    // number of random effects
   int n_fixed;
-  int is_fixed[1,n_fixed];
-  int is_random[n_random];  // which parameters to model person-specific
-  int<lower=1> N_obs_id[N]; // number of observations for each unit
-  vector[N_obs] y[n_p];     // observations as array of vectors
+  array[1,n_fixed] int is_fixed;
+  array[n_random] int is_random;  // which parameters to model person-specific
+  array[N] int<lower=1> N_obs_id; // number of observations for each unit
+  array[n_p] vector[N_obs] y;     // observations as array of vectors
 
   // handling of missing values
   int n_miss;                        // total number of missings across indicators
-  int n_miss_p[n_p];                 // missings per indicator
-  int pos_miss_p[n_p,max(n_miss_p)]; // array of missings' positions
+  array[n_p] int n_miss_p;                 // missings per indicator
+  array[n_p,max(n_miss_p)] int pos_miss_p; // array of missings' positions
 
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
-  int<lower=0,upper=1> innos_rand[D];
+  array[D] int<lower=0,upper=1> innos_rand;
   int n_innos_fix;
-  int innos_fix_pos[D];
-  int innos_pos[D];
+  array[D] int innos_fix_pos;
+  array[D] int innos_pos;
 
   // - covariances of innovations:
   int n_inno_covs; // number of potential innovation covs to include
   int n_obs_cov;   // total number of residuals
-  int inno_cov_pos[1,n_inno_covs];
-  int<lower=-1,upper=1> inno_cov_load[2];
+  array[1,n_inno_covs] int inno_cov_pos;
+  array[2] int<lower=-1,upper=1> inno_cov_load;
 
 
   // - dynamic model specification per D
-  int<lower=1> N_pred[D];     // Number of predictors per dimension
-  int<lower=0> D_pred[D,D*maxLag];    // matrix to index predictors to use per dimension
-  int<lower=0> Lag_pred[D,D*maxLag];  // matrix to index lag of used predictors
-  int Dpos1[D];  // index positions of danymic effect parameters
-  int Dpos2[D];
+  array[D] int<lower=1> N_pred;     // Number of predictors per dimension
+  array[D,D*maxLag] int<lower=0> D_pred;    // matrix to index predictors to use per dimension
+  array[D,D*maxLag] int<lower=0> Lag_pred;  // matrix to index lag of used predictors
+  array[D] int Dpos1;  // index positions of danymic effect parameters
+  array[D] int Dpos2;
 
   // - time-invariant variables:
   // covariates as predictors of random effects
   int<lower=1> n_cov;           // number of covariates - minimum of 1 for intercepts
   int n_cov_bs;
-  int n_cov_mat[n_cov_bs, 2];
+  array[n_cov_bs, 2] int n_cov_mat;
   matrix[N, n_cov] W;  // predictors of individual parameters
 
   // outcome prediction
   int n_out;                 // number of outcome variables
-  int n_out_bs[n_out,1];     // number of predictors per outcome
+  array[n_out,1] int n_out_bs;     // number of predictors per outcome
   int n_out_bs_max;          // number of predictors per outcome
   int n_out_bs_sum;          // number of predictors per outcome
-  int n_out_b_pos[n_out,n_out_bs_max]; // index positions
+  array[n_out,n_out_bs_max] int n_out_b_pos; // index positions
   int n_z;              // number of additional time-invariant as outcome predictors
   matrix[N, n_z] Z;     // observations of Z
-  vector[N] out[n_out];        // outcome
+  array[n_out] vector[N] out;        // outcome
 
   // indexing information on constraints
   int n_etaW_free;
@@ -68,16 +68,16 @@ data {
   int n_alphafree;
   int n_sigmaBfree;
   int n_sigmaWfree;
-  int pos_loadBfree[n_loadBfree]; // positions in relation to the 1:n_p indicators
-  int pos_loadWfree[n_loadWfree];
-  int pos_alphafree[n_alphafree];
-  int pos_sigmaBfree[n_sigmaBfree];
-  int pos_sigmaWfree[n_sigmaWfree];
+  array[n_loadBfree] int pos_loadBfree; // positions in relation to the 1:n_p indicators
+  array[n_loadWfree] int pos_loadWfree;
+  array[n_alphafree] int pos_alphafree;
+  array[n_sigmaBfree] int pos_sigmaBfree;
+  array[n_sigmaWfree] int pos_sigmaWfree;
   // index random manifest indicator means
   int n_YB_free;        // number of indicators for which mu (YB) is not determined by random item mean
-  int YB_free_pos[n_p]; //
-  int mu_is_etaB[n_p];  //
-  int mu_etaB_pos[n_p]; // indicate whether to use etaB or random item mean
+  array[n_p] int YB_free_pos; //
+  array[n_p] int mu_is_etaB;  //
+  array[n_p] int mu_etaB_pos; // indicate whether to use etaB or random item mean
   // get SDs for standardized results
   int<lower=0,upper=1> standardized;
 
@@ -113,7 +113,7 @@ transformed data{
 }
 
 parameters {
-  vector[n_random] b_free[N];            // person-specific parameter
+  array[N] vector[n_random] b_free;            // person-specific parameter
   vector<lower=0>[n_random] sd_R;        // random effect SD
   vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
   cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
@@ -124,7 +124,7 @@ parameters {
   vector[n_out] alpha_out;               // outcome precition intercepts
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
-  vector[n_obs_cov] eta_cov[n_inno_covs];
+  array[n_inno_covs] vector[n_obs_cov] eta_cov;
 
   // measurement model parameters
   vector[n_loadBfree] loadB_free;
@@ -132,15 +132,15 @@ parameters {
   vector[n_alphafree] alpha_free;
   vector<lower=0>[n_sigmaBfree] sigmaB_free;
   vector<lower=0>[n_sigmaWfree] sigmaW_free;
-  vector[N_obs] etaW_free[n_etaW_free];
-  vector[N] YB_free[n_YB_free];
+  array[n_etaW_free] vector[N_obs] etaW_free;
+  array[n_YB_free] vector[N] YB_free;
 }
 
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
-  vector<lower = 0>[N] sd_noise[D];
-  vector<lower = 0>[N] sd_inncov[n_inno_covs];
+  array[D] vector<lower = 0>[N] sd_noise;
+  array[n_inno_covs] vector<lower = 0>[N] sd_inncov;
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -199,9 +199,9 @@ model {
   int p_miss = 1;    // running counter variable to index positions on y_impute
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
-  vector[N_obs] y_merge[n_p];
-  vector[N_obs] Ymus[n_p];
-  vector[N] YB[n_p];
+  array[n_p] vector[N_obs] y_merge;
+  array[n_p] vector[N_obs] Ymus;
+  array[n_p] vector[N] YB;
 
   y_merge = y;          // add observations
   if(n_miss>0){         // add imputed values for missings on each indicator
@@ -253,7 +253,7 @@ model {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
     int pos_etaW_free = 1;    // running counter variable to index positition on etaW_free
-    vector[obs_id] etaW_id[D];
+    array[D] vector[obs_id] etaW_id;
     for(d in 1:D){
       if(D_np[d] == 1){
         etaW_id[d,] = segment(y_merge[D_pos_is_SI[d],], pos, obs_id) - YB[D_pos_is_SI[d],pp];
@@ -271,8 +271,8 @@ model {
     }
 
     // dynamic process
-    vector[obs_id-maxLag] mus[D];
-    vector[obs_id-maxLag] eta_cov_id[n_inno_covs];
+    array[D] vector[obs_id-maxLag] mus;
+    array[n_inno_covs] vector[obs_id-maxLag] eta_cov_id;
     if(n_inno_covs > 0){
        for(i in 1:n_inno_covs){
           eta_cov_id[i,] = segment(eta_cov[i,], pos_cov, (obs_id-maxLag));
@@ -345,7 +345,7 @@ model {
 generated quantities{
   matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
   vector[n_SD_etaW_all] SD_etaW;
-  vector[n_SD_etaW_i] SD_etaW_i[n_SD_etaW_all];
+  array[n_SD_etaW_all] vector[n_SD_etaW_i] SD_etaW_i;
   bcorr = multiply_lower_tri_self_transpose(L);
   if(standardized == 1){
     for(i in 1:n_SD_etaW_all){
