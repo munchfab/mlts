@@ -45,6 +45,9 @@
 #' for overnight lags (see Details).
 #' @param n_overnight_NAs Optional. The number of `NA` rows to add after the last
 #' observation of each day (if `days` is provided).
+#' @param max_NA_seq Integer. Specify a maximum number of consecutive missing values.
+#' Can decrease estimation times drastically in the presence of very long sequences of missing values
+#' (e.g., when setting tinterval to values of small time steps).
 #' @param na.rm logical. Per default, missing values remain in the data and
 #' will be imputed during model estimation. Set to `TRUE` to remove all rows with
 #' missing values in variables given in `ts`.
@@ -56,6 +59,7 @@
 #' The default is 2 (see \code{\link[rstan]{stan}}).
 #' @param monitor_person_pars Logical. Should person parameters (i.e., values of the
 #' latent variables) be stored? Default is FALSE.
+#' @param monitor_all_pars Logical. Should all parameters be stored? Default is FALSE.
 #' @param get_SD_latent Logical. Set to `TRUE` to obtain standardized estimates
 #' in multiple-indicator models.
 #' @param print_message Logical. Print messages based on defined inputs (default = TRUE).
@@ -117,11 +121,13 @@ mlts_fit <- function(model,
                      beep = NULL,
                      days = NULL,
                      n_overnight_NAs,
+                     max_NA_seq = NULL,
                      na.rm = FALSE,
                      iter = 500,
                      chains = 2,
                      cores = 2,
                      monitor_person_pars = FALSE,
+                     monitor_all_pars = FALSE,
                      get_SD_latent = FALSE,
                      fit_model = TRUE,
                      print_message = TRUE,
@@ -252,7 +258,7 @@ mlts_fit <- function(model,
   btw_vars = c(names(covariates), names(outcomes), names(outcome_pred_btw))
   if(length(btw_vars)>0){
     if(sum(is.na(data[,btw_vars]))>0){
-      stop("No missing values on between-level variables are allowed.")
+      stop("Missing values on between-level variables are not allowed.")
     }
   }
 
@@ -263,7 +269,8 @@ mlts_fit <- function(model,
                       days = days, n_overnight_NAs = n_overnight_NAs,
                       na.rm = na.rm, covariates = covariates,
                       outcomes = outcomes,
-                      outcome_pred_btw = outcome_pred_btw)
+                      outcome_pred_btw = outcome_pred_btw,
+                      max_NA_seq = max_NA_seq)
 
   # ======================================================================
 
@@ -288,6 +295,9 @@ mlts_fit <- function(model,
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
     if(monitor_person_pars == TRUE){
       pars = c(pars, "b_free")
+    }
+    if(monitor_all_pars == TRUE){
+      pars <- NA
     }
 
     if(standata$n_inno_cors == 0){

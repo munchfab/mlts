@@ -237,6 +237,7 @@ mod_update_exo <- function(model, is_exo){
  # remove predictors on those random effects
  for(i in is_exo){
    model <- model[!(startsWith(x = model$Param, prefix = paste0("b_mu_",i))),]
+   model <- model[!(startsWith(x = model$Param, prefix = paste0("b_etaB_",i))),]
    model <- model[!(startsWith(x = model$Param, prefix = paste0("b_ln.sigma2_",i))),]
    for(j in 1:9){
      for(l in 1:3){
@@ -248,6 +249,7 @@ mod_update_exo <- function(model, is_exo){
   # remove those random effects as outcome predictors
   for(i in is_exo){
     model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.mu_",i))),]
+    model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.etaB_",i))),]
     model <- model[!(endsWith(x = model$Param, suffix = paste0("ON.ln.sigma2_",i))),]
     for(j in 1:9){
       for(l in 1:3){
@@ -262,5 +264,272 @@ mod_update_exo <- function(model, is_exo){
 
   model
 }
+
+# path model helper funtions ===================================================
+get_mid_points <- function(n = 1, lims = c(0,1), offsets = c(0,0)){
+  lims_use <- lims - offsets
+  n_width <- diff(lims_use) / (n + 1)
+  pos <- c()
+  for(i in 1:n){
+    pos[i] <- lims_use[1] + i*n_width
+  }
+  return(pos)
+}
+
+
+get_arr_pos <- function(x0, x1, y0, y1, radx){
+  arr.length = sqrt((x1-x0)*(x1-x0) + (y1-y0)*(y1-y0))
+  (arr.length - radx) / arr.length
+}
+
+
+
+plotmath_labeller <- function(class = "b", x, clab, y_ind_labs =NULL, y_fac_labs=NULL,
+                              remove_lag_lab = FALSE, y_fac_lab_sep = ","){
+  labelled <- x
+  if(class == "b"){
+    for(i in 1:length(x)){
+      # fixed effects
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "mu_"),  paste0(gsub(x[i], pattern = "_",  replacement = "["),"]"),   labelled[i])
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "etaB_"),paste0(gsub(x[i], pattern = "B_", replacement = "["),"]^B"), labelled[i])
+
+      # interaction effects
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "phi(i"),
+                            paste0("phi[",substr(x[i],8,13),"*",substr(x[i],14,17),"]"), labelled[i])
+      # dynamic parameters
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "phi("), paste0(gsub(x[i], pattern = "phi(", replacement = "phi[(", fixed = T), "]"), labelled[i])
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "phi[("), gsub(labelled[i], pattern = "_", replacement = "*"), labelled[i])
+
+      # log innovation covariances
+      labelled[i] <- ifelse(labelled[i] == "ln.sigma_12", "ln(sigma[zeta*12])", labelled[i])
+      # log innovation variances
+      labelled[i] <- ifelse(startsWith(labelled[i], prefix = "ln.sigma2_"),paste0(gsub(x[i], pattern = "ln.sigma2_", replacement = "ln(sigma[zeta*"),"]^2)"), labelled[i])
+    }
+  }
+  if(class == "decomp"){
+  }
+
+  # change subscripts if requested
+  if(!is.null(y_fac_labs)){
+    for(i in 1:length(y_fac_labs)){
+      labelled = gsub(labelled, pattern = paste0("[",i), replacement = paste0("[",y_fac_labs[i]), fixed = T)
+      labelled = gsub(labelled, pattern = paste0("eta[italic(",i), replacement = paste0("eta[italic(",y_fac_labs[i]), fixed = T)
+      labelled = gsub(labelled, pattern = paste0("Y[italic(",i,"*"), replacement = paste0(y_fac_labs[i],"[italic("), fixed = T)
+
+      labelled = gsub(labelled, pattern = paste0(i,"]"), replacement = paste0("*'",y_fac_lab_sep,"'*",y_fac_labs[i],"]"), fixed = T)
+      labelled = gsub(labelled, pattern = paste0("*",i), replacement = paste0("*",y_fac_labs[i]), fixed = T)
+      labelled = gsub(labelled, pattern = paste0(".",i,"("), replacement = paste0(".",y_fac_labs[i],"("), fixed = T)
+      }
+  }
+
+  # hide lag index if requested
+  if(remove_lag_lab == TRUE){
+      for(j in c(0,1:3)){
+        labelled = gsub(labelled, pattern = paste0("(",j,")*"), replacement = "", fixed = T)
+        labelled = gsub(labelled, pattern = paste0("(",j,")"), replacement = "", fixed = T)
+        }
+    }
+
+  # transform greek letters
+  labelled <- gsub(labelled, pattern = "phi", replacement = "italic(\u03C6)", fixed = T)
+  labelled <- gsub(labelled, pattern = "sigma", replacement = "italic(\u03C3)", fixed = T)
+  labelled <- gsub(labelled, pattern = "mu[", replacement = "italic(\u03BC)[", fixed = T)
+  labelled <- gsub(labelled, pattern = "eta[", replacement = "italic(\u03B7)[", fixed = T)
+  # use plotmath
+  return(labelled)
+}
+
+
+# ==============================================================================
+
+# create decomposition part of mlts path model
+mlts_path_decomp <- function(
+    infos,
+    asp,
+    begin.decomp.x,
+    end.decomp.x,
+    w.decomp.y,
+    fig_margins.y,
+    scale_decomp_ind,
+    scale_decomp_F,
+    y_ind_labs,
+    y_fac_labs
+){
+
+  # first get the number of nodes to plot
+  if(infos$isLatent == F){
+    n_nodes = infos$q
+    ind_nodes <- data.frame(
+      "Param" = paste0("mu_", 1:n_nodes),
+      "is_wcen" = infos$is_wcen)
+    #ind_nodes <- ind_nodes[grepl(ind_nodes$Param_Label, pattern = "Trait") & ind_nodes$Type == "Fixed effect",]
+
+    ## Manifest indicators ----------------------
+    # get midpoints
+    ind_nodes$midx <- get_mid_points(n_nodes, lims = c(begin.decomp.x, end.decomp.x))
+    ind_nodes$midy <- get_mid_points(1, lims = c(fig_margins.y))
+
+    # parameter labels
+    ind_nodes$lab = paste0("Y[italic(", 1:n_nodes,"*i*t)]")
+    if(!is.null(y_ind_labs)){
+      ind_nodes$lab = paste0(y_ind_labs,"[italic(i*t)]")
+    }
+
+    ## within-level factor(s)
+    ind_nodes$Wf_midx <- ind_nodes$midx
+    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/5
+    ind_nodes$Wf_lab  <- paste0("Y[italic(", 1:n_nodes,"*i*t)]^W")
+    if(!is.null(y_fac_labs)){
+      ind_nodes$Wf_lab = paste0(y_fac_labs,"[italic(i*t)]^W")
+    }
+
+    ## between-level factor(s)
+    ind_nodes$Bf_midx <- ind_nodes$midx
+    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/5
+    ind_nodes$Bf_lab  <- plotmath_labeller(
+      class = "b", x = ind_nodes$Param,
+      y_fac_labs = y_fac_labs, y_ind_labs = y_ind_labs)
+
+
+    # get radius
+    ind_radx <- abs(diff(c(ind_nodes$midx[1],begin.decomp.x))) * scale_decomp_ind
+    indf_radx <- abs(diff(c(ind_nodes$midx[1],begin.decomp.x)))* scale_decomp_F
+
+    ind_nodes$ind_radx <- ind_radx
+    ind_nodes$indf_radx <- indf_radx
+
+    # add the down arrows
+    ind_nodes$d_arr_x0 <- ind_nodes$Wf_midx
+    ind_nodes$d_arr_x1 <- ind_nodes$midx
+    ind_nodes$d_arr_y0 <- ind_nodes$Wf_midy - indf_radx/asp
+    ind_nodes$d_arr_y1 <- ind_nodes$midy + ind_radx/asp
+    # add the up arrows
+    ind_nodes$u_arr_x0 <- ind_nodes$Bf_midx
+    ind_nodes$u_arr_x1 <- ind_nodes$midx
+    ind_nodes$u_arr_y0 <- ind_nodes$Bf_midy + indf_radx/asp
+    ind_nodes$u_arr_y1 <- ind_nodes$midy - ind_radx/asp
+    # add measurement error residuals
+    ind_nodes$resW_arr_x0 <- ind_nodes$midx - 1.5*ind_radx
+    ind_nodes$resW_arr_x1 <- ind_nodes$midx - ind_radx
+    ind_nodes$resW_arr_y0 <- ind_nodes$midy + 1.5*indf_radx/asp
+    ind_nodes$resW_arr_y1 <- ind_nodes$midy + ind_radx/asp
+    ind_nodes$resB_arr_x0 <- ind_nodes$midx + 1.5*ind_radx
+    ind_nodes$resB_arr_x1 <- ind_nodes$midx + ind_radx
+    ind_nodes$resB_arr_y0 <- ind_nodes$midy - 1.5*indf_radx/asp
+    ind_nodes$resB_arr_y1 <- ind_nodes$midy - ind_radx/asp
+
+
+
+    } else {
+
+    n_nodes = nrow(infos$indicators)
+    ind_nodes <- infos$indicators
+    ind_nodes$is_wcen <- ind_nodes$D_is_Wcen
+    n_fac_w = length(unique(ind_nodes$q))
+    n_fac_b = length(unique(ind_nodes$etaB_label))
+
+    # get midpoints
+    ind_nodes$midx <- get_mid_points(n_nodes, lims = c(begin.decomp.x, end.decomp.x))
+    ind_nodes$midy <- get_mid_points(1, lims = c(fig_margins.y))
+
+    # parameter labels
+    ind_nodes$lab = paste0("Y[italic(",ind_nodes$q,".",ind_nodes$p,"*i*t)]")
+    if(!is.null(y_ind_labs)){
+      ind_nodes$lab = paste0(y_ind_labs,"[italic(i*t)]")
+    }
+
+    # add the respective within-level factor(s)
+    for(i in 1:nrow(ind_nodes)){
+      fac <- ind_nodes$q[i]
+      ind_nodes$Wf_midx[i] <- get_mid_points(1, lims = c(min(ind_nodes[ind_nodes$q == fac,"midx"]),max(ind_nodes[ind_nodes$q==fac,"midx"])))
+    }
+    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/5
+    ind_nodes$Wf_lab  <- plotmath_labeller(x = paste0("eta[italic(", ind_nodes$q,"*i*t)]^W"), y_fac_labs = y_fac_labs)
+
+    # add the respective between-level factor(s)
+    for(i in 1:nrow(ind_nodes)){
+      if(startsWith(ind_nodes$etaB_label[i], prefix = "eta")){
+        fac <- ind_nodes$q[i]
+        ind_nodes$Wf_midx[i] <- get_mid_points(1, lims = c(min(ind_nodes[ind_nodes$q == fac,"midx"]),max(ind_nodes[ind_nodes$q==fac,"midx"])))
+      }
+    }
+    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/5
+    ind_nodes$Wf_lab  <- plotmath_labeller(x = paste0("eta[italic(", ind_nodes$q,"*i*t)]^W"), y_fac_labs = y_fac_labs)
+
+
+    # add the respective between-level factor(s)
+    for(i in 1:nrow(ind_nodes)){
+      if(startsWith(ind_nodes$etaB_label[i], prefix = "eta")){
+        fac <- ind_nodes$q[i]
+        ind_nodes$Bf_midx[i] <- get_mid_points(1, lims = c(min(ind_nodes[ind_nodes$q == fac,"midx"]),max(ind_nodes[ind_nodes$q==fac,"midx"])))
+      } else {
+        ind_nodes$Bf_midx[i] <- ind_nodes$midx[i]
+      }
+    }
+    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/5
+    ind_nodes$Bf_lab  <- plotmath_labeller("b",ind_nodes$etaB_label, y_fac_labs = y_fac_labs, y_ind_labs = y_ind_labs)
+
+    ind_radx <- abs(diff(c(ind_nodes$midx[1],begin.decomp.x))) * scale_decomp_ind
+    indf_radx <- abs(diff(c(ind_nodes$midx[1],begin.decomp.x)))* scale_decomp_F
+    ind_nodes$ind_radx <- ind_radx
+    ind_nodes$indf_radx <- indf_radx
+    # add the down arrows
+    ind_nodes$d_arr_x0 <- ind_nodes$Wf_midx
+    ind_nodes$d_arr_x1 <- ind_nodes$midx
+    ind_nodes$d_arr_y0 <- ind_nodes$Wf_midy - indf_radx/asp
+    ind_nodes$d_arr_y1 <- ind_nodes$midy + ind_radx/asp
+    # add the up arrows
+    ind_nodes$u_arr_x0 <- ind_nodes$Bf_midx
+    ind_nodes$u_arr_x1 <- ind_nodes$midx
+    ind_nodes$u_arr_y0 <- ind_nodes$Bf_midy + indf_radx/asp
+    ind_nodes$u_arr_y1 <- ind_nodes$midy - ind_radx/asp
+    # add measurement error residuals
+    ind_nodes$resW_arr_x0 <- ind_nodes$midx - 1.5*ind_radx
+    ind_nodes$resW_arr_x1 <- ind_nodes$midx - ind_radx
+    ind_nodes$resW_arr_y0 <- ind_nodes$midy + 1.5*indf_radx/asp
+    ind_nodes$resW_arr_y1 <- ind_nodes$midy + ind_radx/asp
+    ind_nodes$resB_arr_x0 <- ind_nodes$midx + 1.5*ind_radx
+    ind_nodes$resB_arr_x1 <- ind_nodes$midx + ind_radx
+    ind_nodes$resB_arr_y0 <- ind_nodes$midy - 1.5*indf_radx/asp
+    ind_nodes$resB_arr_y1 <- ind_nodes$midy - ind_radx/asp
+
+    # mark fixed loadings
+    ind_nodes$lamW1_midx = NA
+    ind_nodes$lamW1_midy = NA
+    ind_nodes$lamW1_lab = 1
+    ind_nodes$lamB1_midx = NA
+    ind_nodes$lamB1_midy = NA
+    ind_nodes$lamB1_lab = 1
+    for(i in 1:nrow(ind_nodes)){
+      if( ind_nodes$lambdaW_isEqual[i] == "= 1"){
+        ind_nodes$lamW1_midx[i] = ind_nodes$midx[i]
+        ind_nodes$lamW1_midy[i] = ind_nodes$midy[i] + abs(diff(c(ind_nodes$midy[i],ind_nodes$Wf_midy[i])))/3
+      }
+      if( ind_nodes$lambdaB_isEqual[i] == "= 1"){
+        ind_nodes$lamB1_midx[i] = ind_nodes$midx[i]
+        ind_nodes$lamB1_midy[i] = ind_nodes$midy[i] - abs(diff(c(ind_nodes$midy[i],ind_nodes$Bf_midy[i])))/3
+      }
+    }
+
+  }
+
+  return(ind_nodes)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

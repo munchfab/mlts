@@ -30,6 +30,9 @@
 #' Note that specifying `outcomes` is only necessary if the respective
 #' variable name(s) in `data` differ from the outcome variable name(s) specified in `model`.
 #' @param outcome_pred_btw character.
+#' @param max_NA_seq Integer. Specify a maximum number of consecutive missing values.
+#' Can decrease estimation times drastically in the presence of very long sequences of missing values
+#' (e.g., when setting tinterval to values of small time steps).
 #'
 #' @return A `data.frame` that can be passed to \code{\link[mlts]{mlts_fit}}.
 #' @noRd
@@ -51,7 +54,8 @@
 prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
                          beep = NULL, days = NULL,
                          n_overnight_NAs, na.rm = FALSE, covariates = NULL,
-                         outcomes = NULL, outcome_pred_btw = NULL){
+                         outcomes = NULL, outcome_pred_btw = NULL,
+                         max_NA_seq = NULL){
 
   # coerce to data frame if necessary (e.g., if tibble is provided)
   data <- as.data.frame(data)
@@ -175,10 +179,33 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
     }
   }
 
-
     # remove helper column(s)
     data[,c("miss.NA")] <- NULL
 
+
+    if(!is.null(max_NA_seq)){
+      # limit number of missings
+      data$is_miss = ifelse(is.na(rowMeans(data[,ts],na.rm=T)),1,0)
+
+      # count sequences of missings starting with 1 on each sequence
+      cum_misses = rle(x = data$is_miss)
+      n_dim = length(cum_misses$lengths)
+      data$cum_miss = unlist(lapply(1:n_dim, function(x){
+        if ( cum_misses$values[x] == 1 ) {
+          1:cum_misses$lengths[x]
+          } else {
+            rep(0, times = cum_misses$lengths[x])
+            }
+        }))
+
+    # now filter data keeping only sequences of missings up to 5
+    data = data[data$cum_miss <= max_NA_seq,]
+
+    # remove helper columns(s)
+    data$cum_miss <- NULL
+    data$is_miss <- NULL
+
+    }
 
   return(data)
 }

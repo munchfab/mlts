@@ -16,6 +16,8 @@
 #' between-level variable(s) specified in `model`, e.g. (`btw.var.sds = c("covariate1" = 1)`,
 #' to set the SD of the variable "covariate1" to 1). Mean values of the respective
 #' variable(s) will be set to 0 per default.
+#' @param exogenous Matrix of numeric values of exogenous variables with `N`*(`TP`+`burn.in`)
+#' rows and separate columns for each variable.
 #' @return An object of class \code{"mlts_simdata"}.
 #' The object is a list containing the following components:
 #' \item{model}{the model object passed to `mlts_sim` with true parameter values used
@@ -57,7 +59,7 @@
 #'
 
 mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
-                     seed.true = 1, btw.var.sds = NULL){
+                     seed.true = 1, btw.var.sds = NULL, exogenous = NULL){
 
   set.seed(seed.true)
 
@@ -72,6 +74,24 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
   # use helper function to read out information on model
   infos = mlts_model_eval(model)
+
+  # check that exogenous variable is entered and in the correct format
+  if(any(infos$is_wcen==0)){
+
+    if(is.null(exogenous)){
+      stop("Enter values of exogenous variables as a matrix with the correct dimensions:
+          rows = N*(TP+burn.in)
+          columns = no of exogenous variables")
+    }
+    check2 = dim(exogenous)[1] == N*(TP+burn.in)
+    check3 = dim(exogenous)[2] == sum(infos$is_wcen == 0)
+
+    if(check2 == FALSE | check3 == FALSE){
+      stop("Enter values of exogenous variables as a matrix with the correct dimensions:
+          rows = N*(TP+burn.in)
+          columns = no of exogenous variables")
+    }
+  }
 
 
   # use some default settings for parameter values
@@ -143,7 +163,7 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
         # choose value according to the respective lagged effect - if present
         lag_value = model$true.val[model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
         if(is.numeric(lag_value)){
-#          model$true.val[model$Param == t0_effect$Param[i]] <- lag_value
+          #          model$true.val[model$Param == t0_effect$Param[i]] <- lag_value
           model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
         } else {
           model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
@@ -263,12 +283,12 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
   if(n_random == 1){
     cov_mat = model$true.val[model$Type=="Random effect SD"]
   } else {
-  cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
-  for(i in 1:n_random){
-    for(j in 1:n_random){
-      if(i < j){
-        r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
-        cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
+    cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
+    for(i in 1:n_random){
+      for(j in 1:n_random){
+        if(i < j){
+          r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
+          cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
         }
       }
     }
@@ -304,266 +324,300 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
   }
 
   #### WITHIN-LEVEL PROCESS ====================================================
-  # prepare data frame
-  NT = TP + burn.in
-  within = data.frame(
-    "ID" = rep(1:N, each = TP),
-    "time" = rep(1:TP, times = N)
+  mm_pars = model
+  cor_pars = model
+  mm_pars$sample <- mm_pars$true.val
+  cor_pars$sample <- cor_pars$true.val
+
+  within <- mlts_sim_within(
+    infos = infos,
+    N = N,
+    TP = TP,
+    burn.in = burn.in,
+    btw = btw,
+    mm_pars = mm_pars,
+    cor_pars = cor_pars,
+    exogenous = exogenous
   )
-  q = infos$q   # number of constructs
-  y_cols = paste0("Y",1:q)   # prepare columns
-  within[, y_cols] = NA
 
-  # get positions to fill transition matrix
-  dyn = infos$fix_pars_dyn
-  dyn_int = dyn[dyn$isINT == 1,]
-  dyn = dyn[dyn$isINT != 1,]
-  dyn$tran_pos = NA
-  dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
-  # remove t0-effects at this points
-  dyn_t0 = dyn[dyn$Lag == 0,]
-  dyn = dyn[dyn$Lag!=0,]
+  # # prepare data frame
+  # NT = TP + burn.in
+  # within = data.frame(
+  #   "ID" = rep(1:N, each = TP),
+  #   "time" = rep(1:TP, times = N)
+  # )
+  # q = infos$q   # number of constructs
+  # y_cols = paste0("Y",1:q)   # prepare columns
+  # within[, y_cols] = NA
+  #
+  # # get positions to fill transition matrix
+  # dyn = infos$fix_pars_dyn
+  # dyn_int = dyn[dyn$isINT == 1,]
+  # dyn = dyn[dyn$isINT != 1,]
+  # dyn$tran_pos = NA
+  # dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
+  # # remove t0-effects at this points
+  # dyn_t0 = dyn[dyn$Lag == 0,]
+  # dyn = dyn[dyn$Lag!=0,]
+  #
+  # # check w_cen vars
+  # wcen_logical = infos$is_wcen == 1
+  # n_wcen = sum(wcen_logical)
+  # exo_pos = 1
+  #
+  # for(i in 1:N){
+  #   # build person-specific transition matrix
+  #   transition = matrix(nrow = q, ncol = q*infos$maxLag, data = 0)
+  #   y = matrix(nrow = NT, ncol = q)
+  #
+  #   # build person-specific prediction error matrix
+  #   innoVars.i = btw[i,infos$innos_pos]
+  #
+  #   for(d in 1:q){ # loop over number of constructs
+  #     if(infos$is_wcen[d] == 1){
+  #       # parameter positions on btw-matrix
+  #       par_pos = dyn$no[dyn$Dout==d]
+  #       # fill transition matrix with person-specific parameter values
+  #       transition[d,as.integer(dyn$tran_pos[dyn$Dout==d])] = btw[i,par_pos]
+  #
+  #       if(infos$innos_rand[infos$D_cen_pos[d]] == 1){
+  #         innoVars.i[infos$D_cen_pos[d]] = exp(innoVars.i[infos$D_cen_pos[d]]) # retransform log innovations
+  #       } else{
+  #         innoVars.i[infos$D_cen_pos[d]] = innoVars.i[infos$D_cen_pos[d]]^2
+  #       }
+  #     }
+  #   }
+  #
+  #   if(q == 1 | sum(wcen_logical)==1){
+  #     inno_var_mat = matrix(data = innoVars.i, nrow = 1, ncol = 1)
+  #   } else {
+  #     inno_var_mat = diag(innoVars.i)
+  #
+  #     if(infos$n_inno_cors > 0){
+  #       for(xx in 1:q){
+  #         for(yy in 1:q){
+  #           par_is_there = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
+  #           if(xx < yy & length(par_is_there) > 0){
+  #             x_pos = infos$D_cen_pos[xx]
+  #             y_pos = infos$D_cen_pos[yy]
+  #             cor = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
+  #             cov = cor * sqrt(inno_var_mat[x_pos,x_pos]) * sqrt(inno_var_mat[y_pos,y_pos])
+  #             inno_var_mat[x_pos,y_pos] <- inno_var_mat[y_pos,x_pos] <- cov
+  #           }
+  #         }
+  #       }
+  #     }
+  #   }
+  #
+  #   # generate the within-level process in a loop over time points
+  #   for(t in 1:NT){
+  #
+  #     if(t <= infos$maxLag){
+  #       # starting values
+  #       init = matrix(data = NA, nrow = 1, ncol = q)
+  #       init[,wcen_logical] = mvtnorm::rmvnorm(n = 1, mean = rep(0, n_wcen), sigma = inno_var_mat)
+  #       if(any(infos$is_wcen == 0)){
+  #         init[,!wcen_logical] = exogenous[exo_pos, ]
+  #       }
+  #       y[t,] = init
+  #
+  #       # start the process when sufficient initial values are generated
+  #     } else {
+  #       y_lag = c()
+  #       y_lag = as.vector(y[t-1,1:q])            # create a lagged vector
+  #
+  #
+  #       if(infos$maxLag>1){                      # ... extend for higher-order
+  #         for(ll in 2:infos$maxLag){
+  #           y_lag = c(y_lag, as.vector(y[t-ll,1:q]))
+  #         }
+  #       }
+  #
+  #       if(q > 1 | infos$maxLag > 1){
+  #         # get expected values using matrix multiplication
+  #         y[t,1:q] = y_lag %*% t(transition)
+  #         if(any(infos$is_wcen == 0)){
+  #           y[t,!wcen_logical] = exogenous[exo_pos, ]
+  #         }
+  #       } else {
+  #         # or for AR(1):
+  #         y[t,] = y_lag * transition
+  #       }
+  #
+  #       # add innovations
+  #       y[t,wcen_logical] = y[t,wcen_logical] + mvtnorm::rmvnorm(n = 1, mean = rep(0, n_wcen), sigma = inno_var_mat)
+  #
+  #       # add contemporaneous effects
+  #       if(nrow(dyn_t0) != 0){
+  #         for(k in 1:nrow(dyn_t0)){
+  #           dv <- as.integer(dyn_t0$Dout[k])
+  #           iv <- as.integer(dyn_t0$Dpred[k])
+  #           y[t,dv] = y[t,dv] + btw[i,dyn_t0$no[k]] * y[t,iv]
+  #         }
+  #       }
+  #
+  #       # add interaction effects
+  #       if(nrow(dyn_int) > 0){
+  #         for(k in 1:nrow(dyn_int)){
+  #           dv <- as.integer(dyn_int$Dout[k])
+  #           iv1 <- as.integer(dyn_int$Dpred[k])
+  #           iv2 <- as.integer(dyn_int$Dpred2[k])
+  #           lag1 <- as.integer(dyn_int$Lag[k])
+  #           lag2 <- as.integer(dyn_int$Lag2[k])
+  #           y[t,dv] = y[t,dv] + btw[i,dyn_int$no[k]] * y[t-lag1,iv1] * y[t-lag2,iv2]
+  #         }
+  #       }
+  #
+  #       # for bivariate VAR-models with random innovation covariance factor:
+  #       if(infos$q >= 2 & infos$n_inno_covs == 1){
+  #         inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
+  #         y[t,1:2] = y[t,1:2] + infos$inno_cov_load * inno_t
+  #       }
+  #     }
+  #     exo_pos = exo_pos +1
+  #   }
+  #
+  #   # remove burn-in
+  #   within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
+  #
+  #   # add trait scores (for manifest indicators)
+  #   if(infos$isLatent == FALSE){
+  #     for(j in 1:infos$q){
+  #       if(infos$is_wcen[j] == TRUE){
+  #         within[within$ID==i,y_cols[j]] = btw[i,infos$D_cen_pos[j]] + within[within$ID==i,y_cols[j]]
+  #         }
+  #       }
+  #     }
+  #   }
+  #
+  #   # --------
+  #
+  #
+  #   ##### add measurement model here -------------------------------------------
+  #   # create manifest indicator scores
+  #   if(infos$isLatent == TRUE){
+  #     N_inds = max(infos$indicators$p_pos)
+  #     for(i in 1:N_inds){
+  #       q = as.integer(infos$indicators$q[i])
+  #       p = as.integer(infos$indicators$p[i])
+  #       ind.lab = paste0("Y",q,".",p)
+  #       # within
+  #       loadW = model$true.val[model$Level == "Within" & model$Type == "Loading"][i]
+  #       loadW = ifelse(length(loadW) == 0, 1, loadW)
+  #       sigmaW = model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD"][i]
+  #       # between
+  #       alpha = model$true.val[model$Param == paste0("alpha_",q,".",p)]
+  #       alpha = ifelse(length(alpha) == 0, 0, alpha)
+  #       loadB = model$true.val[model$Param == paste0("lambdaB_",q,".",p)]
+  #       loadB = ifelse(length(loadB) == 0, 1, loadB)
+  #       sigmaB = model$true.val[model$Param == paste0("sigmaB_",q,".",p)]
+  #       sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
+  #
+  #       for(j in 1:N){
+  #         # create WITHIN-PART:
+  #         etaW = within[within$ID==j, paste0("Y",q)]
+  #         if(sigmaW == 0){
+  #           YW = loadW * etaW
+  #         } else {
+  #           YW = loadW * etaW + stats::rnorm(n = TP, mean = 0, sd = sigmaW)
+  #         }
+  #
+  #         # create BETWEEN-PART:
+  #         YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, stats::rnorm(n = 1, mean = 0, sd = sigmaB))
+  #
+  #         # indicator
+  #         within[within$ID==j,ind.lab] = YB + YW
+  #       }
+  #     }
+  #     # remove latent process variables
+  #     within = within[,!(colnames(within) %in% paste0("Y",1:infos$q))]
+  #   }
 
-  for(i in 1:N){
-    # build person-specific transition matrix
-    transition = matrix(nrow = q, ncol = q*infos$maxLag, data = 0)
-    y = matrix(nrow = NT, ncol = q)
-
-    # build person-specific prediction error matrix
-    innoVars.i = btw[i,infos$innos_pos]
-
-    for(d in 1:q){ # loop over number of constructs
-      # parameter positions on btw-matrix
-      par_pos = dyn$no[dyn$Dout==d]
-      # fill transition matrix with person-specific parameter values
-      transition[d,as.integer(dyn$tran_pos[dyn$Dout==d])] = btw[i,par_pos]
-
-      if(infos$innos_rand[d] == 1){
-        innoVars.i[d] = exp(innoVars.i[d]) # retransform log innovations
-      } else{
-        innoVars.i[d] = innoVars.i[d]^2
-      }
-    }
-
-    if(q == 1){
-      inno_var_mat = matrix(data = innoVars.i, nrow = 1, ncol = 1)
-    # } else if(q == 2 & infos$n_inno_covs == 1){
-    #   inno_var_mat = diag(innoVars.i)
-    #   inno_var_mat[1,2] <- inno_var_mat[2,1] <- exp(btw[i, infos$inno_cov_pos])
-    } else {
-      inno_var_mat = diag(innoVars.i)
-
-      if(infos$n_inno_cors > 0){
-        for(xx in 1:q){
-          for(yy in 1:q){
-            if(xx < yy){
-              cor = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
-              cov = cor * sqrt(inno_var_mat[xx,xx]) * sqrt(inno_var_mat[yy,yy])
-              inno_var_mat[xx,yy] <- inno_var_mat[yy,xx] <- cov
-            }
-          }
+    # CREATE OUTCOMES ==========================================================
+    outs = matrix(NA, ncol = infos$n_out, nrow = N)
+    if(infos$n_out > 0){
+      if(infos$n_z > 0){
+        btw.Z = matrix(nrow = N, ncol = (infos$n_random + infos$n_z))
+        btw.Z[,1:infos$n_random] = btw_random
+        for(i in 1:infos$n_z){
+          Z_name = infos$n_z_vars[i]
+          Z_pos = unique(stats::na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
+          btw.Z[1:N,Z_pos] = stats::rnorm(n = N, mean = 0,
+                                          sd = btw.var.sds[which(names(btw.var.sds) == Z_name)])
+          #    colnames(btw.Z)[i] = Z_name
         }
-      }
-    }
-
-    # generate the within-level process in a loop over time points
-    for(t in 1:NT){
-
-      if(t <= infos$maxLag){
-        # starting values
-        init = mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat)
-        y[t,] = init
-
-        # start the process when sufficient initial values are generated
-        } else {
-        y_lag = c()
-        y_lag = as.vector(y[t-1,1:q])            # create a lagged vector
-
-        if(infos$maxLag>1){                      # ... extend for higher-order
-          for(ll in 2:infos$maxLag){
-            y_lag = c(y_lag, as.vector(y[t-ll,1:q]))
-          }
-        }
-
-        if(q > 1 | infos$maxLag > 1){
-          # get expected values using matrix multiplication
-          y[t,1:q] = y_lag %*% t(transition)
-        } else {
-          # or for AR(1):
-          y[t,] = y_lag * transition
-        }
-
-        # add innovations
-        y[t,] = y[t,] + mvtnorm::rmvnorm(n = 1, mean = rep(0, q), sigma = inno_var_mat)
-
-        # add contemporaneous effects
-        if(nrow(dyn_t0) != 0){
-          for(k in 1:nrow(dyn_t0)){
-            dv <- as.integer(dyn_t0$Dout[k])
-            iv <- as.integer(dyn_t0$Dpred[k])
-            y[t,dv] = y[t,dv] + btw[i,dyn_t0$no[k]] * y[t,iv]
-          }
-        }
-
-        # add interaction effects
-        if(nrow(dyn_int) > 0){
-          for(k in 1:nrow(dyn_int)){
-            dv <- as.integer(dyn_int$Dout[k])
-            iv1 <- as.integer(dyn_int$Dpred[k])
-            iv2 <- as.integer(dyn_int$Dpred2[k])
-            lag1 <- as.integer(dyn_int$Lag[k])
-            lag2 <- as.integer(dyn_int$Lag2[k])
-            y[t,dv] = y[t,dv] + btw[i,dyn_int$no[k]] * y[t-lag1,iv1] * y[t-lag2,iv2]
-          }
-        }
-
-        # for bivariate VAR-models with random innovation covariance factor:
-        if(infos$q >= 2 & infos$n_inno_covs == 1){
-          inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
-          y[t,1:2] = y[t,1:2] + infos$inno_cov_load * inno_t
-        }
-      }
-    }
-
-    # remove burn-in
-    within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
-
-    # add trait scores (for manifest indicators)
-    if(infos$isLatent == FALSE){
-      for(j in 1:infos$q){
-        within[within$ID==i,y_cols[j]] = btw[i,j] + within[within$ID==i,y_cols[j]]
-      }
-    }
-  }
-
-  # --------
-
-
-  ##### add measurement model here -------------------------------------------
-  # create manifest indicator scores
-  if(infos$isLatent == TRUE){
-    N_inds = max(infos$indicators$p_pos)
-    for(i in 1:N_inds){
-      q = as.integer(infos$indicators$q[i])
-      p = as.integer(infos$indicators$p[i])
-      ind.lab = paste0("Y",q,".",p)
-      # within
-      loadW = model$true.val[model$Level == "Within" & model$Type == "Loading"][i]
-      loadW = ifelse(length(loadW) == 0, 1, loadW)
-      sigmaW = model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD"][i]
-      # between
-      alpha = model$true.val[model$Param == paste0("alpha_",q,".",p)]
-      alpha = ifelse(length(alpha) == 0, 0, alpha)
-      loadB = model$true.val[model$Param == paste0("lambdaB_",q,".",p)]
-      loadB = ifelse(length(loadB) == 0, 1, loadB)
-      sigmaB = model$true.val[model$Param == paste0("sigmaB_",q,".",p)]
-      sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
-
-      for(j in 1:N){
-        # create WITHIN-PART:
-        etaW = within[within$ID==j, paste0("Y",q)]
-        if(sigmaW == 0){
-          YW = loadW * etaW
-        } else {
-          YW = loadW * etaW + stats::rnorm(n = TP, mean = 0, sd = sigmaW)
-        }
-
-        # create BETWEEN-PART:
-        YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, stats::rnorm(n = 1, mean = 0, sd = sigmaB))
-
-        # indicator
-        within[within$ID==j,ind.lab] = YB + YW
-      }
-    }
-    # remove latent process variables
-    within = within[,!(colnames(within) %in% paste0("Y",1:infos$q))]
-  }
-
-  # CREATE OUTCOMES ==========================================================
-  outs = matrix(NA, ncol = infos$n_out, nrow = N)
-  if(infos$n_out > 0){
-    if(infos$n_z > 0){
-      btw.Z = matrix(nrow = N, ncol = (infos$n_random + infos$n_z))
-      btw.Z[,1:infos$n_random] = btw_random
-      for(i in 1:infos$n_z){
-        Z_name = infos$n_z_vars[i]
-        Z_pos = unique(stats::na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
-        btw.Z[1:N,Z_pos] = stats::rnorm(n = N, mean = 0,
-                                 sd = btw.var.sds[which(names(btw.var.sds) == Z_name)])
-        #    colnames(btw.Z)[i] = Z_name
-      }
-    } else {
-      btw.Z = btw_random
-    }
-
-    for(i in 1:infos$n_out){
-      alpha = model$true.val[grepl(model$Param, pattern = paste0("alpha_",infos$out_var[i]))]
-      sigma = model$true.val[grepl(model$Param, pattern = paste0("sigma_",infos$out_var[i]))]
-      # create outcome values
-      out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
-      if(nrow(out_use)>1){
-        outs[,i] = alpha + btw.Z[,out_use$Pred_no]%*%out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
       } else {
-        outs[,i] = alpha + btw.Z[,out_use$Pred_no]*out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
+        btw.Z = btw_random
       }
+
+      for(i in 1:infos$n_out){
+        alpha = model$true.val[grepl(model$Param, pattern = paste0("alpha_",infos$out_var[i]))]
+        sigma = model$true.val[grepl(model$Param, pattern = paste0("sigma_",infos$out_var[i]))]
+        # create outcome values
+        out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
+        if(nrow(out_use)>1){
+          outs[,i] = alpha + btw.Z[,out_use$Pred_no]%*%out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
+        } else {
+          outs[,i] = alpha + btw.Z[,out_use$Pred_no]*out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
+        }
+      }
+
+      OUT = data.frame(
+        "ID" = 1:N,
+        outs
+      )
+      colnames(OUT)[2:(infos$n_out+1)] = infos$out_var
     }
 
-    OUT = data.frame(
-      "ID" = 1:N,
-      outs
-    )
-    colnames(OUT)[2:(infos$n_out+1)] = infos$out_var
-  }
 
+    # add censored versions of variables if requested
+    y_cols = colnames(within)[startsWith(colnames(within),"Y")]
+    if(!is.null(attr(model, which = "censor_left"))){
 
-  # add censored versions of variables if requested
-  y_cols = colnames(within)[startsWith(colnames(within),"Y")]
-  if(!is.null(attr(model, which = "censor_left"))){
+      # get censoring threshold
+      censor_LB <- attr(model, which = "censor_left")
 
-    # get censoring threshold
-    censor_LB <- attr(model, which = "censor_left")
-
-    within[,paste0(y_cols,"_cens")] <- within[,y_cols]
-    within[,paste0(y_cols,"_cens")][within[,y_cols] <= censor_LB] <- censor_LB
-  }
-
-  if(!is.null(attr(model, which = "censor_right"))){
-
-    # get censoring threshold
-    censor_UB <- attr(model, which = "censor_right")
-    if(is.null(attr(model, which = "censor_left"))){
       within[,paste0(y_cols,"_cens")] <- within[,y_cols]
-      }
-    within[,paste0(y_cols,"_cens")][within[,paste0(y_cols,"_cens")] >= censor_UB] <- censor_UB
-  }
-
-  # combine information =======================================================
-  data = within
-
-  if(infos$n_cov>1){
-    W = cbind("ID" = 1:N, W)
-    data = merge(x = data, y = W[,c("ID", infos$n_cov_vars)], by = "ID")
-  }
-  if(infos$n_out>0){
-    data = merge(x = data, y = OUT, by = "ID")
-    if(infos$n_z>0){
-      colnames(btw.Z) = c(infos$re_pars$Param, infos$n_z_vars)
-      btw.Z = cbind("ID" = 1:N, btw.Z)
-      data = merge(x = data, y = btw.Z[,c("ID",infos$n_z_vars)])
+      within[,paste0(y_cols,"_cens")][within[,y_cols] <= censor_LB] <- censor_LB
     }
+
+    if(!is.null(attr(model, which = "censor_right"))){
+
+      # get censoring threshold
+      censor_UB <- attr(model, which = "censor_right")
+      if(is.null(attr(model, which = "censor_left"))){
+        within[,paste0(y_cols,"_cens")] <- within[,y_cols]
+      }
+      within[,paste0(y_cols,"_cens")][within[,paste0(y_cols,"_cens")] >= censor_UB] <- censor_UB
+    }
+
+    # combine information =======================================================
+    data = within
+
+    if(infos$n_cov>1){
+      W = cbind("ID" = 1:N, W)
+      data = merge(x = data, y = W[,c("ID", infos$n_cov_vars)], by = "ID")
+    }
+    if(infos$n_out>0){
+      data = merge(x = data, y = OUT, by = "ID")
+      if(infos$n_z>0){
+        colnames(btw.Z) = c(infos$re_pars$Param, infos$n_z_vars)
+        btw.Z = cbind("ID" = 1:N, btw.Z)
+        data = merge(x = data, y = btw.Z[,c("ID",infos$n_z_vars)])
+      }
+    }
+
+    # return list
+    VARsimData = list(
+      model = model,
+      data = data,
+      RE.pars = btw_random
+    )
+
+    # add class
+    class(VARsimData) <- "mlts_simdata"
+
+
+    return(VARsimData)
+
   }
-
-  # return list
-  VARsimData = list(
-    model = model,
-    data = data,
-    RE.pars = btw_random
-  )
-
-  # add class
-  class(VARsimData) <- "mlts_simdata"
-
-
-  return(VARsimData)
-
-}

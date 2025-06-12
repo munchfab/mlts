@@ -169,7 +169,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
     # check if variable int_time exists:
     if(!("int_time" %in% names(data))){
-      data$int_time = lapply(N_obs_id, function(x){1:x})
+      data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
     }
 
     censL_val = attr(model, which = "censor_left")
@@ -199,7 +199,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   if(!is.null(attr(model, which = "censor_right"))){
     # check if variable int_time exists:
     if(!("int_time" %in% names(data))){
-      data$int_time = lapply(N_obs_id, function(x){1:x})
+      data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
     }
 
     censR_val = attr(model, which = "censor_right")
@@ -321,7 +321,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
       # check if variable int_time exists:
       if(!("int_time" %in% names(data))){
-        data$int_time = lapply(N_obs_id, function(x){1:x})
+        data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
       }
 
       censL_val = attr(model, which = "censor_left")
@@ -353,7 +353,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
       # check if variable int_time exists:
       if(!("int_time" %in% names(data))){
-        data$int_time = lapply(N_obs_id, function(x){1:x})
+        data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
       }
 
       censR_val = attr(model, which = "censor_right")

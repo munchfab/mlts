@@ -1,5 +1,8 @@
 #' Create Path Diagrams from mlts model object
 #'
+#' @description
+#' Deprecated. Please use `mlts_paths`.
+#'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
 #' @param file An optional string containing the name of the file and file path.
 #' Has to end with .pdf file format.

@@ -34,7 +34,11 @@ Imports:
     rmarkdown,
     rstan (>= 2.32.3),
     rstantools (>= 2.4.0),
-    stats
+    stats,
+    shape,
+    diagram,
+    grDevices,
+    graphics
 Suggests: 
     knitr,
     testthat (>= 3.0.0)

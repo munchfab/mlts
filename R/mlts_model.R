@@ -57,10 +57,10 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
-#' @param fixef_group A character vector (developmental). Add a binary coded (0 vs. 1) variable to include
+#' @param fixef_group A character vector (not yet supported). Add a binary coded (0 vs. 1) variable to include
 #' group differences in fixed effects (intercepts). When dynamic or variance parameters
 #' are allowed to vary by cluster, you can enter the grouping variable to `re_pred`.
-#' @param is_exogenous Integer or a vector of integers (developmental). Indicate if any of the constructs
+#' @param is_exogenous Integer or a vector of integers. Indicate if any of the constructs
 #' should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
 #' Adding a dichotomous time-varying predictor variable.
 #' @param incl_t0_effects A character vector. Experimental: Add contemporaneous effects to the model.
@@ -69,15 +69,15 @@
 #' specifying `phi(0)_21` where the `0` indicates the lag, the first subscript letter (`2`) the dependent,
 #' and the latter subscript (`1`) the independent construct. The respective within-level correlation/covariance
 #' of innovations between involved constructs will be excluded from the model accordingly.
-#' @param incl_interaction_effects A character vector. Experimental: Add interaction terms on
-#' the dynamic within-level. For example, to add an interaction term between first
+#' @param incl_interaction_effects A character vector. Add interaction terms on
+#' the dynamic within-level. For example, to add an interaction term between the first
 #' construct at time $t$ (lag of 0) and the second construct at $t-1$ (lag of 1) to
 #' the prediction of the second construct at time $t$ specify `incl_interaction_effects = phi(i)_2.2(1)1(0)`.
 #' where the `i` indicates an interaction effect, the first subscript letter (`2`) the dependent,
 #' and the latter subscripts after the dot (i.e., `2(1)` and `1(0)`) the independent constructs involved
 #' in the interaction each followed by the respective lag in brackets. Note, that in this case the
 #' respective lag 0 effects need to be included separately using `incl_t0_effects`.
-#' @param censor_left Numeric. Developmental. If an input is provided (i.e., a single numeric value) a left-censored
+#' @param censor_left Numeric. If an input is provided (i.e., a single numeric value) a left-censored
 #' version of the model will be estimated by treating all observations (of manifest indicators)
 #' at the censoring threshold (i.e., usually the lower bound of the scale) to be treated as missing during model estimation.
 #' These missing values (observations at the value of `censor_left`) are replaced with imputed values (declared as parameters
@@ -231,12 +231,11 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
      if(silent == F){warning("Input of 'incl_t0_effects' will be ignored in AR models (q = 1).")}
     }
     if(q > 1){
-      if(silent == F){warning("Models including contemporaneous effects are still developemental.")}
       t0_effs = eval_t0_effects(t0_input = incl_t0_effects, q = q)
 
       if(fix_inno_covs == TRUE & inno_covs_zero == FALSE){
         stop("At this stage, it is not possible to combine contemporaneous effects",
-        " with `fix_inno_covs = TRUE`.")
+        " with `fix_inno_covs = TRUE`. Set `inno_covs_zero = TRUE`.")
       }
     }
   }
@@ -247,7 +246,6 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
       if(silent == F){warning("Input of 'incl_interaction_effects' will be ignored in AR models (q = 1).")}
     }
     if(q > 1){
-      if(silent == F){warning("Models including interaction effects on the dynamic within-level are still developemental.")}
       int_effs = eval_int_effects(int_input = incl_interaction_effects, q = q)
     }
   }
@@ -484,14 +482,10 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   row.names(model) <- model$Param
   attr(model, which = "mlts_class") <- class
   if(!is.null(censor_left)){
-    if(silent == F){warning("Censored VAR models are still considered developmental.")}
     attr(model, which = "censor_left") <- censor_left
   }
 
   if(!is.null(censor_right)){
-    if(is.null(censor_left)){
-      if(silent == F){warning("Censored VAR models are still considered developemental.")}
-    }
     attr(model, which = "censor_right") <- censor_right
   }
 

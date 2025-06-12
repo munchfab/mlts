@@ -2,8 +2,7 @@
 % Please edit documentation in R/create_missings.R
 \name{create_missings}
 \alias{create_missings}
-\title{Create Missings for Approximation of Continuous Time Dynamic Models
-(new version)}
+\title{Create Missings for Approximation of Continuous Time Dynamic Models}
 \usage{
 create_missings(data, tinterval, id, time, btw_vars = NULL)
 }
@@ -28,7 +27,6 @@ A \code{data.frame} with missings imputed for use in \code{\link{mlts_fit}}.
 }
 \description{
 Create Missings for Approximation of Continuous Time Dynamic Models
-(new version)
 }
 \examples{
 # create some data for example
