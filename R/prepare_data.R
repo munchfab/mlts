@@ -184,8 +184,14 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
 
 
     if(!is.null(max_NA_seq)){
+
       # limit number of missings
-      data$is_miss = ifelse(is.na(rowMeans(data[,ts],na.rm=T)),1,0)
+      if(length(ts)>1){
+        data$is_miss = ifelse(is.na(rowMeans(data[,ts],na.rm=T)),1,0)
+      } else {
+        data$is_miss = ifelse(is.na(data[,ts]),1,0)
+      }
+
 
       # count sequences of missings starting with 1 on each sequence
       cum_misses = rle(x = data$is_miss)
