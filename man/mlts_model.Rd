@@ -11,6 +11,7 @@ mlts_model(
   max_lag = c(1, 2, 3),
   btw_factor = TRUE,
   btw_model = NULL,
+  equal_loads_levels = FALSE,
   fix_dynamics = FALSE,
   fix_inno_vars = FALSE,
   fix_inno_covs = TRUE,
@@ -20,7 +21,14 @@ mlts_model(
   ranef_zero = NULL,
   ranef_pred = NULL,
   out_pred = NULL,
-  out_pred_add_btw = NULL
+  out_pred_add_btw = NULL,
+  fixef_group = NULL,
+  is_exogenous = NULL,
+  incl_t0_effects = NULL,
+  incl_interaction_effects = NULL,
+  censor_left = NULL,
+  censor_right = NULL,
+  silent = FALSE
 )
 }
 \arguments{
@@ -45,6 +53,10 @@ from a joint multivariate normal distribution.}
 \item{btw_model}{A list to indicate for which manifest indicator variables a common
 between-level factor should be modeled (see Details for detailed instructions).
 At this point restricted to one factor per latent construct.}
+
+\item{equal_loads_levels}{Logical. For multiple-indicator model with \code{btw_factor = TRUE}, if \code{TRUE},
+factor loadings of the same indicators are assumed to be equal across levels. Note, that the first indicator
+loading parameters remain fixed to \code{1}.}
 
 \item{fix_dynamics}{Logical. Fix all random effect variances of autoregressive and
 cross-lagged effects to zero (constraining parameters to be equal across clusters).}
@@ -93,6 +105,44 @@ in \code{model$Param} will be treated as additional between-level predictors.}
 \item{out_pred_add_btw}{A character vector. If \code{out_pred} is a character (vector), all
 inputs will be treated as between-level covariates to be used as additional predictors of
 all outcomes specified in \code{out_pred}.}
+
+\item{fixef_group}{A character vector (not yet supported). Add a binary coded (0 vs. 1) variable to include
+group differences in fixed effects (intercepts). When dynamic or variance parameters
+are allowed to vary by cluster, you can enter the grouping variable to \code{re_pred}.}
+
+\item{is_exogenous}{Integer or a vector of integers. Indicate if any of the constructs
+should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
+Adding a dichotomous time-varying predictor variable.}
+
+\item{incl_t0_effects}{A character vector. Experimental: Add contemporaneous effects to the model.
+For example, to include an effect of the first construct on the second construct at time $t$,
+following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
+specifying \verb{phi(0)_21} where the \code{0} indicates the lag, the first subscript letter (\code{2}) the dependent,
+and the latter subscript (\code{1}) the independent construct. The respective within-level correlation/covariance
+of innovations between involved constructs will be excluded from the model accordingly.}
+
+\item{incl_interaction_effects}{A character vector. Add interaction terms on
+the dynamic within-level. For example, to add an interaction term between the first
+construct at time $t$ (lag of 0) and the second construct at $t-1$ (lag of 1) to
+the prediction of the second construct at time $t$ specify \verb{incl_interaction_effects = phi(i)_2.2(1)1(0)}.
+where the \code{i} indicates an interaction effect, the first subscript letter (\code{2}) the dependent,
+and the latter subscripts after the dot (i.e., \code{2(1)} and \code{1(0)}) the independent constructs involved
+in the interaction each followed by the respective lag in brackets. Note, that in this case the
+respective lag 0 effects need to be included separately using \code{incl_t0_effects}.}
+
+\item{censor_left}{Numeric. If an input is provided (i.e., a single numeric value) a left-censored
+version of the model will be estimated by treating all observations (of manifest indicators)
+at the censoring threshold (i.e., usually the lower bound of the scale) to be treated as missing during model estimation.
+These missing values (observations at the value of \code{censor_left}) are replaced with imputed values (declared as parameters
+in the stan model) with an upper limit of \code{censor_left} (see https://mc-stan.org/docs/stan-users-guide/truncation-censoring.html).
+Note that all manifest variables are affected by the censoring. To prevent
+individual variables from being treated as censored you could change the scale
+of the respective variable(s) so that all values exceed the censoring threshold.}
+
+\item{censor_right}{Numeric. Developmental. Similar to \code{censor_left} but assumes variables to be censored
+on the upper bound of the scale. Can be combined with \code{censor_left}.}
+
+\item{silent}{logical. Set to \code{TRUE} to suppress warnings and messages.}
 }
 \value{
 An object of class \code{data.frame} with the following columns:

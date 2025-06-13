@@ -8,6 +8,7 @@
 #' @param digits Number of digits. Default is 3.
 #' @param add_cluster_std logical. If `what = "within"`, within-level standardized effects for each cluster
 #' are included in the output (defaults to `FALSE`).
+#' @param get_samples logical. For internal use.
 #' @return A `list` containing between- and within-level standardized parameters.
 #' @export
 #'
@@ -32,7 +33,8 @@
 #' }
 #'
 mlts_standardized <- function(object, what = c("between", "within", "both"),
-                              digits = 3, prob = .95, add_cluster_std = FALSE
+                              digits = 3, prob = .95, add_cluster_std = FALSE,
+                              get_samples = FALSE
 ){
 
   what <- match.arg(what)

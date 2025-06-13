@@ -73,6 +73,10 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # model specific information: ------------------------------------------------
   infos = mlts_model_eval(model)
 
+  D_cen = infos$D_cen
+  D_cen_pos = infos$D_cen_pos
+  is_wcen = infos$is_wcen
+
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
@@ -100,9 +104,12 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   # dynamic model specification by dimension (D)
   maxLag = infos$maxLag
-  N_pred = infos$N_pred
+  N_pred = as.array(infos$N_pred)
   D_pred = infos$D_pred
+  D_pred2 = infos$D_pred2
   Lag_pred = infos$Lag_pred
+  Lag_pred2 = infos$Lag_pred2
+  n_int = infos$n_int
   Dpos1 = as.array(infos$Dpos1)
   Dpos2 = as.array(infos$Dpos2)
   # covariate(s) as predictor(s) of random effects
@@ -157,6 +164,70 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     }
   }
 
+  ##### CENSORING --------------------------------------------------------------
+  if(!is.null(attr(model, which = "censor_left"))){
+
+    # check if variable int_time exists:
+    if(!("int_time" %in% names(data))){
+      data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
+    }
+
+    censL_val = attr(model, which = "censor_left")
+    n_censL_D = sapply(ts, FUN = function(x){ # store number of NAs per D
+      sum(data[,x] != -Inf &
+          data[,x] <= censL_val &
+          data$int_time != 1)
+    })
+    n_censL_D = as.array(n_censL_D)
+    n_censL = sum(n_censL_D)
+    pos_censL_D = matrix(0, nrow = D, ncol = max(n_censL_D), byrow = TRUE)
+    for(i in 1:D){
+      if(n_censL_D[i] > 0){
+        pos_censL_D[i,1:n_censL_D[i]] = which(data[,ts[i]] <= censL_val &
+                                              data[,ts[i]] != -Inf &
+                                              data$int_time != 1)
+      }
+    }
+
+  } else {
+    censL_val = 0
+    n_censL = 0
+    n_censL_D = array(0, dim = D)
+    pos_censL_D = array(0, dim = c(D,n_censL))
+  }
+
+  if(!is.null(attr(model, which = "censor_right"))){
+    # check if variable int_time exists:
+    if(!("int_time" %in% names(data))){
+      data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
+    }
+
+    censR_val = attr(model, which = "censor_right")
+    n_censR_D = sapply(ts, FUN = function(x){ # store number of NAs per D
+      sum(data[,x] != -Inf &
+            data[,x] <= censR_val &
+            data$int_time != 1)
+    })
+    n_censR_D = as.array(n_censR_D)
+    n_censR = sum(n_censR_D)
+    pos_censR_D = matrix(0, nrow = D, ncol = max(n_censR_D), byrow = TRUE)
+    for(i in 1:D){
+      if(n_censR_D[i] > 0){
+        pos_censR_D[i,1:n_censR_D[i]] = which(data[,ts[i]] <= censR_val &
+                                                data[,ts[i]] != -Inf &
+                                                data$int_time != 1)
+      }
+    }
+
+  } else {
+    censR_val = 0
+    n_censR = 0
+    n_censR_D = array(0, dim = D)
+    pos_censR_D = array(0, dim = c(D,n_censR))
+  }
+
+
+
   # priors
   prior_gamma = infos$prior_gamma
   prior_sd_R = infos$prior_sd_R
@@ -174,16 +245,20 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # combine all information
   standata = rstan::nlist(
     # data specifications
-    N, D,maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
+    N, D, D_cen, D_cen_pos, is_wcen, maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
     # model specifications
     n_pars, n_random, n_fixed, is_random, is_fixed,
-    N_pred, D_pred, Lag_pred, Dpos1, Dpos2,
+    N_pred, D_pred, D_pred2, Lag_pred, Lag_pred2, n_int, Dpos1, Dpos2,
     ## innovations
     innos_rand, innos_pos, n_innos_fix,
     ## innovation covariances
     innos_fix_pos, n_obs_cov, n_obs_cov, inno_cov_pos,
     n_inno_covs,n_inno_cors, n_inno_cov_fix, inno_cov_load,
 
+    # censoring parameters
+    censL_val,n_censL, n_censL_D, pos_censL_D,
+    censR_val,n_censR, n_censR_D, pos_censR_D,
+    # covariates
     n_cov, n_cov_bs, n_cov_mat, W,
     n_out, n_out_bs, n_out_bs_max, n_out_bs_sum, n_out_b_pos, out, n_z, Z,
     # priors
@@ -197,6 +272,9 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   # for latent models:
   if(infos$isLatent == TRUE){
+    standata$Dp_cen_pos <- infos$Dp_cen_pos
+    standata$p_is_wcen <- infos$p_is_wcen
+    standata$p_is_wcen_pos <- infos$p_is_wcen_pos
     standata$D = infos$q
     standata$D_np = as.array(infos$p)
     standata$n_p = nrow(infos$indicators)
@@ -211,24 +289,121 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     standata$n_etaW_free = sum(infos$p > 1)
 
     # alternative missing data indexing
-    n_miss = sum(data[,ts] == -Inf)           # overall number of NAs
-    n_miss_p = as.array(sapply(ts, FUN = function(x){sum(data[,x] == -Inf)}))
+    n_miss = sum(data[,ts[standata$is_SI == 1]] == -Inf)           # overall number of NAs
+    n_miss_p = rep(0, length(ts))
+    if(any(standata$is_SI == 1)){
+      n_miss_p[standata$is_SI == 1] = sapply(ts[standata$is_SI == 1], FUN = function(x){sum(data[,x] == -Inf)})
+    }
+    n_miss_p = as.array(n_miss_p)
     pos_miss_p = matrix(0, nrow = standata$n_p, ncol = max(n_miss_p), byrow = TRUE)
     for(i in 1:standata$n_p){
       if(n_miss_p[i] > 0){
         pos_miss_p[i,1:n_miss_p[i]] = which(data[,ts[i]] == -Inf)
       }
     }
+
+    # alternative missing data indexing
+    n_obs_p = rep(0, time = length(ts))
+    if(any(standata$is_SI == 0)){
+    n_obs_p[standata$is_SI == 0] = sapply(ts[standata$is_SI == 0], FUN = function(x){sum(data[,x] != -Inf)})
+    }
+    pos_obs_p = matrix(0, nrow = length(ts), ncol = max(n_obs_p))
+    for(i in 1:standata$n_p){
+      if(n_obs_p[i]>0){
+        pos_obs_p[i, 1:n_obs_p[i]] <- which(data[,ts[i]] != -Inf)
+      }
+    }
+
+
+    ##### CENSORING --------------------------------------------------------------
+    if(!is.null(attr(model, which = "censor_left"))){
+      n_p = standata$n_p
+
+      # check if variable int_time exists:
+      if(!("int_time" %in% names(data))){
+        data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
+      }
+
+      censL_val = attr(model, which = "censor_left")
+      n_censL_p = sapply(ts, FUN = function(x){ # store number of NAs per D
+        sum(data[,x] != -Inf &
+              data[,x] <= censL_val &
+              data$int_time != 1)
+      })
+      n_censL_p = as.array(n_censL_p)
+      n_censL = sum(n_censL_p)
+      pos_censL_p = matrix(0, nrow = n_p, ncol = max(n_censL_p), byrow = TRUE)
+      for(i in 1:n_p){
+        if(n_censL_p[i] > 0){
+          pos_censL_p[i,1:n_censL_p[i]] = which(data[,ts[i]] <= censL_val &
+                                                data[,ts[i]] != -Inf &
+                                                data$int_time != 1)
+        }
+      }
+
+    } else {
+      censL_val = 0
+      n_censL = 0
+      n_censL_p = array(0, dim = standata$n_p)
+      pos_censL_p = array(0, dim = c(standata$n_p,n_censL))
+    }
+
+    if(!is.null(attr(model, which = "censor_right"))){
+      n_p = standata$n_p
+
+      # check if variable int_time exists:
+      if(!("int_time" %in% names(data))){
+        data$int_time = unlist(lapply(N_obs_id, function(x){1:x}))
+      }
+
+      censR_val = attr(model, which = "censor_right")
+      n_censR_p = sapply(ts, FUN = function(x){ # store number of NAs per D
+        sum(data[,x] != -Inf &
+              data[,x] <= censR_val &
+              data$int_time != 1)
+      })
+      n_censR_p = as.array(n_censR_p)
+      n_censR = sum(n_censR_p)
+      pos_censR_p = matrix(0, nrow = n_p, ncol = max(n_censR_p), byrow = TRUE)
+      for(i in 1:n_p){
+        if(n_censR_p[i] > 0){
+          pos_censR_p[i,1:n_censR_p[i]] = which(data[,ts[i]] <= censR_val &
+                                                  data[,ts[i]] != -Inf &
+                                                  data$int_time != 1)
+        }
+      }
+
+    } else {
+      censR_val = 0
+      n_censR = 0
+      n_censR_p = array(0, dim = standata$n_p)
+      pos_censR_p = array(0, dim = c(standata$n_p,n_censR))
+    }
+
+
     standata$n_miss <- n_miss
     standata$n_miss_p <- n_miss_p
     standata$pos_miss_p <- pos_miss_p
+    standata$n_obs_p <- n_obs_p
+    standata$pos_obs_p <- pos_obs_p
+
+    standata$censL_val = censL_val
+    standata$n_censL = n_censL
+    standata$n_censL_p = n_censL_p
+    standata$pos_censL_p = pos_censL_p
+    standata$censR_val = censR_val
+    standata$n_censR = n_censR
+    standata$n_censR_p = n_censR_p
+    standata$pos_censR_p = pos_censR_p
 
     standata$n_loadBfree <- infos$n_loadBfree
+    standata$n_loadB_equalW <- infos$n_loadB_equalW
     standata$n_loadWfree <- infos$n_loadWfree
     standata$n_alphafree <- infos$n_alphafree
     standata$n_sigmaBfree <- infos$n_sigmaBfree
     standata$n_sigmaWfree <- infos$n_sigmaWfree
     standata$pos_loadBfree <- as.array(infos$pos_loadBfree)
+    standata$pos_loadB_equalW <- as.array(infos$pos_loadB_equalW)
     standata$pos_loadWfree <- as.array(infos$pos_loadWfree)
     standata$pos_alphafree <- as.array(infos$pos_alphafree)
     standata$pos_sigmaBfree <- as.array(infos$pos_sigmaBfree)

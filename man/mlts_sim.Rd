@@ -12,7 +12,8 @@ mlts_sim(
   burn.in = 50,
   seed = NULL,
   seed.true = 1,
-  btw.var.sds = NULL
+  btw.var.sds = NULL,
+  exogenous = NULL
 )
 }
 \arguments{
@@ -36,6 +37,9 @@ population parameters values from plausible ranges for stationary time series.}
 between-level variable(s) specified in \code{model}, e.g. (\code{btw.var.sds = c("covariate1" = 1)},
 to set the SD of the variable "covariate1" to 1). Mean values of the respective
 variable(s) will be set to 0 per default.}
+
+\item{exogenous}{Matrix of numeric values of exogenous variables with \code{N}*(\code{TP}+\code{burn.in})
+rows and separate columns for each variable.}
 }
 \value{
 An object of class \code{"mlts_simdata"}.

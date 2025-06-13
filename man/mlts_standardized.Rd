@@ -9,7 +9,8 @@ mlts_standardized(
   what = c("between", "within", "both"),
   digits = 3,
   prob = 0.95,
-  add_cluster_std = FALSE
+  add_cluster_std = FALSE,
+  get_samples = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ interval. Default is .95.}
 
 \item{add_cluster_std}{logical. If \code{what = "within"}, within-level standardized effects for each cluster
 are included in the output (defaults to \code{FALSE}).}
+
+\item{get_samples}{logical. For internal use.}
 }
 \value{
 A \code{list} containing between- and within-level standardized parameters.

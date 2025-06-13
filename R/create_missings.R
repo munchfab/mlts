@@ -1,5 +1,4 @@
 #' Create Missings for Approximation of Continuous Time Dynamic Models
-#' (new version)
 #'
 #' @param data An object of class `data.frame` (or one that can be coerced
 #' to that class) containing data of all variables used in the model.

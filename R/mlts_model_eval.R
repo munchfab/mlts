@@ -21,14 +21,16 @@ mlts_model_eval <- function(model){
 
   # extract included lag-order
   isPHI = which(startsWith(model$Param, "phi("))
+  isINT = which(startsWith(model$Param, "phi(i"))
   model$Lag = NA
-  model$Lag[isPHI] = as.integer(substr(model$Param[isPHI], 5, 5))
-  maxLag = max(model$Lag, na.rm = TRUE)
+  model$Lag[isPHI] = substr(model$Param[isPHI], 5, 5)
+
 
   # create additional columns
   ars = paste0("phi(",rep(1:3,each = 9),")_", 1:9, 1:9) # attention: max lag of 3 is hard-coded
   model$isAR = ifelse(model$Param %in% ars,1,0)
-
+  model$isINT = ifelse(startsWith(model$Param,"phi(i"),1,0)
+  n_int = sum(model$isINT)
 
   # check if measurement model is entered
   isLatent = nrow(model[model$Model == "Measurement",])
@@ -45,28 +47,61 @@ mlts_model_eval <- function(model){
   fix_pars$no = 1:nrow(fix_pars)
   fix_pars_dyn = fix_pars[fix_pars$Param_Label == "Dynamic",]
   n_dyn.pars = nrow(fix_pars_dyn)
+  n_int = sum(fix_pars_dyn$isINT)
   if(q < 10){  ### ACHTUNG AKTUELLE LÖSUNG FUNKTIONIERT NUR MIT D < 10
-    fix_pars_dyn$Dout = substr(fix_pars_dyn$Param, start = 8, stop = 8)
-    fix_pars_dyn$Dpred = substr(fix_pars_dyn$Param, start = 9, stop = 9)
-  }
-  # lagged relations between constructs
-  N_pred = table(fix_pars_dyn$Dout) # number of lagged preds in each dimension
-  D_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
-  Lag_pred = matrix(0, nrow = q, ncol = q*maxLag, byrow = TRUE)
-  Dpos1 = c()
-  Dpos2 = c()
-  for(i in 1:q){
-    D_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred[fix_pars_dyn$Dout == i])
-    Lag_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag[fix_pars_dyn$Dout == i])
-    if(i == 1){
-      Dpos1[i] = n_mus+1
-      Dpos2[i] = n_mus+N_pred[i]
-    } else {
-      Dpos1[i] = Dpos2[i-1] +1
-      Dpos2[i] = Dpos2[i-1] +N_pred[i]
+    fix_pars_dyn$Dout = -99
+    fix_pars_dyn$Dpred = -99
+    fix_pars_dyn$Dpred2 = -99
+    fix_pars_dyn$Lag2 = -99
+    for(i in 1:n_dyn.pars){
+      if(fix_pars_dyn$isINT[i] == 0){
+        fix_pars_dyn$Dout[i] = substr(fix_pars_dyn$Param[i], start = 8, stop = 8)
+        fix_pars_dyn$Dpred[i] = substr(fix_pars_dyn$Param[i], start = 9, stop = 9)
+      } else {
+        fix_pars_dyn$Dout[i] = substr(fix_pars_dyn$Param[i], start = 8, stop = 8)
+        fix_pars_dyn$Dpred[i] = substr(fix_pars_dyn$Param[i], start = 10, stop = 10)
+        fix_pars_dyn$Lag[i] = substr(fix_pars_dyn$Param[i], start = 12, stop = 12)
+        fix_pars_dyn$Dpred2[i] = substr(fix_pars_dyn$Param[i], start = 14, stop = 14)
+        fix_pars_dyn$Lag2[i] = substr(fix_pars_dyn$Param[i], start = 16, stop = 16)
+      }
     }
   }
 
+  # update q based on involved constructs in the dynamic effects
+  q <- as.integer(max(c(fix_pars_dyn$Dout,fix_pars_dyn$Dpred,fix_pars_dyn$Dpred2)))
+
+
+  maxLag = max(as.numeric(fix_pars_dyn$Lag), na.rm = TRUE)
+
+
+  # lagged relations between constructs
+  N_pred = unlist(lapply(1:q, function(x){sum(fix_pars_dyn$Dout == x)})) # number of lagged preds in each dimension
+  D_pred = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  D_pred2 = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  Lag_pred = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  Lag_pred2 = matrix(0, nrow = q, ncol = max(N_pred), byrow = TRUE)
+  Dpos1 = rep(0,times = q)
+  Dpos2 = rep(0,times = q)
+  for(i in 1:q){
+    if(N_pred[i] != 0){
+      D_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred[fix_pars_dyn$Dout == i])
+      D_pred2[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Dpred2[fix_pars_dyn$Dout == i])
+      Lag_pred[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag[fix_pars_dyn$Dout == i])
+      Lag_pred2[i,1:N_pred[i]] = as.integer(fix_pars_dyn$Lag2[fix_pars_dyn$Dout == i])
+    }
+      if(i == 1){
+          Dpos1[i] = n_mus+1
+          Dpos2[i] = n_mus+N_pred[i]
+          } else {
+            Dpos1[i] = Dpos2[i-1]+1
+            Dpos2[i] = Dpos2[i-1]+N_pred[i]
+          }
+      }
+
+  # based on N_pred check which construct is exogenous
+  D_cen = sum(N_pred != 0)
+  is_wcen = as.array(ifelse(N_pred == 0, 0, 1))
+  D_cen_pos = as.array(cumsum(is_wcen))
 
 
   # number of indicators per latent construct
@@ -139,7 +174,7 @@ mlts_model_eval <- function(model){
     # add positions
     fixefs = model[model$Level == "Within" & startsWith(model$Param_Label, "Trait"),]
     indicators$etaB_pos = unlist(lapply(indicators$etaB_label, function(x){
-      which(fixefs$Param == x)
+      ifelse(x %in% fixefs$Param, which(fixefs$Param == x),0)
     }))
     indicators$YB_free_pos = cumsum(indicators$sigmaB_isFree)
     indicators$btw_factor <- ifelse(
@@ -149,12 +184,16 @@ mlts_model_eval <- function(model){
 
     # prepare infos to be passed to stan model ---------------------------------
     n_loadBfree = sum(indicators$lambdaB_isFree, na.rm = TRUE)
+    n_loadB = sum(indicators$lambdaB_isEqual != "= 1", na.rm = TRUE)
+    n_loadB_equalW = sum(indicators$lambdaB_isEqual != "= 1" & indicators$lambdaB_isEqual != "free", na.rm = TRUE)
     n_loadWfree = sum(indicators$lambdaW_isFree, na.rm = TRUE)
+    n_loadW = sum(indicators$lambdaW_isEqual != "= 1", na.rm = TRUE)
     n_alphafree = sum(indicators$alpha_isFree, na.rm = TRUE)
     n_sigmaBfree = sum(indicators$sigmaB_isFree, na.rm = TRUE)
     n_sigmaWfree = sum(indicators$sigmaW_isFree, na.rm = TRUE)
 
     pos_loadBfree = which(indicators$lambdaB_isFree == 1)
+    pos_loadB_equalW = which(indicators$lambdaB_isEqual != "= 1" & indicators$lambdaB_isEqual != "free")
     pos_loadWfree = which(indicators$lambdaW_isFree == 1)
     pos_alphafree = which(indicators$alpha_isFree == 1)
     pos_sigmaBfree = which(indicators$sigmaB_isFree == 1)
@@ -166,6 +205,13 @@ mlts_model_eval <- function(model){
     mu_is_etaB = ifelse(indicators$sigmaB_isFree == 1 & !is.na(indicators$sigmaB_isFree), 0, 1)
     mu_etaB_pos = indicators$etaB_pos
 
+    # addition for exogenous variables
+    indicators$D_is_Wcen <- ifelse(is_wcen[as.integer(indicators$q)] == 0, 0,1)
+    indicators$Dp_cen_pos <- ifelse(indicators$D_is_Wcen == 0, indicators$p_pos, 0)
+    Dp_cen_pos <- as.array(indicators[indicators$p == 1, "Dp_cen_pos"])
+    p_is_wcen <- indicators$D_is_Wcen
+    p_is_wcen_pos <- cumsum(indicators$D_is_Wcen)
+
     # add priors
     cols = c("prior_location", "prior_scale")
     prior_alpha = matrix(ncol = 2, nrow = n_alphafree)
@@ -173,7 +219,7 @@ mlts_model_eval <- function(model){
     prior_loadB = matrix(ncol = 2, nrow = n_loadBfree)
     prior_loadB = model[model$Type == "Loading" & model$Level == "Between" & model$Constraint == "free",cols]
     prior_loadW = matrix(ncol = 2, nrow = n_loadWfree)
-    prior_loadW = model[model$Type == "Loading" & model$Level == "Within" & model$Constraint == "free",cols]
+    prior_loadW = model[model$Type == "Loading" & model$Level == "Within" & model$Constraint != "= 1",cols]
     prior_sigmaB = matrix(ncol = 2, nrow = n_sigmaBfree)
     prior_sigmaB = model[model$Type == "Measurement Error SD" & model$Level == "Between" & model$Constraint == "free",cols]
     prior_sigmaW = matrix(ncol = 2, nrow = n_sigmaWfree)
@@ -183,11 +229,15 @@ mlts_model_eval <- function(model){
     p <- 1
     indicators = NA
     n_loadBfree = 0
+    n_loadB = 0
+    n_loadB_equalW = 0
     n_loadWfree = 0
+    n_loadW = 0
     n_alphafree = 0
     n_sigmaWfree = 0
     n_sigmaBfree = 0
     pos_loadBfree = 0
+    pos_loadB_equalW = 0
     pos_loadWfree = 0
     pos_alphafree = 0
     pos_sigmaBfree = 0
@@ -201,12 +251,15 @@ mlts_model_eval <- function(model){
     prior_loadW = 0
     prior_sigmaB = 0
     prior_sigmaW = 0
+    Dp_cen_pos <- 0
+    p_is_wcen <- 0
+    p_is_wcen_pos <- 0
   }
 
   # which innovation variances as random effects?
   innos_rand = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "isRandom"]
   innos_pos = fix_pars[grepl(fix_pars$Param_Label, pattern="Variance"), "no"]
-  n_innos_fix = q - sum(innos_rand)
+  n_innos_fix = D_cen - sum(innos_rand)
   innos_fix_pos = cumsum(1 - innos_rand)
 
 
@@ -214,6 +267,9 @@ mlts_model_eval <- function(model){
   n_random = sum(model$isRandom, na.rm = TRUE)
   n_fixed = n_pars - n_random - n_innos_fix
   is_random = fix_pars$no[fix_pars$isRandom==1]
+
+
+
   is_fixed = matrix(fix_pars_dyn$no[fix_pars_dyn$isRandom==0], nrow = 1, ncol = n_fixed)
   re_pars = model[model$Type=="Fixed effect" & model$isRandom==1,]
   re_pars$par_no = 1:nrow(re_pars)
@@ -379,6 +435,12 @@ mlts_model_eval <- function(model){
   modelinfos = rstan::nlist(
     modelext,
     q,
+    D_cen,
+    D_cen_pos,
+    is_wcen,
+    Dp_cen_pos,
+    p_is_wcen,
+    p_is_wcen_pos,
     p,
     maxLag,
     n_mus,
@@ -391,9 +453,12 @@ mlts_model_eval <- function(model){
     fix_pars,
     fix_pars_dyn,
     n_dyn.pars,
+    n_int,
     N_pred,
     D_pred,
+    D_pred2,
     Lag_pred,
+    Lag_pred2,
     Dpos1,
     Dpos2,
     innos_rand,
@@ -416,8 +481,8 @@ mlts_model_eval <- function(model){
     n_z, n_z_vars,
 
     # measurement model parameters
-    isLatent, indicators, n_loadBfree, n_loadWfree, n_alphafree, n_sigmaWfree, n_sigmaBfree,
-    pos_loadBfree, pos_loadWfree, pos_alphafree, pos_sigmaBfree, pos_sigmaWfree,
+    isLatent, indicators, n_loadBfree, n_loadB, n_loadB_equalW, n_loadWfree, n_loadW, n_alphafree, n_sigmaWfree, n_sigmaBfree,
+    pos_loadBfree, pos_loadB_equalW, pos_loadWfree, pos_alphafree, pos_sigmaBfree, pos_sigmaWfree,
     n_YB_free, YB_free_pos, mu_is_etaB, mu_etaB_pos,
 
     # priors

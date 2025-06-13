@@ -42,7 +42,7 @@ outcomes.}
 An RMarkdown file that is automatically rendered to a pdf document.
 }
 \description{
-Create Path Diagrams from mlts model object
+Deprecated. Please use \code{mlts_paths}.
 }
 \examples{
 \donttest{

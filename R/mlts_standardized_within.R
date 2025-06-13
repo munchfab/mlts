@@ -65,14 +65,28 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
           b_std[p,] = b[p,] *
             SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
             SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+          if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
+            b_std[p,] = b[p,] /
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
+          }
           }
         } else {
           fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)
           param_stan = paste0("b_fix[",fix_par_no[j],"]")
-          b[,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
+          for(p in 1:N){
+          b[p,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
           b_std[p,] = b[p,] *
             SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
             SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+          if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
+            b_std[p,] = b[p,] /
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
+          }
+          }
         }
       # calculate average standardized effect per iteration
       b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
@@ -131,6 +145,12 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
           b_std[p,] = b[p,] *
             SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
             SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+          if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
+            b_std[p,] = b[p,] /
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
+          }
         }
       } else {
         fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)
@@ -139,6 +159,12 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
         b_std[p,] = b[p,] *
           SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
           SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+        if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
+          b_std[p,] = b[p,] /
+            SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
+            SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
+            SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
+        }
       }
       # calculate average standardized effect per iteration
       b_std_average = apply(b_std, MARGIN = 2, FUN = mean)

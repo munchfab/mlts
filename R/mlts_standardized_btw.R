@@ -171,6 +171,9 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
       all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
       # 2. check if innovation variances of involved constructs are constant
       dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
+      if(fix_dyn$isINT[i] == 1){
+        dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
+      }
       # check based on parameter labels
       InnoVar_labs = paste0("sigma_",dim_pred)
       all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
@@ -184,6 +187,13 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
         sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
         b_std <- b[[1]] * sd_x / sd_y
+        if(fix_dyn$isINT[i] == 1){
+          sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+          sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
+          sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+          b_std <- b[[1]] / sd_y * sd_x * sd_x2
+        }
+
         b_std = round(c(
           mean(unlist(b_std)),
           stats::sd(unlist(b_std)),
@@ -241,6 +251,9 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
         # 2. check if innovation variances of involved constructs are constant
         dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
+        if(fix_dyn$isINT[i] == 1){
+          dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
+        }
         # check based on parameter labels
         InnoVar_labs = paste0("sigma_",dim_pred)
         all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
@@ -254,6 +267,13 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
           sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
           sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
           b_std <- b[[1]] * sd_x / sd_y
+          if(fix_dyn$isINT[i] == 1){
+            sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+            sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
+            sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+            b_std <- b[[1]] / sd_y * sd_x * sd_x2
+          }
+
           b_std = round(c(
             mean(unlist(b_std)),
             stats::sd(unlist(b_std)),

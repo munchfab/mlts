@@ -36,6 +36,9 @@
 #' @param btw_model A list to indicate for which manifest indicator variables a common
 #' between-level factor should be modeled (see Details for detailed instructions).
 #' At this point restricted to one factor per latent construct.
+#' @param equal_loads_levels Logical. For multiple-indicator model with `btw_factor = TRUE`, if `TRUE`,
+#' factor loadings of the same indicators are assumed to be equal across levels. Note, that the first indicator
+#' loading parameters remain fixed to `1`.
 #' @param ranef_pred A character vector or a named list. Include between-level covariate(s)
 #' as predictor(s) of all random effects in `model` by entering a vector of unique variable
 #' names. Alternatively, to include between-level covariates or differing sets of
@@ -54,6 +57,37 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
+#' @param fixef_group A character vector (not yet supported). Add a binary coded (0 vs. 1) variable to include
+#' group differences in fixed effects (intercepts). When dynamic or variance parameters
+#' are allowed to vary by cluster, you can enter the grouping variable to `re_pred`.
+#' @param is_exogenous Integer or a vector of integers. Indicate if any of the constructs
+#' should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
+#' Adding a dichotomous time-varying predictor variable.
+#' @param incl_t0_effects A character vector. Experimental: Add contemporaneous effects to the model.
+#' For example, to include an effect of the first construct on the second construct at time $t$,
+#' following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
+#' specifying `phi(0)_21` where the `0` indicates the lag, the first subscript letter (`2`) the dependent,
+#' and the latter subscript (`1`) the independent construct. The respective within-level correlation/covariance
+#' of innovations between involved constructs will be excluded from the model accordingly.
+#' @param incl_interaction_effects A character vector. Add interaction terms on
+#' the dynamic within-level. For example, to add an interaction term between the first
+#' construct at time $t$ (lag of 0) and the second construct at $t-1$ (lag of 1) to
+#' the prediction of the second construct at time $t$ specify `incl_interaction_effects = phi(i)_2.2(1)1(0)`.
+#' where the `i` indicates an interaction effect, the first subscript letter (`2`) the dependent,
+#' and the latter subscripts after the dot (i.e., `2(1)` and `1(0)`) the independent constructs involved
+#' in the interaction each followed by the respective lag in brackets. Note, that in this case the
+#' respective lag 0 effects need to be included separately using `incl_t0_effects`.
+#' @param censor_left Numeric. If an input is provided (i.e., a single numeric value) a left-censored
+#' version of the model will be estimated by treating all observations (of manifest indicators)
+#' at the censoring threshold (i.e., usually the lower bound of the scale) to be treated as missing during model estimation.
+#' These missing values (observations at the value of `censor_left`) are replaced with imputed values (declared as parameters
+#' in the stan model) with an upper limit of `censor_left` (see https://mc-stan.org/docs/stan-users-guide/truncation-censoring.html).
+#' Note that all manifest variables are affected by the censoring. To prevent
+#' individual variables from being treated as censored you could change the scale
+#' of the respective variable(s) so that all values exceed the censoring threshold.
+#' @param censor_right Numeric. Developmental. Similar to `censor_left` but assumes variables to be censored
+#' on the upper bound of the scale. Can be combined with `censor_left`.
+#' @param silent logical. Set to `TRUE` to suppress warnings and messages.
 #' @return An object of class `data.frame` with the following columns:
 #' \item{Model}{Indicates if the parameter in the respective row is part of the structural, or
 #' the measurement model (if multiple indicators per construct are provided)}
@@ -131,11 +165,17 @@
 
 mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           btw_factor = TRUE, btw_model = NULL,
+                          equal_loads_levels = FALSE,
                           fix_dynamics = FALSE, fix_inno_vars = FALSE,
                           fix_inno_covs = TRUE, inno_covs_zero = FALSE,
                           inno_covs_dir = NULL,
                           fixef_zero = NULL, ranef_zero = NULL,
-                          ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL){
+                          ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL,
+                          fixef_group = NULL,
+                          is_exogenous = NULL,
+                          incl_t0_effects = NULL,
+                          incl_interaction_effects = NULL,
+                          censor_left = NULL, censor_right = NULL, silent = FALSE){
 
   if(length(max_lag) == 3){
     max_lag = 1
@@ -144,11 +184,13 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   if(length(p) == 1){
     p = rep(p, times = q)
     if (q > 1) {
+      if(silent == FALSE){
       warning("Note: The number of indicators is assumed to be ", p[1],
               " for each latent variable. If this is not intended, please",
               " specify a vector of length q containing the number of",
               " indicators for each latent construct",
               " (see Vignettes for examples).")
+      }
     }
   }
   if (length(p) != q & !is.null(p)) {
@@ -157,13 +199,18 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
          " indicators for each latent construct (see Vignettes for examples).")
   }
 
+  if(!is.null(p) & !is.null(is_exogenous) & any(p[is_exogenous] > 1)){
+    stop("Measurment model specification for exogenous construct is not supported.")
+  }
 
-  if(q == 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
+  if(q >= 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
     if(is.null(inno_covs_dir)){
       stop(
-        "For a bivariate VAR model with person-specific innovation covariances, ",
-        "a latent variable appraoch will be used. This affords putting a restriction ",
-        "on the loading parameters of the latent innovation covariance factor,",
+        "For a VAR model with person-specific innovation covariances, ",
+        "a latent variable appraoch will be used to capture the shared variance of ",
+        "innovations (for now restricted to the first two constructs). ",
+        "This affords putting a restriction ",
+        "on the loading parameters of the latent innovation covariance factor, ",
         "specifying the association of innovations as either positive (inno_covs_dir == 'pos') ",
         "or negative (inno_covs_dir = 'neg').")
     }
@@ -178,20 +225,67 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     }
   }
 
+  # check for contemporaneous effects
+  if(!is.null(incl_t0_effects)){
+    if(q == 1){
+     if(silent == F){warning("Input of 'incl_t0_effects' will be ignored in AR models (q = 1).")}
+    }
+    if(q > 1){
+      t0_effs = eval_t0_effects(t0_input = incl_t0_effects, q = q)
+
+      if(fix_inno_covs == TRUE & inno_covs_zero == FALSE){
+        stop("At this stage, it is not possible to combine contemporaneous effects",
+        " with `fix_inno_covs = TRUE`. Set `inno_covs_zero = TRUE`.")
+      }
+    }
+  }
+
+  # check for interaction effects on the within-level
+  if(!is.null(incl_interaction_effects)){
+    if(q == 1){
+      if(silent == F){warning("Input of 'incl_interaction_effects' will be ignored in AR models (q = 1).")}
+    }
+    if(q > 1){
+      int_effs = eval_int_effects(int_input = incl_interaction_effects, q = q)
+    }
+  }
+
+  if(q > 2 & fix_inno_covs == FALSE & any(is_exogenous < 3)){
+    stop("For this type of model, setting is_exogenous < 3 is not allowed. You can just reorder the variables.")
+  }
+
+
+  # check for censoring inputs
+
 
   # Structural Model ===========================================================
   n_mus = q                                 # trait level parameters
   mus_pars = paste0("mu_",1:n_mus)
 
-  n_phi = (q^2)*max_lag                        # dynamic parameters
-  phi_order = rep(paste0("phi(",1:max_lag,")_"), each = q, times = q)
-  phis = paste0(rep(1:q, each = q*max_lag), rep(1:q, times = q*max_lag))
+  n_phi = (q^2)*max_lag+length(incl_t0_effects) # dynamic parameters
+  phi_order = rep(paste0("phi(",0:max_lag,")_"), each = q, times = q)
+  phis = paste0(rep(1:q, each = q*(max_lag+1)), rep(1:q, times = q*max_lag))
   phi_pars = paste0(phi_order, phis)
-
-  n_sigma = q                               # innovation variances
+  # remove all t0-effects not included in incl_to_effects
+  phi_pars = phi_pars[phi_pars %in% incl_t0_effects | !startsWith(prefix = "phi(0)_",phi_pars)]
+  # squeeze interaction effects into the phi-vector
+  if(!is.null(incl_interaction_effects)){
+    phi_pars_dv = unlist(lapply(phi_pars, function(x){substr(x,8,8)}))
+    phi_pars_int = c()
+    for(j in 1:q){
+      phi_pars_int = c(phi_pars_int, phi_pars[which(phi_pars_dv == j)])
+      # add interactions
+      phi_pars_int = c(phi_pars_int, int_effs$Param[int_effs$DV==j])
+    }
+    phi_pars = phi_pars_int
+    n_phi = n_phi + nrow(int_effs)
+  }
+  # innovation variances
+  n_sigma = q
   sigma_pars = paste0("ln.sigma2_", 1:q)
 
-  n_covs = (q *(q-1)) / 2                   # innovation covariances
+  # innovation covariances
+  n_covs = (q *(q-1)) / 2
   qs = c()
   ps = c()
   for(i in 1:(q-1)){
@@ -201,6 +295,22 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     ps = c(ps, rep(i:q, 1))
   }
   cov_pars = paste0("ln.sigma_", qs, ps)
+
+  if(!is.null(incl_t0_effects)){
+    covs_to_exclude = unlist(
+      lapply(incl_t0_effects, function(x){
+        paste0("ln.sigma_",
+          c(strsplit(x,split = "_")[[1]][2],
+            paste0(
+              rev(strsplit(strsplit(x,split = "_")[[1]][2],split="")[[1]]),
+              collapse = ""
+              )
+            )
+          )
+      }))
+    cov_pars = cov_pars[!(cov_pars %in% covs_to_exclude)]
+    n_covs = n_covs - length(incl_t0_effects)
+  }
 
   # ---
 
@@ -295,14 +405,15 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
       "isRandom" = 0
     )
 
-
     ## combine
     model = rbind(FE, RE, REcors)
   }
 
   # ---
-  if(q == 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
+  if(q >= 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
     model$Constraint[model$Type == "Fixed effect" & grepl(pattern = "Covariance", model$Param_Label)] = inno_covs_dir
+    # remove factors other than ln.sigma2_12
+    model <- model[model$Param_Label != "Log Innovation Covariance" | model$Param %in% c("ln.sigma_12", "sigma_ln.sigma_12"),]
   }
 
 
@@ -317,9 +428,12 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     inno_covs_zero = FALSE
   }
   if(inno_covs_zero == FALSE & q > 2 & fix_inno_covs == FALSE){
-stop("Note: At this point, specifying a VAR(1) model with person-specific innovation covariances",
-     "is only possible for `q == 2`.")
-    }
+    if(silent == F){message(
+     "Note: The inclusion of person-specific innovation covariances is restricted \n",
+     "      to one latent innovation covariance factor which will load on the first two \n",
+     "      constructs. The innovations of additional constructs will be modeled to stem \n",
+     "      from a univariate normal distribution.")}
+   }
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
      fix_inno_covs == TRUE | !is.null(fixef_zero) |
@@ -335,7 +449,24 @@ stop("Note: At this point, specifying a VAR(1) model with person-specific innova
   if(!is.null(p)){
     model = mlts_model_measurement(
       model = model, q = q, p = p,
-      btw_factor = btw_factor, btw_model = btw_model)
+      btw_factor = btw_factor, btw_model = btw_model, silent = silent)
+
+    # update equality constraints on loading parameters across levels
+    if(equal_loads_levels == T){
+      # get non-fixed loading parameters present on both levels
+      within.loads = model$Param[model$Level == "Within" & model$Type == "Loading" & model$Constraint != "= 1"]
+      between.loads = model$Param[model$Level == "Between" & model$Type == "Loading" & model$Constraint != "= 1"]
+      btw_exp = gsub(within.loads, replacement = "B_", pattern = "W_")
+      n_loads_to_fix = sum(between.loads %in% btw_exp)
+      which_loads_to_fix = within.loads[which(btw_exp %in% between.loads)]
+      if(n_loads_to_fix>0){
+        # create unique labels for estimates
+        labels = letters[1:n_loads_to_fix]
+        model$Constraint[model$Param %in% which_loads_to_fix] <- labels
+        model$Constraint[model$Param %in% gsub(which_loads_to_fix, replacement = "B_", pattern = "W_")] <- labels
+        }
+    }
+
   }
 
   # BETWEEN-MODEL =============================================================
@@ -345,13 +476,41 @@ stop("Note: At this point, specifying a VAR(1) model with person-specific innova
                                out_pred_add_btw = out_pred_add_btw)
   }
 
-  return(model)
 
-  # we should think about something like this:
-  # adding the class to model, or ideally as a specific class of data frame
-  # referring to the specific models (to come), however, just adding a class to the
-  # data frame resulted in turning it into a list object. The latter code lead to problems
-  # in the summary.
-  #return(cbind("class" = class, model))
+
+  # add attributes to the object
+  row.names(model) <- model$Param
+  attr(model, which = "mlts_class") <- class
+  if(!is.null(censor_left)){
+    attr(model, which = "censor_left") <- censor_left
+  }
+
+  if(!is.null(censor_right)){
+    attr(model, which = "censor_right") <- censor_right
+  }
+
+
+  # Fixed effect - Group Differences ===========================================
+  if(!is.null(fixef_group)){
+    # add parameters to the model
+    FEdiffs <- model[model$Type == "Fixed effect", ]
+    # update
+    FEdiffs$Type <- "FE Group Diff"
+    FEdiffs$Param <- paste0(FEdiffs$Param,"_diff")
+
+    # add to model
+    model = rbind(model, FEdiffs)
+
+  }
+
+
+  # Any exogenous variables? ===================================================
+  if(!is.null(is_exogenous)){
+    model <- mod_update_exo(model, is_exo = is_exogenous)
+  }
+
+
+
+  return(model)
 }
 

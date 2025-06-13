@@ -1,5 +1,8 @@
 #' Create Path Diagrams from mlts model object
 #'
+#' @description
+#' Deprecated. Please use `mlts_paths`.
+#'
 #' @param model A model built with \code{\link[mlts]{mlts_model}}.
 #' @param file An optional string containing the name of the file and file path.
 #' Has to end with .pdf file format.
@@ -963,7 +966,7 @@ mlts_model_paths <- function(model, file = NULL,
   # get random effects from within-model fixed effects
   all_bpars <- model[grepl("Fix", model$Type), ]
   # the next line removes non-random effects completely, if desired
-  # all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
+  all_bpars <- model[grepl("Fix", model$Type) & model$isRandom == 1, ]
   # replace dots with nothing
   all_bpars$Param <- gsub("\\.", "", all_bpars$Param)
   # replace rzeta with psi (ugly fix but ok)
@@ -1206,6 +1209,10 @@ mlts_model_paths <- function(model, file = NULL,
 
   # optional: store PDF pages as separate pngs ################################
   if (add_png == T) {
+    # if(!is.null(file)){
+    #   file =
+    # }
+
     pdftools::pdf_convert(
       pdf = pdf_file,
       format = "png",

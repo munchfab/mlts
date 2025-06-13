@@ -18,11 +18,13 @@ mlts_fit(
   beep = NULL,
   days = NULL,
   n_overnight_NAs,
+  max_NA_seq = NULL,
   na.rm = FALSE,
   iter = 500,
   chains = 2,
   cores = 2,
   monitor_person_pars = FALSE,
+  monitor_all_pars = FALSE,
   get_SD_latent = FALSE,
   fit_model = TRUE,
   print_message = TRUE,
@@ -89,6 +91,10 @@ for overnight lags (see Details).}
 \item{n_overnight_NAs}{Optional. The number of \code{NA} rows to add after the last
 observation of each day (if \code{days} is provided).}
 
+\item{max_NA_seq}{Integer. Specify a maximum number of consecutive missing values.
+Can decrease estimation times drastically in the presence of very long sequences of missing values
+(e.g., when setting tinterval to values of small time steps).}
+
 \item{na.rm}{logical. Per default, missing values remain in the data and
 will be imputed during model estimation. Set to \code{TRUE} to remove all rows with
 missing values in variables given in \code{ts}.}
@@ -104,6 +110,8 @@ The default is 2 (see \code{\link[rstan]{stan}}).}
 
 \item{monitor_person_pars}{Logical. Should person parameters (i.e., values of the
 latent variables) be stored? Default is FALSE.}
+
+\item{monitor_all_pars}{Logical. Should all parameters be stored? Default is FALSE.}
 
 \item{get_SD_latent}{Logical. Set to \code{TRUE} to obtain standardized estimates
 in multiple-indicator models.}

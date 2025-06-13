@@ -34,6 +34,11 @@ mlts_model_formula <- function(model, file = NULL,
   # extract model infos
   infos <- mlts_model_eval(model)
 
+  # check that model is supported:
+  if(infos$n_int > 0 | any(infos$is_wcen == 0) | any(infos$fix_pars_dyn$Lag == 0)){
+    stop("Sorry, obtaining a model formular for this model is currently not supported. Please check the model using `mlts_paths`.")
+  }
+
   # extract model data frame
   model <- model
 
