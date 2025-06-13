@@ -31,6 +31,7 @@ data {
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
+
   array[D_cen] int<lower=0,upper=1> innos_rand;
   int n_innos_fix;
   array[D_cen] int innos_fix_pos;

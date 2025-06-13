@@ -31,6 +31,7 @@ data {
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
+
   array[D_cen] int<lower=0,upper=1> innos_rand;
   int n_innos_fix;
   array[D_cen] int innos_fix_pos;
@@ -111,7 +112,6 @@ parameters {
   // group-specific
 //  vector[by_group == 1 ? n_fixed : 0] b_fix_diff;
 //  vector[by_group == 1 ? n_innos_fix : 0] sigma_diff; // SDs of fixed innovation variances
-
 }
 
 transformed parameters {
