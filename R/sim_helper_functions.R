@@ -321,7 +321,7 @@ get_new_person_par_mat <- function(
   if(n_innos_fix > 0){
     samples = rstan::extract(fit$stanfit, pars = paste0("sigma"))
     for(i in 1:n_innos_fix){
-      btw[,infos$innos_fix_pos[i]] <- samples$sigma[iter,i]
+      btw[,infos$innos_pos[i]] <- samples$sigma[iter,i]
     }
   }
 
