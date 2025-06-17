@@ -35,9 +35,11 @@ data {
   array[n_p] int n_censR_p;                  // obs at LB per D
   array[n_p,max(n_censR_p)] int pos_censR_p; // array of obs at LBs' positions
 
+
   // model adaptations based on user inputs:
   // - fixing parameters to constant values:
   // - innovation variances
+
   array[D_cen] int<lower=0,upper=1> innos_rand;
   int n_innos_fix;
   array[D_cen] int innos_fix_pos;
@@ -143,6 +145,7 @@ parameters {
   vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
   vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
   array[n_inno_covs] vector[n_obs_cov] eta_cov;
+
   // measurement model parameters
   vector[n_loadBfree] loadB_free;
   vector[n_loadWfree] loadW_free;
@@ -158,6 +161,7 @@ transformed parameters {
   matrix[N,n_pars] b;
   array[D_cen] vector[N] sd_noise;
   array[n_inno_covs] vector[N] sd_inncov;
+r
   matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
 
   vector[n_p] loadB = rep_vector(1, n_p); // measurement model parameters
@@ -311,6 +315,7 @@ model {
 
     // dynamic process
     array[D_cen] vector[obs_id-maxLag] mus;
+
     array[n_inno_covs] vector[obs_id-maxLag] eta_cov_id;
     if(n_inno_covs > 0){
        for(i in 1:n_inno_covs){

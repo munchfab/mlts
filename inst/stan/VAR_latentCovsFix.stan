@@ -53,6 +53,7 @@ data {
   array[D,max(N_pred)] int D_pred2;    // matrix to index predictors to use per dimension
   array[D,max(N_pred)] int Lag_pred2;  // matrix to index lag of used predictors
 
+
   // - time-invariant variables:
   // covariates as predictors of random effects
   int<lower=1> n_cov;           // number of covariates - minimum of 1 for intercepts
@@ -299,6 +300,7 @@ model {
 
     // dynamic process
     array[obs_id-maxLag] vector[D_cen] mus;
+
     for(d in 1:D){ // start loop over dimensions
 
       if(is_wcen[d] == 1){
