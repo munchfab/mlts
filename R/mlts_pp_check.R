@@ -6,6 +6,7 @@
 #'
 #' @param fit A fitted model object of class \code{mlts.fit}. Only used if \code{fit_list} is \code{NULL}.
 #' @param fit_list An optional list of fitted \code{mlts.fit} objects for model comparison. If provided, \code{fit} is ignored.
+#' @param ts Optional vector of variable names to include in the plot.
 #' @param y_reps Optional. A list of posterior predictive samples (as returned by \code{\link{mlts_posterior_sample}}) for a single model.
 #' If \code{NULL}, samples are generated within the function.
 #' @param by_cluster Logical. If \code{TRUE}, density plots are faceted by individual and time-series variable.
@@ -70,6 +71,7 @@
 mlts_pp_check <- function(
     fit,
     fit_list = NULL,
+    ts = NULL,
     y_reps = NULL,
     by_cluster = FALSE,
     cluster_ids = NULL,
@@ -88,9 +90,11 @@ mlts_pp_check <- function(
   cbPalette <- c("#999999","#E69F00","darkblue","#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
   # base settings
-  if(is.null(y_rep_col)){y_rep_col = cbPalette}
-  if(is.null(model_lab)&!is.null(fit_list)){model_lab = paste0("Model ", 1:length(fit_list), ": Y_rep")}
-  if(is.null(model_lab)&is.null(fit_list)){model_lab = paste0("Y_rep")}
+  if( is.null(y_rep_col) ){y_rep_col = cbPalette}
+  if( is.null(model_lab)&!is.null(fit_list) ){model_lab = paste0("Model ", 1:length(fit_list), ": Y_rep")}
+  if( is.null(model_lab)& is.null(fit_list) ){model_lab = paste0("Y_rep")}
+  if( is.null(ts)       & is.null(fit_list) ) {ts = fit$standata$ts}
+  if( is.null(ts)       &!is.null(fit_list) ) {ts = fit_list[[1]]$standata$ts}
 
   if(is.null(fit_list)) {
 
@@ -107,7 +111,7 @@ mlts_pp_check <- function(
     y_reps <- do.call(rbind, y_reps)
 
     # bring into longer format by ts variables
-    y_reps_long <- lapply(fit$standata$ts, function(x){
+    y_reps_long <- lapply(ts, function(x){
       cbind.data.frame(
         "ID" = y_reps$ID,
         "Y_class" =  model_lab,
@@ -134,7 +138,7 @@ mlts_pp_check <- function(
       y_reps_list[[j]] <- do.call(rbind, y_reps_list[[j]])
 
       # bring into longer format by ts variables
-      y_reps_list[[j]] <- lapply(fit$standata$ts, function(x){
+      y_reps_list[[j]] <- lapply(ts, function(x){
         cbind.data.frame(
           "ID" = y_reps_list[[j]]$ID,
           "Y_class" = model_lab[j],
@@ -154,7 +158,7 @@ mlts_pp_check <- function(
 
   if(add_y_obs == TRUE){
     # bring observations into same format as replications
-    y_obs_long <- lapply(fit$standata$ts, function(x){
+    y_obs_long <- lapply(ts, function(x){
       cbind.data.frame(
         "ID" = fit$data$num_id,
         "Y_class" = "Y_obs",

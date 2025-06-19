@@ -7,6 +7,7 @@
 mlts_pp_check(
   fit,
   fit_list = NULL,
+  ts = NULL,
   y_reps = NULL,
   by_cluster = FALSE,
   cluster_ids = NULL,
@@ -26,6 +27,8 @@ mlts_pp_check(
 \item{fit}{A fitted model object of class \code{mlts.fit}. Only used if \code{fit_list} is \code{NULL}.}
 
 \item{fit_list}{An optional list of fitted \code{mlts.fit} objects for model comparison. If provided, \code{fit} is ignored.}
+
+\item{ts}{Optional vector of variable names to include in the plot.}
 
 \item{y_reps}{Optional. A list of posterior predictive samples (as returned by \code{\link{mlts_posterior_sample}}) for a single model.
 If \code{NULL}, samples are generated within the function.}

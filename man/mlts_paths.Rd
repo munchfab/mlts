@@ -11,7 +11,7 @@ mlts_paths(
   fig_margins.x = c(0, 8),
   fig_margins.y = c(0, 8),
   width = 7,
-  height = 6,
+  height = 5,
   file = NULL,
   asp = height/width,
   family = "serif",
@@ -59,7 +59,7 @@ of the plot. Defaults to \code{c(0, 8)}.}
 
 \item{width}{Width of the plot in inches. Defaults to 7.}
 
-\item{height}{Height of the plot in inches. Defaults to 6.}
+\item{height}{Height of the plot in inches. Defaults to 5.}
 
 \item{file}{A character string specifying the path to save the plot. If \code{NULL},
 the plot will not be saved. Defaults to \code{NULL}.}

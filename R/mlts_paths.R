@@ -14,7 +14,7 @@
 #' @param fig_margins.y A numeric vector of length 2 defining the vertical margins
 #'   of the plot. Defaults to `c(0, 8)`.
 #' @param width Width of the plot in inches. Defaults to 7.
-#' @param height Height of the plot in inches. Defaults to 6.
+#' @param height Height of the plot in inches. Defaults to 5.
 #' @param file A character string specifying the path to save the plot. If `NULL`,
 #'   the plot will not be saved. Defaults to `NULL`.
 #' @param asp The overall aspect ratio of the plot, computed as `height / width`.
@@ -95,7 +95,7 @@ mlts_paths <- function(
     fig_margins.x = c(0,8),
     fig_margins.y = c(0,8),
     width = 7,
-    height = 6,
+    height = 5,
     file = NULL,
     asp = height/width,
     family = "serif",
@@ -445,9 +445,10 @@ n_out_paths <- nrow(infos$OUT)
 if(b_style == "h"){
   # positions of random effect par nodes
   b_poses_x = get_mid_points(n_nod_b, lims = c(begin.btw.x, end.btw.x))
+  b_radx <- diff(b_poses_x[1:2])*scale_between
   # basic settings (that may be overwritten based on other consitions)
   b_poses_y <- get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[5]
-  b_r_l_y   = get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[3]
+  b_r_l_y   <- b_poses_y + 3 * b_radx
   b_cor_pos <- "t"
   # other vars ==============================================================
   cov_midy <- get_mid_points(4, lims = c(end.btw.y, begin.btw.y))[1]
@@ -457,21 +458,21 @@ if(b_style == "h"){
   #### conditional
   if(has_out == 1 & has_cov == 0){
     b_poses_y <- get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[4]
-    b_r_l_y   = get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[2]
+    b_r_l_y   <- b_poses_y + 2.5 * b_radx
     b_cor_pos <- "t"
   }
   if(has_out == 0 & has_cov == 1){
     cov_midy <- get_mid_points(10, lims = c(end.btw.y, begin.btw.y))[3]
     b_poses_y <- get_mid_points(10, lims = c(end.btw.y, begin.btw.y))[8]
-    b_r_l_y   = get_mid_points(10, lims = c(end.btw.y, begin.btw.y))[10]
+    b_r_l_y   <- b_poses_y - 2.5 * b_radx
     b_cor_pos <- "b"
   }
   if(has_out == 1 & has_cov == 1){
     b_poses_y <- get_mid_points(9, lims = c(end.btw.y, begin.btw.y))[5]
-    b_r_l_y   = get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[6]
+    b_r_l_y   <- b_poses_y - 2.5 * b_radx
     b_cor_pos <- "b"
   }
-  b_radx <- diff(b_poses_x[1:2])*scale_between
+
   ##### placement of correlations ==========================================
 
   b_cor_offset <- ifelse(has_cov == 1 & has_out == 1, b_radx, 0)
