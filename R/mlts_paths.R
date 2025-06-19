@@ -120,7 +120,7 @@ mlts_paths <- function(
     type = "cairo",
     # new options
     y_ind_labs = NULL,
-    y_fac_labs = NULL, # + cex_loads
+    y_fac_labs = NULL,
     y_fac_lab_sep = ",",
     remove_lag_lab = FALSE,
     adj_load_x = 1.25,
@@ -241,7 +241,7 @@ inno_radx <- diff(get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[c(10
 for(i in 1:nrow(inno)){
   inno$q[i] <- as.integer(strsplit(inno$Param[i], split = "_")[[1]][2])
   if(!is.null(y_fac_labs)){
-    inno$lab[i] <- paste0("zeta[",y_fac_labs[i],"*italic(it)]")
+    inno$lab[i] <- paste0("zeta[",y_fac_labs[inno$q[i]],"*italic(it)]")
   } else {
     inno$lab[i] <- paste0("zeta[",inno$q[i],"*italic(it)]")
   }
@@ -263,6 +263,13 @@ if(infos$n_inno_covs == 1){
   for(i in 1:2){
 #    inno$q[i] <- as.integer(strsplit(inno$Param[i], split = "_")[[1]][2])
     inno_cov$lab <- paste0("eta[zeta*",12,"*italic(it)]")
+    if(!is.null(y_fac_labs)){
+      inno_cov$lab <- paste0("eta[zeta*",
+                             y_fac_labs[1],
+                             "*'",y_fac_lab_sep,"'*",
+                             y_fac_labs[2],
+                             "*italic(it)]")
+      }
     inno_cov$x0[i] <- inno_cov$midx[i] - inno_radx
     inno_cov$x1[i] <- w_nodes$midx[w_nodes$construct==inno$q[i]&w_nodes$lag==0]
     inno_cov$y0[i] <- inno_cov$midy[i]
