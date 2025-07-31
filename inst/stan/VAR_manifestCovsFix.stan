@@ -149,12 +149,13 @@ model {
   matrix[D_cen, D_cen] SIGMA_inno = diag_pre_multiply(sd_noise[1,], L_inno);
 
   y_merge = y;      // add observations
-  if(n_miss>0){
-    for(i in 1:D){
+
+  for(i in 1:D){
+    if(n_miss_D[i]>0){
     // add imputed values for missings on each indicator
     y_merge[i,pos_miss_D[i,1:n_miss_D[i]]] = segment(y_impute, p_miss, n_miss_D[i]);
     p_miss = p_miss + n_miss_D[i];    // update counter for next indicator i+1
-  }
+    }
   }
   // replace values at censor thresholds
   for(i in 1:D){
