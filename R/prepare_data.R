@@ -7,6 +7,8 @@
 #' @param ts Character. The variable(s) in `data` that
 #' contain the time-series construct. If multiple variables are provided in a
 #' character vector, a vector autoregressive model is fit.
+#' @param group Character. The variable(s) in `data` that
+#' contain grouping variable.
 #' @param time Character. The variable in `data` that contains the (continuous) time.
 #' @param tinterval The step interval for approximation for a continuous time
 #' dynamic model. The smaller the step interval, the better the approximation.
@@ -52,7 +54,7 @@
 #'
 #' }
 prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
-                         beep = NULL, days = NULL,
+                         beep = NULL, days = NULL, group = NULL,
                          n_overnight_NAs, na.rm = FALSE, covariates = NULL,
                          outcomes = NULL, outcome_pred_btw = NULL,
                          max_NA_seq = NULL){
@@ -80,8 +82,14 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
     data = data[order(data$num_id, data$day, data$beep),]
   }
 
+  if(!is.null(group)){
+    data$group_int = as.numeric(as.factor(data[,group]))
+  } else {
+    data$group_int = 1
+  }
+
   # store between person variables
-  btw.vars = c(names(outcomes), names(covariates), names(outcome_pred_btw))
+  btw.vars = c(names(outcomes), names(covariates), names(outcome_pred_btw), group, "group_int")
 
   # general step: add variable to detect observations with NAs
   # remove rows containing missing values

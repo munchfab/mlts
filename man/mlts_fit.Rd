@@ -8,6 +8,7 @@ mlts_fit(
   model,
   data = NULL,
   id,
+  group = NULL,
   ts,
   covariates = NULL,
   outcomes = NULL,
@@ -45,6 +46,9 @@ in the data generation.}
 cluster unit. Not necessary when \code{data} is a list object of simulated data generated
 with \code{mlts_sim}.}
 
+\item{group}{Character. The variable in \code{data} that identifies the grouping variable
+across cluster units.}
+
 \item{ts}{Character. The variable(s) in \code{data} that contain the time-series
 construct(s) or their indicator variable(s). If multiple constructs are provided
 in the \code{model}, multiple entries are necessary. Note that the order of variable
@@ -71,7 +75,8 @@ respective variable name(s) in \code{data} differ from the variable name(s) spec
 \item{center_covs}{Logical. Between-level covariates used as predictors of random effects
 will be grand-mean centered before model fitting by default. Set \code{center_covs} to \code{FALSE}
 when including categorical predictors into the set of \code{covariates}. Note that in this case,
-additional continuous covariates should be grand-mean centered prior to using \code{mlts_fit}.}
+additional continuous covariates should be grand-mean centered prior to using \code{mlts_fit}.
+If \code{group} is specified, covariates will be centered on their respective group mean.}
 
 \item{time}{Character. The variable in \code{data} that contains the (continuous) time of observation.}
 

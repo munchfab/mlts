@@ -11,12 +11,6 @@
 mlts_standardized_btw <- function(object, digits = 3, prob = .95
 ){
 
-  # make sure object is of class mltsfit
-  # if(class(object) != "mltsfit")
-  if (!inherits(object, "mltsfit")) {
-    stop("Input of `object` should be of class 'mltsfit'.")
-  }
-
   # get model infos
   infos <- mlts_model_eval(object$model)
 
@@ -34,22 +28,31 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
   chains <- as.numeric(object$stanfit@sim$chains)
   warmup <- as.numeric(object$stanfit@sim$warmup)
   iter <- as.numeric(object$stanfit@sim$iter) -warmup
+  iter <- iter / object$stanfit@sim$thin
   n_random <- object$standata$n_random
   re_sds = array(dim = c(chains, iter, n_random))
   N = object$standata$N
   # get SDs of RE predictor variables
-  Wvars_sds = apply(object$standata$W, MARGIN = 2, FUN = stats::sd)
+  Wvars_sds <- list()
+  for(g in 1:infos$G){
+    Wvars_sds[[g]] <- apply(object$standata$W[object$standata$g_id==g,], MARGIN = 2, FUN = stats::sd)
+  }
 
   # get/calculate model-implied RE variances ----
+  Var_RE <- list()
+
+  for(g in 1:infos$G){
+    N = object$standata$N_G[g]
+
   ## get labels of (residual) random effect SDs
-  labs_re = paste0("sd_R[",1:n_random,"]")
+  labs_re = paste0("sd_R[",g,",",1:n_random,"]")
   sigma_RE = rstan::extract(object$stanfit, pars = labs_re)
   # number of covariates used for prediction of random effects
   n_cov = object$standata$n_cov
   # as default use sigma of random effects and update respectively
-  Var_RE = sigma_RE
+  Var_RE[[g]] = sigma_RE
   for(i in 1:n_random){
-    Var_RE[[i]] = Var_RE[[i]]^2
+    Var_RE[[g]][[i]] = Var_RE[[g]][[i]]^2
   }
 
   # Part 1: Standardized estimates for random effects regressed on covariate(s)
@@ -67,9 +70,9 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         for(j in 1:n_cov_pred){
           cov_mat = object$standata$n_cov_mat
           b_pos = which(cov_mat[,1] == n_cov_pos[j] & cov_mat[,2] == i)
-          b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",b_pos,"]"))
+          b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",g,",",b_pos,"]"))
           for(k in 1:(iter*chains)){
-            y_pred[k,] = y_pred[k,] + object$standata$W[,n_cov_pos[j]] * b[[1]][k]
+            y_pred[k,] = y_pred[k,] + object$standata$W[object$standata$g_id == g,n_cov_pos[j]] * b[[1]][k]
           }
         }
         # get variance of predicted scores in each iteration
@@ -79,23 +82,29 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         }
 
         # add variance of predicted scores to sigma in each iteration
-        Var_RE[[i]] = Var_RE[[i]] + y_pred_var
+        Var_RE[[g]][[i]] = Var_RE[[g]][[i]] + y_pred_var
       }
     }
 
 
     # now use SDs of RE to standardize regression parameters:
     # prepare object to store results
-    re_pred_std = infos$RE.PREDS[, c("Type", "Param")]
+    if(infos$G > 1){
+      re_pred_std = infos$RE.PREDS[, c("Type","group", "Param")]
+      re_pred_std$group = g
+    } else {
+      re_pred_std = infos$RE.PREDS[, c("Type", "Param")]
+    }
+
     re_pred_std[,result.cols] = NA
     for(k in 1:nrow(infos$RE.PREDS)){
 
       # get SD of covariate
-      sd_x = Wvars_sds[object$standata$n_cov_mat[k,1]]
+      sd_x = Wvars_sds[[g]][object$standata$n_cov_mat[k,1]]
       # get position of RE on RE_par_SD
-      sd_y = sqrt(Var_RE[[object$standata$n_cov_mat[k,2]]])
+      sd_y = sqrt(Var_RE[[g]][[object$standata$n_cov_mat[k,2]]])
       # get parameter label in stan model
-      b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",k,"]"))
+      b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",g,",",k,"]"))
       b_std <- b[[1]] * sd_x / sd_y
       # save summary statistics
       re_pred_std[k, result.cols] = round(c(
@@ -105,29 +114,42 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     }
 
     result = rbind(result, re_pred_std)
+    }
   }
 
   # Part 2: Standardized estimates for outcomes regressed on random effects
   if(object$standata$n_out > 0){
+
+    for(g in 1:infos$G){
+
     # prepare final object to store results
-    out_pred_std = infos$OUT[, c("Type", "Param")]
+    if(infos$G>1){
+      out_pred_std = infos$OUT[, c("Type","group", "Param")]
+      out_pred_std$group = g
+    } else {
+      out_pred_std = infos$OUT[, c("Type", "Param")]
+    }
+
     out_pred_std[,result.cols] = NA
 
     # get SDs of outcomes
-    SDs_out = apply(object$standata$out, FUN = stats::sd, MARGIN = 1)
+    for(i in 1:infos$n_out){
+      SDs_out[i] = stats::sd(object$standata$out[i,object$standata$g_id==g])
+    }
+
     # add variances of additional covariates used as predictor
     if(object$standata$n_z > 0){
       for(i in 1:object$standata$n_z){
-        Var_RE[[n_random+i]] <- stats::var(object$standata$Z[,i])
+        Var_RE[[g]][[n_random+i]] <- stats::var(object$standata$Z[,i])
       }
     }
 
     for(i in 1:nrow(infos$OUT)){
       # get unstandardized estimate
-      lab_out = object$pop.pars.summary$Param_stan[which(object$pop.pars.summary$Param == infos$OUT$Param[i])]
+      lab_out = object$pop.pars.summary$Param_stan[which(object$pop.pars.summary$Param == infos$OUT$Param[i] & object$pop.pars.summary$group == g)]
       b = rstan::extract(object$stanfit, pars = c(lab_out))
       sd_y = SDs_out[infos$OUT$out_var_no[i]]
-      sd_x = sqrt(Var_RE[[infos$OUT$Pred_no[i]]])
+      sd_x = sqrt(Var_RE[[g]][[infos$OUT$Pred_no[i]]])
       b_std = b[[1]] * sd_x / sd_y
       # save summary statistics
       out_pred_std[i, result.cols] = round(c(
@@ -138,6 +160,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 
     row.names(result) <- NULL
     result = rbind(result, out_pred_std)
+
+    }
   }
 
   ## Standardization of constant dynamic parameters ----------------------------
@@ -290,5 +314,6 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     }
   }
 
+  row.names(result) <- NULL
   return(result)
 }

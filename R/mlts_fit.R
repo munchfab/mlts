@@ -9,6 +9,8 @@
 #' @param id Character. The variable in `data` that identifies the observational
 #' cluster unit. Not necessary when `data` is a list object of simulated data generated
 #' with `mlts_sim`.
+#' @param group Character. The variable in `data` that identifies the grouping variable
+#' across cluster units.
 #' @param ts Character. The variable(s) in `data` that contain the time-series
 #' construct(s) or their indicator variable(s). If multiple constructs are provided
 #' in the `model`, multiple entries are necessary. Note that the order of variable
@@ -32,6 +34,7 @@
 #' will be grand-mean centered before model fitting by default. Set `center_covs` to `FALSE`
 #' when including categorical predictors into the set of `covariates`. Note that in this case,
 #' additional continuous covariates should be grand-mean centered prior to using `mlts_fit`.
+#' If `group` is specified, covariates will be centered on their respective group mean.
 #' @param time Character. The variable in `data` that contains the (continuous) time of observation.
 #' @param tinterval The step interval for approximating equally spaced observations in time by
 #' insertion of missing values, to be specified with respect to the time stamp variable
@@ -111,6 +114,7 @@
 mlts_fit <- function(model,
                      data =NULL,
                      id,
+                     group=NULL,
                      ts,
                      covariates = NULL,
                      outcomes = NULL,
@@ -270,7 +274,8 @@ mlts_fit <- function(model,
                       na.rm = na.rm, covariates = covariates,
                       outcomes = outcomes,
                       outcome_pred_btw = outcome_pred_btw,
-                      max_NA_seq = max_NA_seq)
+                      max_NA_seq = max_NA_seq,
+                      group = group)
 
   # ======================================================================
 
@@ -288,7 +293,7 @@ mlts_fit <- function(model,
     standata <- VARprepare(model = model, data = data, ts = ts,
                           covariates = covariates, outcomes = outcomes,
                           outcome_pred_btw = outcome_pred_btw,
-                          center_covs = center_covs)
+                          center_covs = center_covs, group = group)
 
     # model fit
     pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
@@ -338,7 +343,7 @@ mlts_fit <- function(model,
     standata <- VARprepare(model = model, data = data, ts = ts,
                            covariates = covariates, outcomes = outcomes,
                            outcome_pred_btw = outcome_pred_btw,
-                           center_covs = center_covs)
+                           center_covs = center_covs, group = group)
     # latent variable SDs requested?
     standata$standardized = ifelse(get_SD_latent == TRUE, 1, 0)
     if(get_SD_latent == FALSE & print_message == TRUE){
@@ -412,10 +417,18 @@ mlts_fit <- function(model,
     if(monitor_person_pars == TRUE){
       sums.i = sums[startsWith(sums$Param_stan, "b_free"),1:ncol(sums)]
 
+    } else {
+      sums.i = rstan::get_posterior_mean(stanfit)
+      sums.i = sums.i[startsWith(row.names(sums.i), "b_free"),]
+      sums.i = data.frame(
+        "Param_stan" = rownames(sums.i),
+        "mean" = sums.i[,dim(sums.i)[2]]
+        )
+    }
+
       # extract infos
       pars <- gsub(sums.i$Param_stan, pattern = "b_free[", replacement = "", fixed = TRUE)
-      pars <- gsub(pars, pattern = "]", replacement = "", fixed = TRUE
-                   )
+      pars <- gsub(pars, pattern = "]", replacement = "", fixed = TRUE)
       ID_new <- sapply(pars, function(x){strsplit(x,split = ",")[[1]][1]})
       pars <- sapply(pars, function(x){as.integer(strsplit(x,split = ",")[[1]][2])})
       pars <- sapply(pars, function(x){infos$re_pars$Param[x]})
@@ -424,6 +437,7 @@ mlts_fit <- function(model,
       sums.i$Param_stan <- NULL
       sums.i = cbind(
         "num_id" = ID_new,
+        "group" = sapply(as.numeric(ID_new),function(x){standata$g_id[x]}),
         "Param" = pars,
         sums.i
       )
@@ -443,14 +457,8 @@ mlts_fit <- function(model,
       id.match = unique(data[c(id, "num_id")])
       sums.i = merge(id.match, y = sums.i, by = "num_id", all = TRUE)
 
-
-
     } else {
-        # we could think about adding the posterior means here
-        sums.i <- NA
-    }
 
-  } else {
     posteriors <- NA
     pop.sums <- NA
     sums.i <- NA

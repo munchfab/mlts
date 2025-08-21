@@ -36,7 +36,7 @@
 #' summary(fit)
 #' }
 summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
-                            bpe = c("mean", "median"),
+                            bpe = c("mean"),
                             digits = 3, flag_signif = FALSE, ...) {
 
   object <- object
@@ -96,26 +96,6 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
 
   infos <- mlts_model_eval(object$model)
 
-  # assemble model call to paste in summary
-  call_start <- paste0(
-    "Call:\n",
-    "mlts_model(q = ", infos$q,
-    sep = ""
-  )
-  call_end <- ")\n"
-
-  # for latent variabels: print number of indicators and latent variables
-  call_p <- ifelse(
-    infos$isLatent == TRUE,
-    paste0(
-      ", p = ", ifelse(
-        length(infos$p) > 1,
-        paste0("c(", paste(infos$p, collapse = ", "), ")"),
-        infos$p
-      )
-    ), ""
-  )
-
   # print information on variables used for model estimation
   if(infos$isLatent == FALSE){
     call_inds = c(
@@ -135,160 +115,17 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     )
   }
 
-  # if (infos$isLatent == TRUE) {
-  #   latents <- pop_pars[
-  #     startsWith(pop_pars$Param, "eta") | startsWith(pop_pars$Param, "mu"),
-  #     "Param"
-  #   ]
-  #   n_latents <- length(latents)
-  #   indicators <- rownames(object$standata$y)
-  #   # n_indicators <- length(indicators)
-  #   lat_ind <- data.frame(
-  #     latents = rep(latents, times = infos$p),
-  #     by = "=~",
-  #     indicators = indicators
-  #   )
-  #   mm <- aggregate(
-  #     indicators ~ latents + by, data = lat_ind,
-  #     FUN = function(x) {paste(x, collapse = " + ")}
-  #   )
-  #   mm_string <- do.call(paste, mm)
-  #   call_latents <- c(
-  #     paste0("Latent Variables: ", n_latents, "\n"),
-  #     paste0("  ", mm_string, collapse = "\n "),
-  #     "\n"
-  #   )
-  # } else {
-  #   latents <- pop_pars[
-  #     startsWith(pop_pars$Param, "mu"),
-  #     "Param"
-  #   ]
-  #   n_latents <- length(latents)
-  #   indicators <- rownames(object$standata$y)
-  #   # n_indicators <- length(indicators)
-  #   lat_ind <- data.frame(
-  #     latents = rep(latents, times = infos$p),
-  #     by = "=~",
-  #     indicators = indicators
-  #   )
-  #   mm <- aggregate(
-  #     indicators ~ latents + by, data = lat_ind,
-  #     FUN = function(x) {paste(x, collapse = " + ")}
-  #   )
-  #   mm_string <- do.call(paste, mm)
-  #   call_latents <- c(
-  #     paste0("Latent Variables: ", n_latents, "\n"),
-  #     paste0("  ", mm_string, collapse = "\n "),
-  #     "\n"
-  #   )
-  # }
-
-  call_maxlag <- paste0(", max_lag = ", infos$maxLag)
-  call_fix_dynamics <- ifelse(
-    all(infos$fix_pars_dyn$isRandom == 0),
-    paste0(", fix_dynamics = TRUE"),
-    ""
-  )
-  call_fix_inno_vars <- ifelse(
-    all(
-      infos$fix_pars[
-        grepl("ln.sigma", infos$fix_pars$Param), "isRandom"
-      ] == 0
-    ),
-    paste0(", fix_inno_vars = TRUE"),
-    ""
-  )
-  call_ranef_zero <- ifelse(
-    # determine if there is exactly one random effect == 0
-    # apart from residual correlations (which are fixed by default)
-    sum(
-      infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param), "isRandom"] == 0
-    ) == 1,
-    paste0(", ranef_zero = \"",
-           infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param) &
-                            infos$fix_pars$isRandom == 0, "Param"],
-           "\""),
-    ifelse(
-      # determine if there are more than one random effects == 0
-      # apart from residual correlations (which are fixed by default)
-      sum(
-        infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param), "isRandom"] == 0
-      ) > 1,
-      paste0(
-        ", ranef_zero = c(",
-        paste0(
-          "\"", infos$fix_pars[!grepl("r.zeta", infos$fix_pars$Param) &
-                                 infos$fix_pars$isRandom == 0, "Param"], "\"",
-          collapse = ", "
-        ),
-        ")"
-      ), ""
+  # check for multiple groups
+  if(infos$G > 1){
+    call_group <- c(
+      "Multiple groups detected: \n",
+      unlist(lapply(1:infos$G, function(x){
+        paste0("  ", x, " --> ",
+               paste0(object$standata$group_lab[x]), " (N = ", object$standata$N_G[x], ") \n")
+      }))
     )
-  )
-  call_ranef_pred <- ifelse(
-    length(infos$n_cov_vars) > 1,
-    paste0(
-      ", ranef_pred = ", ifelse(
-        length(infos$n_cov_vars) == 1,
-        paste0("\"", infos$n_cov_vars, "\""),
-        paste0("c(", paste0(paste0("\"", infos$n_cov_vars, "\""), collapse = ", "),
-               ")")
-      )
-    ), ""
-  )
-  call_out_pred <- ifelse(
-    length(infos$out_var) > 0,
-    paste0(
-      ", out_pred = ", ifelse(
-        length(infos$out_var) == 1,
-        paste0("\"", infos$out_var, "\""),
-        paste0("c(", paste0(paste0("\"", infos$out_var, "\""), collapse = ", "),
-               ")")
-      )
-    ), ""
-  )
-  # determine fixed effects fixed to zero
-  suppressMessages({
-  sat_model <- mlts_model(
-    q = infos$q,
-    p = if (all(infos$p == 1)) {NULL} else {infos$p},
-    max_lag = infos$maxLag,
-    ranef_pred = if (length(infos$n_cov_vars) > 1) {infos$n_cov_vars} else {NULL},
-    out_pred = if (infos$n_out > 0) {infos$n_out} else {NULL},
-    fix_inno_covs =  if (infos$n_inno_cov_fix > 0) {TRUE} else {FALSE},
-    inno_covs_zero =  if(infos$n_inno_covs == 0) {TRUE} else {FALSE},
-    inno_covs_dir = if(is.na(infos$inno_cov_dir)) {NULL} else {infos$inno_cov_dir},
-  )}
-  )
+  }
 
-  sat_model_fixed <- sat_model[grepl("Fix", sat_model$Type), "Param"]
-  model_fixed <- model[grepl("Fix", model$Type), "Param"]
-  fe_zero <- setdiff(
-    union(sat_model_fixed, model_fixed), intersect(sat_model_fixed, model_fixed)
-  )
-  call_fixef_zero <- ifelse(
-    length(fe_zero) > 0,
-    paste0(
-      ", fixef_zero = ", ifelse(
-        length(fe_zero) == 1,
-        paste0("\"", fe_zero, "\""),
-        paste0("c(", paste0(paste0("\"", fe_zero, "\""), collapse = ", "),
-               ")")
-      )
-    ), ""
-  )
-
-
-  # concatenate and paste to summary output
-  model_call <- paste(
-    call_start, call_p, call_maxlag,
-    # maybe not necessary?
-    call_fix_dynamics, call_fix_inno_vars,
-    call_fixef_zero, call_ranef_zero,
-    call_ranef_pred, call_out_pred,
-    call_end,
-    sep = ""
-  )
 
   # number of observations and IDs
   data_info <- paste0(
@@ -306,104 +143,114 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
     " (should be 0) \n"
   )
 
-  # Type is missing pop_pars if model is latent
-  # disable this workaround when fixed
-  # if (infos$isLatent == TRUE) {
-  #   pop_pars <- merge(pop_pars, object$model[, c("Type", "Param")], by = "Param")
-  # }
 
 
-  # get fixed effects for printing
-  fixef_params <- pop_pars[grepl("Fix", pop_pars$Type), c(cols)]
-  # colnames(fixef_params)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(fixef_params) <- change_colnames(fixef_params)
+  fixef_params <- list()
+  ranef_sds <- list()
+  ranef_corrs <- list()
+  ranef_preds <- list()
+  outcomes <- list()
+  outcomes_sds <- list()
 
-  # get random effects SD for printing
-  ranef_sds <- pop_pars[grepl("Random", pop_pars$Type), c(cols)]
-  # drop sigma_ prefix in Param
-  ranef_sds[grepl("sigma_", ranef_sds$Param), "Param"] <- substr(x = ranef_sds$Param, start = 7, stop = 30)
-  # colnames(ranef_sds)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(ranef_sds) <- change_colnames(ranef_sds)
+  for(g in 1:infos$G){
+    # get fixed effects for printing
+    fixef_params[[g]] <- pop_pars[grepl("Fix", pop_pars$Type) & pop_pars$group == g, c(cols)]
+    colnames(fixef_params[[g]]) <- change_colnames(fixef_params[[g]])
 
-  # get random effects correlation for printing
-  ranef_corrs <- pop_pars[grepl("RE correlation", pop_pars$Type), c(cols)]
-  # drop r_ prefix in Param
-  ranef_corrs[grepl("r_", ranef_corrs$Param), "Param"] <- gsub(
-    "r_", "", ranef_corrs$Param
-  )
-  # colnames(ranef_corrs)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(ranef_corrs) <- change_colnames(ranef_corrs)
+    # get random effects SD for printing
+    ranef_sds[[g]] <- pop_pars[grepl("Random", pop_pars$Type) & pop_pars$group == g, c(cols)]
+    # drop sigma_ prefix in Param
+    ranef_sds[[g]][grepl("sigma_", ranef_sds$Param), "Param"] <- substr(x = ranef_sds[[g]]$Param, start = 7, stop = 30)
+    colnames(ranef_sds[[g]]) <- change_colnames(ranef_sds[[g]])
 
-  # get random effect predictors
-  ranef_preds <- pop_pars[grepl("RE prediction", pop_pars$Type), c(cols)]
-  ranef_preds[grepl(".ON.", ranef_preds$Param), "Param"] <- gsub(
-    "b_(.*).ON.(.*)", "\\1 ~ \\2", ranef_preds$Param
-  )
-  # colnames(ranef_preds)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(ranef_preds) <- change_colnames(ranef_preds)
-
-  # get outcome prediction effects
-  outcomes <- pop_pars[
-    grepl("Outcome prediction", pop_pars$Type) & !grepl("sigma_", pop_pars$Param),cols]
-  outcomes$Param <- ifelse(
-    grepl(".ON.", outcomes$Param),
-    gsub("b_(.*).ON.(.*)", "\\1 ~ \\2", outcomes$Param), ifelse(
-      grepl("alpha", outcomes$Param),
-      gsub("alpha_(\\w+)", "\\1 ~ 1", outcomes$Param),
-      NA
+    # get random effects correlation for printing
+    ranef_corrs[[g]] <- pop_pars[grepl("RE correlation", pop_pars$Type) & pop_pars$group == g, c(cols)]
+    # drop r_ prefix in Param
+    ranef_corrs[[g]][grepl("r_", ranef_corrs[[g]]$Param), "Param"] <- gsub(
+      "r_", "", ranef_corrs[[g]]$Param
     )
-  )
-  # colnames(outcomes)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(outcomes) <- change_colnames(outcomes)
+    colnames(ranef_corrs[[g]]) <- change_colnames(ranef_corrs[[g]])
 
-  # get outcome SDs
-  outcomes_sds <- pop_pars[grepl("Outcome prediction", pop_pars$Type) & grepl("sigma_", pop_pars$Param),cols]
-  outcomes_sds[grepl("sigma_", outcomes_sds$Param), "Param"] <- gsub(
-    "sigma_(\\w+)", "\\Residual SD \\1", outcomes_sds$Param
-  )
-  # colnames(outcomes_sds)[1:3] <- c("", "Estimate", "Post.SD")
-  colnames(outcomes_sds) <- change_colnames(outcomes_sds)
+    # get random effect predictors
+    ranef_preds[[g]] <- pop_pars[grepl("RE prediction", pop_pars$Type) & pop_pars$group == g, c(cols)]
+    ranef_preds[[g]][grepl(".ON.", ranef_preds[[g]]$Param), "Param"] <- gsub(
+      "b_(.*).ON.(.*)", "\\1 ~ \\2", ranef_preds[[g]]$Param
+    )
+    colnames(ranef_preds[[g]]) <- change_colnames(ranef_preds[[g]])
+
+    # get outcome prediction effects
+    outcomes[[g]] <- pop_pars[
+      grepl("Outcome prediction", pop_pars$Type) & pop_pars$group == g & !grepl("sigma_", pop_pars$Param),cols]
+    outcomes[[g]]$Param <- ifelse(
+      grepl(".ON.", outcomes[[g]]$Param),
+      gsub("b_(.*).ON.(.*)", "\\1 ~ \\2", outcomes[[g]]$Param), ifelse(
+        grepl("alpha", outcomes[[g]]$Param),
+        gsub("alpha_(\\w+)", "\\1 ~ 1", outcomes[[g]]$Param),
+        NA
+      )
+    )
+    colnames(outcomes[[g]]) <- change_colnames(outcomes[[g]])
+
+    # get outcome SDs
+    outcomes_sds[[g]] <- pop_pars[grepl("Outcome prediction", pop_pars$Type) & pop_pars$group == g & grepl("sigma_", pop_pars$Param),cols]
+    outcomes_sds[[g]][grepl("sigma_", outcomes_sds[[g]]$Param), "Param"] <- gsub(
+    "sigma_(\\w+)", "\\Residual SD \\1", outcomes_sds[[g]]$Param
+    )
+    colnames(outcomes_sds[[g]]) <- change_colnames(outcomes_sds[[g]])
+}
 
   # get measurement model parameters
   mm_pars <- pop_pars[grepl("Measurement|Item|Loading", pop_pars$Type),cols]
-  # colnames(mm_pars)[1:3] <- c("", "Estimate", "Post.SD")
   colnames(mm_pars) <- change_colnames(mm_pars)
 
 
 
   # assemble everything
-  cat(model_call)
-  # cat(call_latents)
   cat(call_inds)
+  if (infos$G > 1){
+    cat(call_group)
+  }
   cat(data_info)
   cat(convergence)
-  if (nrow(fixef_params) > 0) {
-    cat("\nPosterior Summary Statistics\nFixed Effects:\n")
-    print(fixef_params, row.names = FALSE)
-  }
-  if (nrow(ranef_sds) > 0) {
-    cat("\nRandom Effects SDs:\n")
-    print(ranef_sds, row.names = FALSE)
-  }
-  if (nrow(ranef_corrs) > 0) {
-    cat("\nRandom Effects Correlations:\n")
-    print(ranef_corrs, row.names = FALSE)
-  }
-  if(nrow(outcomes) > 0) {
-    cat("\nOutcome Prediction:\n")
-    outcomes <- rbind(outcomes, outcomes_sds)
-    print(outcomes, row.names = FALSE)
-  }
-  if(nrow(ranef_preds) > 0) {
-    cat("\nRandom Effects Regressed On:\n")
-    print(ranef_preds, row.names = FALSE)
-  }
-  if (nrow(mm_pars) > 0) {
-    cat("\nMeasurement Model Parameters:\n")
-    print(mm_pars, row.names = FALSE)
+
+  for(g in 1:infos$G){
+
+    if(infos$G > 1){
+      group_header <- paste0("\nPosterior Summary Statistics for Group: ", object$standata$group_lab[g]," \n")
+      cat(group_header)
+    } else {
+      cat("\nPosterior Summary Statistics")
+    }
+
+    if (nrow(fixef_params[[g]]) > 0) {
+      cat("\nFixed Effects:\n")
+      print(fixef_params[[g]], row.names = FALSE)
+    }
+    if(nrow(ranef_preds[[g]]) > 0) {
+      cat("\nRandom Effects Regressed On:\n")
+      print(ranef_preds[[g]], row.names = FALSE)
+    }
+    if(nrow(outcomes[[g]]) > 0) {
+      cat("\nOutcome Prediction:\n")
+      outcomes[[g]] <- rbind(outcomes[[g]], outcomes_sds[[g]])
+      print(outcomes[[g]], row.names = FALSE)
+    }
+    if (nrow(ranef_sds[[g]]) > 0) {
+      cat("\nRandom Effects SDs:\n")
+      print(ranef_sds[[g]], row.names = FALSE)
+    }
+    if (nrow(ranef_corrs[[g]]) > 0) {
+      cat("\nRandom Effects Correlations:\n")
+      print(ranef_corrs[[g]], row.names = FALSE)
+    }
   }
 
-  cat("\nSamples were drawn using ", algorithm, " on ", date, ".\n",
+    if (nrow(mm_pars) > 0) {
+      cat("\nMeasurement Model Parameters:\n")
+      print(mm_pars, row.names = FALSE)
+    }
+
+    cat("\nSamples were drawn using ", algorithm, " on ", date, ".\n",
       "For each parameter, Bulk_ESS and Tail_ESS are measures of effective\n",
       "sample size, and Rhat is the potential scale reduction factor\n",
       "on split chains (at convergence, Rhat = 1).",

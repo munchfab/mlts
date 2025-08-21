@@ -18,6 +18,14 @@
 mlts_model_eval <- function(model){
 
   # read features of specified model
+  ## Check if grouping was requested
+  if(!is.null(model$group)){
+    G = max(model$group, na.rm = T)
+    backup <- model
+    model <- model[model$group == 1,]
+  } else {
+    G = 1
+  }
 
   # extract included lag-order
   isPHI = which(startsWith(model$Param, "phi("))
@@ -435,6 +443,7 @@ mlts_model_eval <- function(model){
   modelinfos = rstan::nlist(
     modelext,
     q,
+    G,
     D_cen,
     D_cen_pos,
     is_wcen,
