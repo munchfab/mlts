@@ -70,7 +70,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
               SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
               SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
               SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
-          }
+            }
           }
         } else {
           fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)

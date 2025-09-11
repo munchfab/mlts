@@ -10,9 +10,10 @@ mlts_pp_check(
   ts = NULL,
   y_reps = NULL,
   by_cluster = FALSE,
+  by_group = FALSE,
   cluster_ids = NULL,
   draw_person_pars = FALSE,
-  n_draws = 20,
+  n_draws = 10,
   draws = NULL,
   add_y_obs = TRUE,
   model_lab = NULL,
@@ -34,6 +35,9 @@ mlts_pp_check(
 If \code{NULL}, samples are generated within the function.}
 
 \item{by_cluster}{Logical. If \code{TRUE}, density plots are faceted by individual and time-series variable.
+If \code{FALSE}, only time-series variables are used for faceting. Default is \code{FALSE}.}
+
+\item{by_group}{Logical. If \code{TRUE}, density plots are faceted by grouping and time-series variable.
 If \code{FALSE}, only time-series variables are used for faceting. Default is \code{FALSE}.}
 
 \item{cluster_ids}{Optional vector of cluster IDs to include in the plot. If \code{NULL}, all IDs are shown.}
@@ -78,7 +82,7 @@ If \code{draw_person_pars = TRUE}, simulated datasets incorporate subject-specif
 This requires that \code{monitor_person_pars = TRUE} was set during model fitting.
 }
 \examples{
-\dontrun{
+\donttest{
 # Set up censored AR(1) model
 ar1_cens <- mlts_model(q = 1, censor_left = -1)
 

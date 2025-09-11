@@ -35,7 +35,10 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
   # get SDs of RE predictor variables
   Wvars_sds <- list()
   for(g in 1:infos$G){
-    Wvars_sds[[g]] <- apply(object$standata$W[object$standata$g_id==g,], MARGIN = 2, FUN = stats::sd)
+    Wvars_sds[[g]] <- 0 # initiate the structure to supress error
+    for(cc in 1:infos$n_cov){
+      Wvars_sds[[g]][cc] <- stats::sd(object$standata$W[object$standata$g_id==g,cc])
+    }
   }
 
   # get/calculate model-implied RE variances ----
@@ -170,68 +173,88 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 
   # run standardization for single-indicator models ----------------------------
   if(isLatent == FALSE){
-  # check that for each dimension:
-  # all dynamic parameters are fixed
-  # all innovation variances of dependent and independent dimensions are fixed
-  fix_dyn = infos$fix_pars_dyn[infos$fix_pars_dyn$isRandom == 0,]
-  if(nrow(fix_dyn) > 0){
-    # use average of observed intraindividual variance for standardization of
-    # constant dynamic parameters
-    VarYw = array(dim = c(infos$q))
-    for(i in 1:infos$q){
-      ivar = c()
-      for(p in 1:N){
-        ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=TRUE)
-      }
-      VarYw[i] = mean(ivar)
-    }
 
+    for(g in 1:infos$G){
+      # check that for each dimension:
+      # all dynamic parameters are fixed
+      # all innovation variances of dependent and independent dimensions are fixed
+      fix_dyn = infos$fix_pars_dyn[infos$fix_pars_dyn$isRandom == 0,]
 
-    # run checks looped over dynamic parameters
-    for(i in 1:nrow(fix_dyn)){
-      # 1. check if all dynamic parameters predicting the respective construct
-      # are constant across subjects
-      dim_out = fix_dyn$Dout[i]
-      all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
-      # 2. check if innovation variances of involved constructs are constant
-      dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
-      if(fix_dyn$isINT[i] == 1){
-        dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
-      }
-      # check based on parameter labels
-      InnoVar_labs = paste0("sigma_",dim_pred)
-      all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
-
-      # run standardization
-      if(all_dynPars_fixed & all_InnoVars_fixed){
-        # get unstandardized estimates per iteration
-        par_label = fix_dyn$Param[i]
-        par_stan = object$param.labels$Param_stan[object$param.labels$Param == par_label]
-        b = rstan::extract(object$stanfit, pars = c(par_stan))
-        sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
-        sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
-        b_std <- b[[1]] * sd_x / sd_y
-        if(fix_dyn$isINT[i] == 1){
-          sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
-          sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
-          sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
-          b_std <- b[[1]] / sd_y * sd_x * sd_x2
+      if(nrow(fix_dyn) > 0){
+        # use average of observed intraindividual variance for standardization of
+        # constant dynamic parameters
+        VarYw = array(dim = c(infos$q))
+        for(i in 1:infos$q){
+          ivar = c()
+          for(p in 1:object$standata$N_G[g]){
+            sub_id = object$standata$g_id_pos[g,p]
+            ivar[p] = stats::var(object$data[object$data$num_id==sub_id,object$standata$ts[i]], na.rm=TRUE)
+          }
+          VarYw[i] = mean(ivar)
         }
 
-        b_std = round(c(
-          mean(unlist(b_std)),
-          stats::sd(unlist(b_std)),
-          stats::quantile(unlist(b_std), c(probs))),digits = digits)
-        b_std = cbind.data.frame(
-          "Type" = "Dynamic",
-          "Param" = par_label,
-          t(b_std)
-        )
-        colnames(b_std) = c("Type", "Param", result.cols)
-        result = rbind(result, b_std)
+
+        # run checks looped over dynamic parameters
+        for(i in 1:nrow(fix_dyn)){
+          # 1. check if all dynamic parameters predicting the respective construct
+          # are constant across subjects
+          dim_out = fix_dyn$Dout[i]
+          all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
+          # 2. check if innovation variances of involved constructs are constant
+          dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
+          if(fix_dyn$isINT[i] == 1){
+            dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
+          }
+          # check based on parameter labels
+          InnoVar_labs = paste0("sigma_",dim_pred)
+          all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
+
+          # run standardization
+          if(all_dynPars_fixed & all_InnoVars_fixed){
+            # get unstandardized estimates per iteration
+            par_label = fix_dyn$Param[i]
+            par_stan = object$param.labels$Param_stan[object$param.labels$Param == par_label &
+                                                        object$param.labels$group == g]
+            b = rstan::extract(object$stanfit, pars = c(par_stan))
+            sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+            sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+            b_std <- b[[1]] * sd_x / sd_y
+            if(fix_dyn$isINT[i] == 1){
+              sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+              sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
+              sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+              b_std <- b[[1]] / sd_y * sd_x * sd_x2
+            }
+
+            b_std = round(c(
+              mean(unlist(b_std)),
+              stats::sd(unlist(b_std)),
+              stats::quantile(unlist(b_std), c(probs))),digits = digits)
+
+            if(object$standata$G > 2){
+              b_std = cbind.data.frame(
+                "Type" = "Dynamic",
+                "Param" = par_label,
+                "Group" = object$standata$group_lab[g],
+                t(b_std)
+              )
+              colnames(b_std) = c("Type", "Param", "Group", result.cols)
+            } else {
+              b_std = cbind.data.frame(
+                "Type" = "Dynamic",
+                "Param" = par_label,
+                t(b_std)
+              )
+              colnames(b_std) = c("Type", "Param", result.cols)
+            }
+
+
+            result = rbind(result, b_std)
+          }
+        }
       }
+
     }
-  }
   }
 
 

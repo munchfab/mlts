@@ -30,6 +30,9 @@
 #'   Defaults to 0.8.
 #' @param adj_load_x Numeric value specifying the x-axis offset loading parameter labels.
 #'   Defaults to 1.25.
+#' @param w_y_offset Numeric value specifying the vertical width of the within-level part. Defaults to 0.
+#' @param decomp_F_y_offset Numeric value to control the vertical space between manifest
+#' indicators and latent factors in the decomposition part of the path model. Defaults to 4.
 #' @param y_ind_labs A vector of character strings with names of observed variables.
 #' @param y_fac_labs A vector of character strings with factor labels to replace numeric indices in parameter names.
 #' @param y_fac_lab_sep A character string to separate multiple factor labels. Defaults to ",".
@@ -80,11 +83,13 @@
 #' @return A graphical object representing the path diagram of the model.
 #'
 #' @examples
+#' \donttest{
 #' # A two-level second-order autoregressive model
 #' model <- mlts_model(q = 1, max_lag = 2)
 #'
 #' # Plot the paths
 #' mlts_paths(model)
+#' }
 #'
 #' @export
 
@@ -104,6 +109,8 @@ mlts_paths <- function(
     cex_decomp = 1,
     cex_loads = 0.8,
     b_style = "h",
+    w_y_offset = 0,
+    decomp_F_y_offset = 4,
     arrHead_w = 0.16,
     arrHead_b = 0.16,
     scale_decomp_ind = 0.35,
@@ -183,7 +190,8 @@ ind_nodes = mlts_path_decomp(
   scale_decomp_ind = scale_decomp_ind,
   scale_decomp_F = scale_decomp_F,
   y_ind_labs = y_ind_labs,
-  y_fac_labs = y_fac_labs
+  y_fac_labs = y_fac_labs,
+  decomp_F_y_offset = decomp_F_y_offset
 )
 
 
@@ -191,11 +199,7 @@ ind_nodes = mlts_path_decomp(
 n_nod_w_y <- infos$q
 n_nod_w <- infos$q
 n_TP <- infos$maxLag:0
-#w_nodes <- infos$fix_pars_dyn
-# n_pos_w < n_TP
-# calculate positions
-w_poses_y = get_mid_points(n = n_nod_w, lims = c(end.wth.y, begin.wth.y))
-#w_poses_x = get_mid_points(n = n_TP, lims = c(end.wth.x, begin.wth.x))
+
 # get the nodes
 w_nodes = data.frame()
 for(i in 1:n_nod_w_y){
@@ -223,6 +227,8 @@ w_nodes$par <- ifelse(w_nodes$w_cen == 1,
 w_nodes$lab <- plotmath_labeller(x = w_nodes$par, y_fac_labs = y_fac_labs)
 # get positions
 w_ys <- get_mid_points(n = n_nod_w_y, lims = c(end.wth.y, begin.wth.y))
+w_ys <- w_ys + w_y_offset
+
 w_xs <- get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[within_x_pos]
 w_radx <- diff(get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[c(10,30)])*scale_within
 w_inno_x <- get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[within_inno_pos]
@@ -609,14 +615,14 @@ for ( i in 1:nrow(ind_nodes) ) {
         arr.pos = (1-0.8*arrHead_w), arr.length = 0.8*arrHead_w)
       }
 
-      if( ind_nodes$lambdaW_isEqual[i] == "= 1" ){
+      if( ind_nodes$lambdaW_isEqual[i] != "free" ){
         diagram::textempty(family=family,
           mid = c(ind_nodes$lamW1_midx[i],ind_nodes$lamW1_midy[i]),
           lab = ind_nodes$lamW1_lab[i], box.col = "white", cex = cex_loads, adj = adj_load_x
           )
       }
 
-      if( ind_nodes$lambdaB_isEqual[i] == "= 1" ){
+      if( ind_nodes$lambdaB_isEqual[i] != "free" ){
         diagram::textempty(family=family,
           mid = c(ind_nodes$lamB1_midx[i],ind_nodes$lamB1_midy[i]),
           lab = ind_nodes$lamB1_lab[i], box.col = "white", cex = cex_loads, adj = adj_load_x

@@ -20,6 +20,8 @@ mlts_paths(
   cex_decomp = 1,
   cex_loads = 0.8,
   b_style = "h",
+  w_y_offset = 0,
+  decomp_F_y_offset = 4,
   arrHead_w = 0.16,
   arrHead_b = 0.16,
   scale_decomp_ind = 0.35,
@@ -83,6 +85,11 @@ Defaults to 0.8.}
 
 \item{b_style}{A character string specifying the style of the between-level plot
 ("h" for horizontal). Defaults to \code{"h"}.}
+
+\item{w_y_offset}{Numeric value specifying the vertical width of the within-level part. Defaults to 0.}
+
+\item{decomp_F_y_offset}{Numeric value to control the vertical space between manifest
+indicators and latent factors in the decomposition part of the path model. Defaults to 4.}
 
 \item{arrHead_w}{Numeric values controlling the arrowhead size for
 within-level paths. Defaults to 0.16.}
@@ -157,10 +164,12 @@ Depending on the model structure (e.g., maximum lag, number of random effects,
 presence of interaction terms), the function dynamically adjusts the visualization.
 }
 \examples{
+\donttest{
 # A two-level second-order autoregressive model
 model <- mlts_model(q = 1, max_lag = 2)
 
 # Plot the paths
 mlts_paths(model)
+}
 
 }

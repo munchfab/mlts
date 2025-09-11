@@ -11,6 +11,8 @@
 #' If \code{NULL}, samples are generated within the function.
 #' @param by_cluster Logical. If \code{TRUE}, density plots are faceted by individual and time-series variable.
 #' If \code{FALSE}, only time-series variables are used for faceting. Default is \code{FALSE}.
+#' @param by_group Logical. If \code{TRUE}, density plots are faceted by grouping and time-series variable.
+#' If \code{FALSE}, only time-series variables are used for faceting. Default is \code{FALSE}.
 #' @param cluster_ids Optional vector of cluster IDs to include in the plot. If \code{NULL}, all IDs are shown.
 #' @param draw_person_pars Logical. If \code{TRUE}, samples are generated using person-specific parameters (random effects).
 #' If \code{FALSE}, only population-level parameters are used. Defaults to \code{FALSE}.
@@ -38,7 +40,7 @@
 #' (and optionally across individuals).
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Set up censored AR(1) model
 #' ar1_cens <- mlts_model(q = 1, censor_left = -1)
 #'
@@ -74,9 +76,10 @@ mlts_pp_check <- function(
     ts = NULL,
     y_reps = NULL,
     by_cluster = FALSE,
+    by_group = FALSE,
     cluster_ids = NULL,
     draw_person_pars = FALSE,
-    n_draws = 20,
+    n_draws = 10,
     draws = NULL,
     add_y_obs = TRUE,
     model_lab = NULL,
@@ -112,12 +115,22 @@ mlts_pp_check <- function(
 
     # bring into longer format by ts variables
     y_reps_long <- lapply(ts, function(x){
+
+      if(fit$standata$G > 1){
+        group_id = y_reps$group
+        group_id = sapply(group_id, function(x){fit$standata$group_lab[x]})
+      } else {
+        group_id = 1
+      }
+
       cbind.data.frame(
         "ID" = y_reps$ID,
+        "group" = group_id,
         "Y_class" =  model_lab,
         "Rep_no" = y_reps$Y_rep,
         "ts" = x,
         "Y" = y_reps[,x])
+
     })
     y_reps_long <- do.call(rbind, y_reps_long)
 
@@ -139,8 +152,17 @@ mlts_pp_check <- function(
 
       # bring into longer format by ts variables
       y_reps_list[[j]] <- lapply(ts, function(x){
+
+        if(fit$standata$G > 1){
+          group_id = y_reps_list[[j]]$group
+          group_id = sapply(group_id, function(x){fit$standata$group_lab[x]})
+        } else {
+          group_id = 1
+        }
+
         cbind.data.frame(
           "ID" = y_reps_list[[j]]$ID,
+          "group" = group_id,
           "Y_class" = model_lab[j],
           "Rep_no" = paste0(model_lab[j], y_reps_list[[j]]$Y_rep),
           "ts" = x,
@@ -159,17 +181,30 @@ mlts_pp_check <- function(
   if(add_y_obs == TRUE){
     # bring observations into same format as replications
     y_obs_long <- lapply(ts, function(x){
+
+      if(fit$standata$G > 1){
+          group_id = fit$data$group_int
+          group_id = sapply(group_id, function(x){fit$standata$group_lab[x]})
+        } else {
+          group_id = 1
+          }
+
       cbind.data.frame(
         "ID" = fit$data$num_id,
+        "group" = group_id,
         "Y_class" = "Y_obs",
         "Rep_no" = 100000+1,
         "ts" = x,
         "Y" = fit$data[,x])
+
     })
     y_obs_long <- do.call(rbind, y_obs_long)
 
     y_reps_long <- rbind(y_obs_long, y_reps_long)
   }
+
+
+
 
   # data to plot
   if(!is.null(cluster_ids)){
@@ -193,13 +228,19 @@ mlts_pp_check <- function(
         data=y_reps_long[y_reps_long$Y_class=="Y_obs",], alpha = 1, linewidth=y_obs_lw)
   }
 
+  pp.plot <- pp.plot +
+    ggplot2::facet_grid(~ts)
+
+  if(by_group == TRUE){
+    pp.plot <- pp.plot +
+      ggplot2::facet_wrap(group~ts)
+  }
   if(by_cluster == TRUE){
     pp.plot <- pp.plot +
       ggplot2::facet_wrap(ID~ts)
-  } else {
-    pp.plot <- pp.plot +
-      ggplot2::facet_grid(~ts)
   }
+
+
 
 
 

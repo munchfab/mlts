@@ -7,6 +7,7 @@
 #' @param default logical. If set to `TRUE`, default prior specifications are
 #' added.
 #' @param N integer Number of observational units.
+#' @param N_G vector of integers. Number of observational units per group.
 #' @param TP integer. Number of measurements per observational unit.
 #' @param burn.in integer. Length of ‘burn-in’ period.
 #' @param seed integer. Seed used for data generation.
@@ -58,22 +59,24 @@
 #' }
 #'
 
-mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
+mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in = 50, seed = NULL,
                      seed.true = 1, btw.var.sds = NULL, exogenous = NULL){
 
-  set.seed(seed.true)
-
-  # add check that sds are entered for all between variables are availabe
-
-
-  # simulate data based on model
-
-  ### in a later verion, write separate function for specification of true parameter values
-  ### for now use partly fixed values
 
 
   # use helper function to read out information on model
   infos = mlts_model_eval(model)
+
+  # check correct inputs:
+  if(infos$G > 1 & is.null(N_G)){
+    stop("Use `N_G` to specify the number of clusters in each group.")
+  }
+  if(infos$G > 1 & !is.null(N_G)){
+    N <- sum(N_G)
+  }
+
+  # set seed
+  set.seed(seed.true)
 
   # check that exogenous variable is entered and in the correct format
   if(any(infos$is_wcen==0)){
@@ -96,6 +99,7 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
   # use some default settings for parameter values
   if(default==TRUE){
+
     model$true.val = NA
 
     # MEASUREMENT MODEL PARAMETERS =============================================
@@ -122,7 +126,6 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
       }
     }
 
-
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "= 0"] = 0
     model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.3, by = 0.05), size = infos$n_sigmaWfree, replace = TRUE)
@@ -130,106 +133,144 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     model$true.val[model$Level == "Between" & model$Type == "Measurement Error SD" & model$Constraint == "free"] =
       sample(x = seq(0.15, 0.2, by = 0.05), size = infos$n_sigmaBfree, replace = TRUE)
 
-    # Fixed effects ========
-    model.type = "Fixed effect"
-    ## Mus
-    n_traits = length(model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")])
-    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
-      x = seq(from= 0, to = 1, by = 0.1), size = n_traits)
-    ## Phis
-    # dynamic parameters separately for each lag
-    phis = infos$fix_pars_dyn
-    phis$true.val = NA
-    ## start with lag 1 ARs
-    n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
-    phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = TRUE, size = n_sample)
-    n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
-    phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = TRUE, size = n_sample)
-    ## add higher order effects
-    if(infos$maxLag>1){
-      for(i in 1:nrow(phis)){
-        if(phis$Lag[i] > 1){
-          phi.lag1 = phis$true.val[phis$Param == paste0("phi(1)_",phis$Dout[i],phis$Dpred[i])]
-          phis$true.val[i] = phi.lag1/as.numeric(phis$Lag[i])
+
+    # DYNAMIC PART =============================================================
+    ## add helper column, in case no group is specified
+    if( infos$G == 1 ){ model$group <- 1 }
+
+    for ( gg in 1:infos$G ){
+
+      # FIXED EFFECTS:
+      type = "Fixed effect"
+
+      ## MUS =====
+      use      <- startsWith(model$Param_Label, "Trait")
+      vals     <- sample(x = seq(from= 0, to = 1, by = 0.1), size = 1000, replace = T)
+      model    <- add_trues(model, type = type, group = gg, which = use, values = vals, adjust_size = TRUE)
+      # --
+
+      ## PHIs ====
+
+      # dynamic parameters separately for each lag
+      phis = infos$fix_pars_dyn
+      phis$true.val = NA
+      ## start with lag 1 ARs
+      n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
+      phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = TRUE, size = n_sample)
+      n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
+      phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = TRUE, size = n_sample)
+      ## add higher order effects
+      if(infos$maxLag>1){
+        for(i in 1:nrow(phis)){
+          if(phis$Lag[i] > 1){
+            phi.lag1 = phis$true.val[phis$Param == paste0("phi(1)_",phis$Dout[i],phis$Dpred[i])]
+            phis$true.val[i] = phi.lag1/as.numeric(phis$Lag[i])
+          }
         }
       }
-    }
-    model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = round(phis$true.val,3)
 
-    ## t0-effect
-    t0_effect = infos$fix_pars_dyn[startsWith(infos$fix_pars_dyn$Param,"phi(0"),]
-    if(nrow(t0_effect) > 0){
-      for(i in 1:nrow(t0_effect)){
-        # choose value according to the respective lagged effect - if present
-        lag_value = model$true.val[model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
-        if(is.numeric(lag_value)){
-          #          model$true.val[model$Param == t0_effect$Param[i]] <- lag_value
-          model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
-        } else {
-          model$true.val[model$Param == t0_effect$Param[i]] <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
+      vals  <- round(phis$true.val,3)
+      model <- add_trues(model, type = type, label = "Dynamic", group = gg, values = vals)
+      #-
+
+      ## t0-effect
+      t0_effect = infos$fix_pars_dyn[startsWith(infos$fix_pars_dyn$Param,"phi(0"),]
+      if(nrow(t0_effect) > 0){
+        for(i in 1:nrow(t0_effect)){
+          # choose value according to the respective lagged effect - if present
+          lag_value = model$true.val[model$group == gg, model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
+
+          if(is.numeric(lag_value)){
+            vals <- 1.2 * lag_value
+          } else {
+            vals <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
+          }
+
+          use = model$Param == t0_effect$Param[i]
+          model <- add_trues(model, group = gg, which = use, values = vals)
         }
       }
-    }
+      # -
 
-    # interaction effects
-    if(infos$n_int > 0){
-      model$true.val[startsWith(model$Param, prefix = "phi(i)")] <- sample(x = seq(from=-0.1,to=0.1,by=0.025),size = infos$n_int)
-    }
+      ## interaction effects
+      if(infos$n_int > 0){
+        use  <- startsWith(model$Param, prefix = "phi(i)")
+        vals <- sample(x = seq(from=-0.1,to=0.1,by=0.025), size = infos$n_int)
+        model <- add_trues(model, group = gg, which = use, values = vals)
+      }
+      # --
 
+      ## LOG INNOVATION (CO)VARIANCES
+      model <- add_trues(model, type = type, label = "Log Innovation Variance", group = gg, values = -0.3)
+      model <- add_trues(model, type = type, label = "Innovation Variance", group = gg, values = 0.75)
+      model <- add_trues(model, type = type, label = "Log Innovation Covariance", group = gg, values = 0.3)
+      model <- add_trues(model, type = type, label = "Log Innovation Covariance", group = gg, values = -0.3)
+      model <- add_trues(model, type = type, label = "Innovation correlation", group = gg, values = -0.15)
 
-    ## log innovation variances
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = -0.3
-    ## Fixed innovation variance
-    model$true.val[model$Type==model.type & model$Param_Label=="Innovation Variance"] = 0.75
-
-    ## Log innovation covariance
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = -0.3
-    model$true.val[model$Type==model.type & model$Param_Label=="Innovation correlation"] = -0.15
-
-    # RANDOM EFFECT SDs ==========
-    model.type = "Random effect SD"
-    ## Mus
-    model$true.val[model$Type==model.type & startsWith(model$Param_Label, "Trait")] = sample(
-      x = seq(from= 0.7, to = 1.2, by = 0.1), size = n_traits, replace = TRUE)
-    ## Phis
-    model$true.val[model$Type==model.type & model$Param_Label=="Dynamic"] = 0.15
-    ## smaller for interaction effects
-    model$true.val[model$Type==model.type & startsWith(model$Param, "phi(i)")] = 0.1
-    ## log innovation variances
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Variance"] = 0.25
-    ## log innovation covaraince(s)
-    model$true.val[model$Type==model.type & model$Param_Label=="Log Innovation Covariance"] = 0.25
+      # ---
 
 
-    # RANDOM EFFECT CORRELATIONS ============
-    ## set all to zero for now
-    model.type = "RE correlation"
-    model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.2, to = 0.2, by = 0.025),3)), replace = TRUE,
-      size = sum(model$Type == model.type))
+      # RANDOM EFFECTS SDs:
+      type = "Random effect SD"
 
-    # RE as OUTCOME =========================
-    model.type = "RE prediction"
-    model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.2, to = 0.2, by = 0.05),3)), replace = TRUE,
-      size = sum(model$Type == model.type))
+      ## Mus
+      use   <- startsWith(model$Param_Label, "Trait")
+      vals  <- sample(seq(from= 0.7, to = 1.2, by = 0.1), size = 100, replace = TRUE)
+      model <- add_trues(model, type = type, which = use, group = gg, values = vals, adjust_size = TRUE)
 
-    # OUTCOME PREDICTION ===================
-    model.type = "Outcome prediction"
-    model$true.val[model$Type == model.type] = sample(
-      c(round(seq(from = -0.3, to = 0.3, by = 0.1),3)), replace = TRUE,
-      size = sum(model$Type == model.type))
-    # scale true values for AR and CL as predictor
-    model$true.val[model$Type == model.type & grepl(pattern = "phi",model$Param)] <-
-      model$true.val[model$Type == model.type & grepl(pattern = "phi",model$Param)] * 5
+      ## Phis
+      model <- add_trues(model, type = type, label = "Dynamic", group = gg, values = 0.15)
+      ## smaller for interaction effects
+      use = startsWith(model$Param, "phi(i)")
+      model <- add_trues(model, type = type, which = use, group = gg, values = 0.1)
+      ## log innovation variances
+      model <- add_trues(model, type = type, label = "Log Innovation Variance", group = gg, values = 0.25)
+      ## log innovation covariance(s)
+      model <- add_trues(model, type = type, label = "Log Innovation Covariance", group = gg, values = 0.25)
 
-    model$true.val[model$Type == model.type & model$Param_Label == "intercept"] = 0
-    model$true.val[model$Type == model.type & model$Param_Label == "Residual SD"] = 0.5
+      # ---
 
-  } else if ( is.null(model$true.val)) {
-    stop("No true parameter values provided in model$true.val. Set default = TRUE to run data generation with random true parameter values.",
+      # RANDOM EFFECTS CORRELATIONS:
+
+      ## set all to zero for now
+      type <- "RE correlation"
+      vals <- sample(seq(from = -0.2, to = 0.2, by = 0.05), replace = TRUE, size = sum(model$Type == type & model$group==gg))
+      model <- add_trues(model = model, type = type, group = gg, values = vals)
+
+
+
+      # ---
+
+      # RE as OUTCOME:
+      type <- "RE prediction"
+      vals <- sample(seq(from = -0.2, to = 0.2, by = 0.05), replace = TRUE, size = sum(model$Type == type & model$group==gg))
+      model <- add_trues(model, type = type, group = gg, values = vals)
+
+      # ---
+
+      # OUTCOME PREDICTION :
+      type <- "Outcome prediction"
+      vals <- sample(seq(from = -0.3, to = 0.3, by = 0.1), replace = TRUE, size = sum(model$Type == type & model$group==gg))
+      model <- add_trues(model, type = type, group = gg, values = vals)
+
+      # scale true values for AR and CL as predictor
+      model$true.val[model$Type == type & grepl(pattern = "phi",model$Param)] <-
+        model$true.val[model$Type == type & grepl(pattern = "phi",model$Param)] * 5
+
+      model <- add_trues(model, type = type, label ="intercept", group = gg, values = 0)
+      model <- add_trues(model, type = type, label ="Residual SD", group = gg, values = 0)
+
+      # ---
+
+      }
+
+      model$true.val <- round(model$true.val, 3)
+
+      } else if ( is.null(model$true.val)) {
+      stop("No true parameter values provided in model$true.val. Set default = TRUE to run data generation with random true parameter values.",
          "Alternatively, user-specified values for each parameter can be specified in an additional column `true.val` in model.")
-  }
+    }
+
 
 
   # set seed for data generation
@@ -237,43 +278,53 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     set.seed(seed)
   }
 
-
-
   # run again after adding true parameter values
-  infos = mlts_model_eval(model)
+  if(infos$G == 1){
+    infos = mlts_model_eval(model)
+  } else {
+    infos = mlts_model_eval(model)
+  }
+
 
 
   # start generating between-level model =======================================
 
+  # separately by group
+  if( infos$G == 1 ) { N_G <- N }
+
+  # store final person parameters as a list
+  btw <- list()
+  W <- list()
+  for( gg in 1:infos$G ){
+
   # FIXED EFFECTS
-  gammas = model$true.val[model$Type=="Fixed effect" & model$isRandom==1]
+  gammas = model$true.val[model$group == gg & model$Type=="Fixed effect" & model$isRandom==1]
 
   # BETWEEN-LEVEL
   # sample covariates and get expected values of individual parameters
-  bmu = matrix(data = NA, nrow = N, ncol = infos$n_random)
-  W = matrix(data = NA, nrow = N, ncol = infos$n_cov)
+  bmu = matrix(data = NA, nrow = N_G[gg], ncol = infos$n_random)
+  W[[gg]] = matrix(data = NA, nrow = N_G[gg], ncol = infos$n_cov)
   cov_name = c()
-  W[,1] = 1 # intercept
+  W[[gg]][,1] = 1 # intercept
   if(infos$n_cov>1){
     for(i in 2:infos$n_cov){
       cov_name[i-1] = unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
-      # name btw.var.sds vector
-      # names(btw.var.sds) <- unique(infos$RE.PREDS$re_preds[infos$RE.PREDS$pred_no == i-1])
-      W[1:N,i] = stats::rnorm(n = N, mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
+      W[[gg]][,i] = stats::rnorm(n = N_G[gg], mean = 0, btw.var.sds[names(btw.var.sds) == cov_name[i-1]])
     }
   }
-  colnames(W) <- c("Intercept", cov_name)
+  colnames(W[[gg]]) <- c("Intercept", cov_name)
 
   for(i in 1:infos$n_random){
     # get expected individual parameters
     pred_use = infos$RE.PREDS[infos$RE.PREDS$re_no ==i,]
+    val_use = model$true.val[model$group==gg & model$Param == pred_use$Param]
+
     if(nrow(pred_use)>0){
-      bmu[,i] = W[,c(1,pred_use$pred_no+1)] %*% c(gammas[i],pred_use$true.val)
+      bmu[,i] = W[[gg]][,c(1,pred_use$pred_no+1)] %*% c(gammas[i], val_use)
     } else {
       bmu[,i] = gammas[i]
     }
   }
-
 
   # calculate covariances from correlations
   n_random = infos$n_random
@@ -281,13 +332,13 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
   # variance covariance matrix of random effects
   if(n_random == 1){
-    cov_mat = model$true.val[model$Type=="Random effect SD"]
+    cov_mat = model$true.val[model$Type=="Random effect SD" & model$group == gg]
   } else {
-    cov_mat = diag(model$true.val[model$Type=="Random effect SD"]^2)
+    cov_mat = diag(model$true.val[model$Type=="Random effect SD" & model$group == gg]^2)
     for(i in 1:n_random){
       for(j in 1:n_random){
         if(i < j){
-          r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j])]
+          r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j]) & model$group == gg]
           cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
         }
       }
@@ -296,11 +347,11 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
 
 
   #### sample random effects from multivariate normal distribution and add to bmus
-  btw_random = matrix(NA, nrow = N, ncol = infos$n_random)
+  btw_random = matrix(NA, nrow = N_G[gg], ncol = infos$n_random)
   if(n_random == 1){
-    btw_random = bmu + stats::rnorm(n = N, mean = 0, sd = cov_mat)
+    btw_random = bmu + stats::rnorm(n = N_G[gg], mean = 0, sd = cov_mat)
   } else {
-    btw_random = bmu + mvtnorm::rmvnorm(n = N, mean = rep(0, infos$n_random), sigma = cov_mat)
+    btw_random = bmu + mvtnorm::rmvnorm(n = N_G[gg], mean = rep(0, infos$n_random), sigma = cov_mat)
   }
   colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
 
@@ -313,25 +364,31 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
   }
 
   # now combine fixed effects and random effects
-  btw = matrix(NA, nrow = N, infos$n_pars)
-  btw[,infos$is_random] = btw_random               # first add random pars
+  btw[[gg]] = matrix(NA, nrow = N_G[gg], infos$n_pars)
+  btw[[gg]][, infos$is_random] = btw_random               # first add random pars
   if(infos$n_fixed>0){
-    btw[,infos$is_fixed[1,]] = rep(model$true.val[model$Type=="Fixed effect"][infos$is_fixed[1,]], each=N)
+    btw[[gg]][,infos$is_fixed[1,]] = rep(model$true.val[model$Type=="Fixed effect" & model$group == gg][infos$is_fixed[1,]], each=N_G[gg])
   }
   if(infos$n_innos_fix>0){
     for(i in infos$innos_fix_pos)
-      btw[,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fixed effect" & model$Param_Label == "Innovation Variance"][i],times=N)
+      btw[[gg]][,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fixed effect" & model$Param_Label == "Innovation Variance"& model$group == gg][i],times=N_G[gg])
+    }
   }
 
   #### WITHIN-LEVEL PROCESS ====================================================
+  btw <- do.call(rbind, btw)
   mm_pars = model
   cor_pars = model
   mm_pars$sample <- mm_pars$true.val
   cor_pars$sample <- cor_pars$true.val
 
+  # create vector of group_ids
+  group_ids <- unlist(sapply(1:infos$G, function(x) rep(x, N_G[x])))
+
   within <- mlts_sim_within(
     infos = infos,
-    N = N,
+    N = sum(N_G),
+    group_ids = group_ids,
     TP = TP,
     burn.in = burn.in,
     btw = btw,
@@ -340,225 +397,34 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     exogenous = exogenous
   )
 
-  # # prepare data frame
-  # NT = TP + burn.in
-  # within = data.frame(
-  #   "ID" = rep(1:N, each = TP),
-  #   "time" = rep(1:TP, times = N)
-  # )
-  # q = infos$q   # number of constructs
-  # y_cols = paste0("Y",1:q)   # prepare columns
-  # within[, y_cols] = NA
-  #
-  # # get positions to fill transition matrix
-  # dyn = infos$fix_pars_dyn
-  # dyn_int = dyn[dyn$isINT == 1,]
-  # dyn = dyn[dyn$isINT != 1,]
-  # dyn$tran_pos = NA
-  # dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
-  # # remove t0-effects at this points
-  # dyn_t0 = dyn[dyn$Lag == 0,]
-  # dyn = dyn[dyn$Lag!=0,]
-  #
-  # # check w_cen vars
-  # wcen_logical = infos$is_wcen == 1
-  # n_wcen = sum(wcen_logical)
-  # exo_pos = 1
-  #
-  # for(i in 1:N){
-  #   # build person-specific transition matrix
-  #   transition = matrix(nrow = q, ncol = q*infos$maxLag, data = 0)
-  #   y = matrix(nrow = NT, ncol = q)
-  #
-  #   # build person-specific prediction error matrix
-  #   innoVars.i = btw[i,infos$innos_pos]
-  #
-  #   for(d in 1:q){ # loop over number of constructs
-  #     if(infos$is_wcen[d] == 1){
-  #       # parameter positions on btw-matrix
-  #       par_pos = dyn$no[dyn$Dout==d]
-  #       # fill transition matrix with person-specific parameter values
-  #       transition[d,as.integer(dyn$tran_pos[dyn$Dout==d])] = btw[i,par_pos]
-  #
-  #       if(infos$innos_rand[infos$D_cen_pos[d]] == 1){
-  #         innoVars.i[infos$D_cen_pos[d]] = exp(innoVars.i[infos$D_cen_pos[d]]) # retransform log innovations
-  #       } else{
-  #         innoVars.i[infos$D_cen_pos[d]] = innoVars.i[infos$D_cen_pos[d]]^2
-  #       }
-  #     }
-  #   }
-  #
-  #   if(q == 1 | sum(wcen_logical)==1){
-  #     inno_var_mat = matrix(data = innoVars.i, nrow = 1, ncol = 1)
-  #   } else {
-  #     inno_var_mat = diag(innoVars.i)
-  #
-  #     if(infos$n_inno_cors > 0){
-  #       for(xx in 1:q){
-  #         for(yy in 1:q){
-  #           par_is_there = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
-  #           if(xx < yy & length(par_is_there) > 0){
-  #             x_pos = infos$D_cen_pos[xx]
-  #             y_pos = infos$D_cen_pos[yy]
-  #             cor = model$true.val[model$Param == paste0("r.zeta_",xx,yy)]
-  #             cov = cor * sqrt(inno_var_mat[x_pos,x_pos]) * sqrt(inno_var_mat[y_pos,y_pos])
-  #             inno_var_mat[x_pos,y_pos] <- inno_var_mat[y_pos,x_pos] <- cov
-  #           }
-  #         }
-  #       }
-  #     }
-  #   }
-  #
-  #   # generate the within-level process in a loop over time points
-  #   for(t in 1:NT){
-  #
-  #     if(t <= infos$maxLag){
-  #       # starting values
-  #       init = matrix(data = NA, nrow = 1, ncol = q)
-  #       init[,wcen_logical] = mvtnorm::rmvnorm(n = 1, mean = rep(0, n_wcen), sigma = inno_var_mat)
-  #       if(any(infos$is_wcen == 0)){
-  #         init[,!wcen_logical] = exogenous[exo_pos, ]
-  #       }
-  #       y[t,] = init
-  #
-  #       # start the process when sufficient initial values are generated
-  #     } else {
-  #       y_lag = c()
-  #       y_lag = as.vector(y[t-1,1:q])            # create a lagged vector
-  #
-  #
-  #       if(infos$maxLag>1){                      # ... extend for higher-order
-  #         for(ll in 2:infos$maxLag){
-  #           y_lag = c(y_lag, as.vector(y[t-ll,1:q]))
-  #         }
-  #       }
-  #
-  #       if(q > 1 | infos$maxLag > 1){
-  #         # get expected values using matrix multiplication
-  #         y[t,1:q] = y_lag %*% t(transition)
-  #         if(any(infos$is_wcen == 0)){
-  #           y[t,!wcen_logical] = exogenous[exo_pos, ]
-  #         }
-  #       } else {
-  #         # or for AR(1):
-  #         y[t,] = y_lag * transition
-  #       }
-  #
-  #       # add innovations
-  #       y[t,wcen_logical] = y[t,wcen_logical] + mvtnorm::rmvnorm(n = 1, mean = rep(0, n_wcen), sigma = inno_var_mat)
-  #
-  #       # add contemporaneous effects
-  #       if(nrow(dyn_t0) != 0){
-  #         for(k in 1:nrow(dyn_t0)){
-  #           dv <- as.integer(dyn_t0$Dout[k])
-  #           iv <- as.integer(dyn_t0$Dpred[k])
-  #           y[t,dv] = y[t,dv] + btw[i,dyn_t0$no[k]] * y[t,iv]
-  #         }
-  #       }
-  #
-  #       # add interaction effects
-  #       if(nrow(dyn_int) > 0){
-  #         for(k in 1:nrow(dyn_int)){
-  #           dv <- as.integer(dyn_int$Dout[k])
-  #           iv1 <- as.integer(dyn_int$Dpred[k])
-  #           iv2 <- as.integer(dyn_int$Dpred2[k])
-  #           lag1 <- as.integer(dyn_int$Lag[k])
-  #           lag2 <- as.integer(dyn_int$Lag2[k])
-  #           y[t,dv] = y[t,dv] + btw[i,dyn_int$no[k]] * y[t-lag1,iv1] * y[t-lag2,iv2]
-  #         }
-  #       }
-  #
-  #       # for bivariate VAR-models with random innovation covariance factor:
-  #       if(infos$q >= 2 & infos$n_inno_covs == 1){
-  #         inno_t = stats::rnorm(n = 1, mean = 0, sd = sqrt(exp(btw[i,infos$inno_cov_pos])))
-  #         y[t,1:2] = y[t,1:2] + infos$inno_cov_load * inno_t
-  #       }
-  #     }
-  #     exo_pos = exo_pos +1
-  #   }
-  #
-  #   # remove burn-in
-  #   within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP),]
-  #
-  #   # add trait scores (for manifest indicators)
-  #   if(infos$isLatent == FALSE){
-  #     for(j in 1:infos$q){
-  #       if(infos$is_wcen[j] == TRUE){
-  #         within[within$ID==i,y_cols[j]] = btw[i,infos$D_cen_pos[j]] + within[within$ID==i,y_cols[j]]
-  #         }
-  #       }
-  #     }
-  #   }
-  #
-  #   # --------
-  #
-  #
-  #   ##### add measurement model here -------------------------------------------
-  #   # create manifest indicator scores
-  #   if(infos$isLatent == TRUE){
-  #     N_inds = max(infos$indicators$p_pos)
-  #     for(i in 1:N_inds){
-  #       q = as.integer(infos$indicators$q[i])
-  #       p = as.integer(infos$indicators$p[i])
-  #       ind.lab = paste0("Y",q,".",p)
-  #       # within
-  #       loadW = model$true.val[model$Level == "Within" & model$Type == "Loading"][i]
-  #       loadW = ifelse(length(loadW) == 0, 1, loadW)
-  #       sigmaW = model$true.val[model$Level == "Within" & model$Type == "Measurement Error SD"][i]
-  #       # between
-  #       alpha = model$true.val[model$Param == paste0("alpha_",q,".",p)]
-  #       alpha = ifelse(length(alpha) == 0, 0, alpha)
-  #       loadB = model$true.val[model$Param == paste0("lambdaB_",q,".",p)]
-  #       loadB = ifelse(length(loadB) == 0, 1, loadB)
-  #       sigmaB = model$true.val[model$Param == paste0("sigmaB_",q,".",p)]
-  #       sigmaB = ifelse(length(sigmaB) == 0, 0, sigmaB)
-  #
-  #       for(j in 1:N){
-  #         # create WITHIN-PART:
-  #         etaW = within[within$ID==j, paste0("Y",q)]
-  #         if(sigmaW == 0){
-  #           YW = loadW * etaW
-  #         } else {
-  #           YW = loadW * etaW + stats::rnorm(n = TP, mean = 0, sd = sigmaW)
-  #         }
-  #
-  #         # create BETWEEN-PART:
-  #         YB = alpha + loadB * btw[j,infos$indicators$etaB_pos[i]] + ifelse(sigmaB == 0, 0, stats::rnorm(n = 1, mean = 0, sd = sigmaB))
-  #
-  #         # indicator
-  #         within[within$ID==j,ind.lab] = YB + YW
-  #       }
-  #     }
-  #     # remove latent process variables
-  #     within = within[,!(colnames(within) %in% paste0("Y",1:infos$q))]
-  #   }
-
     # CREATE OUTCOMES ==========================================================
     outs = matrix(NA, ncol = infos$n_out, nrow = N)
     if(infos$n_out > 0){
       if(infos$n_z > 0){
         btw.Z = matrix(nrow = N, ncol = (infos$n_random + infos$n_z))
-        btw.Z[,1:infos$n_random] = btw_random
+        btw.Z[,1:infos$n_random] = btw
         for(i in 1:infos$n_z){
           Z_name = infos$n_z_vars[i]
           Z_pos = unique(stats::na.omit(infos$OUT$Pred_no[infos$OUT$Pred_Z == Z_name]))
-          btw.Z[1:N,Z_pos] = stats::rnorm(n = N, mean = 0,
+          btw.Z[1:N,Z_pos] = stats::rnorm(n = sum(N_G), mean = 0,
                                           sd = btw.var.sds[which(names(btw.var.sds) == Z_name)])
           #    colnames(btw.Z)[i] = Z_name
         }
       } else {
-        btw.Z = btw_random
+        btw.Z = btw
       }
 
       for(i in 1:infos$n_out){
-        alpha = model$true.val[grepl(model$Param, pattern = paste0("alpha_",infos$out_var[i]))]
-        sigma = model$true.val[grepl(model$Param, pattern = paste0("sigma_",infos$out_var[i]))]
-        # create outcome values
-        out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
-        if(nrow(out_use)>1){
-          outs[,i] = alpha + btw.Z[,out_use$Pred_no]%*%out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
-        } else {
-          outs[,i] = alpha + btw.Z[,out_use$Pred_no]*out_use$true.val + stats::rnorm(n = N, mean = 0, sd = sigma)
+        for(gg in 1:infos$G){
+          alpha = model$true.val[model$group == gg & grepl(model$Param, pattern = paste0("alpha_",infos$out_var[i]))]
+          sigma = model$true.val[model$group == gg & grepl(model$Param, pattern = paste0("sigma_",infos$out_var[i]))]
+          # create outcome values
+          out_use = infos$OUT[infos$OUT$Var == infos$out_var[i],]
+          if(nrow(out_use)>1){
+            outs[group_ids==gg,i] = alpha + btw.Z[group_ids==gg,out_use$Pred_no]%*%out_use$true.val + stats::rnorm(n = N_G[gg], mean = 0, sd = sigma)
+          } else {
+            outs[group_ids==gg,i] = alpha + btw.Z[group_ids==gg,out_use$Pred_no]*out_use$true.val + stats::rnorm(n = N_G[gg], mean = 0, sd = sigma)
+          }
         }
       }
 
@@ -595,7 +461,7 @@ mlts_sim <- function(model, default = FALSE, N, TP, burn.in = 50, seed = NULL,
     data = within
 
     if(infos$n_cov>1){
-      W = cbind("ID" = 1:N, W)
+      W = cbind("ID" = 1:N, do.call(rbind, W))
       data = merge(x = data, y = W[,c("ID", infos$n_cov_vars)], by = "ID")
     }
     if(infos$n_out>0){

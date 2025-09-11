@@ -49,7 +49,7 @@ Posterior draws are either selected randomly (\code{n_draws}) or specified manua
 Optionally, left or right censoring is respected in the simulated data if such constraints were present in the model.
 }
 \examples{
-\dontrun{
+\donttest{
 # Simulate 20 replications from the posterior
 y_reps <- mlts_posterior_sample(fit = my_model_fit, n_draws = 20)
 

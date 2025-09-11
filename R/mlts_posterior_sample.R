@@ -33,7 +33,7 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Simulate 20 replications from the posterior
 #' y_reps <- mlts_posterior_sample(fit = my_model_fit, n_draws = 20)
 #'
@@ -66,7 +66,7 @@ mlts_posterior_sample <- function(
     mm_samples = rstan::extract(fit$stanfit, pars = mm_pars$Param_stan)
   }
   cor_pars = fit$pop.pars.summary[fit$pop.pars.summary$Param_Label == "Innovation correlation",]
-  if(infos$n_inno_cors > 1){
+  if(infos$n_inno_cors > 0){
     cor_samples = rstan::extract(fit$stanfit, pars = cor_pars$Param_stan)
   }
 
@@ -89,7 +89,7 @@ mlts_posterior_sample <- function(
   y_reps = list()
 
   # check if posterior samples of person parameters exist
-  if(draw_person_pars == FALSE & is.na(fit$person.pars.summary)[1]){
+  if(draw_person_pars == FALSE & ncol(fit$person.pars.summary) < 7){
     stop("Posterior samples of person-specific parameters are not available.
          Consider setting `monitor_person_pars = TRUE` in `mlts_fit`.")
   }
@@ -104,7 +104,7 @@ mlts_posterior_sample <- function(
       }
     }
 
-    if(infos$n_inno_cors > 1){
+    if(infos$n_inno_cors > 0){
       cor_pars$sample = NA
       for(j in 1:nrow(cor_pars)){
         cor_pars$sample[j] = cor_samples[[cor_pars$Param_stan[j]]][draws_use[i]]
@@ -140,6 +140,7 @@ mlts_posterior_sample <- function(
     reps = mlts_sim_within(
       infos = infos,
       burn.in = 0,
+      group_ids = fit$standata$g_id,
       N = fit$standata$N,
       TP = fit$standata$N_obs_id,
       btw = btw,
@@ -148,7 +149,7 @@ mlts_posterior_sample <- function(
       exogenous = exogenous)
 
     # add proper names
-    colnames(reps) <- c("ID", "time", fit$standata$ts)
+    colnames(reps)[!(colnames(reps) %in% c("ID", "time", "group"))] <- fit$standata$ts
 
     # add censoring
     if(!is.null(attr(fit$model, which = "censor_left"))){

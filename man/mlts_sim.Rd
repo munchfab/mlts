@@ -7,7 +7,8 @@
 mlts_sim(
   model,
   default = FALSE,
-  N,
+  N = NULL,
+  N_G = NULL,
   TP,
   burn.in = 50,
   seed = NULL,
@@ -23,6 +24,8 @@ mlts_sim(
 added.}
 
 \item{N}{integer Number of observational units.}
+
+\item{N_G}{vector of integers. Number of observational units per group.}
 
 \item{TP}{integer. Number of measurements per observational unit.}
 

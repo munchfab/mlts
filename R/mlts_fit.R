@@ -399,7 +399,16 @@ mlts_fit <- function(model,
     # add posteriors with adapted names
     posteriors <- rstan::extract(stanfit, inc_warmup = FALSE, permuted = FALSE,
                              pars = par_labels$Param_stan)
-    dimnames(posteriors)$parameters <- par_labels$Param
+
+    # names of parameters
+    par_names <- par_labels$Param
+    # adjust parameter names for multiple groups
+    if(standata$G > 1){
+      g_prefix <- sapply(par_labels$group, function(x){standata$group_lab[x]})
+      par_names <- paste0(g_prefix,": ",par_names)
+    }
+
+    dimnames(posteriors)$parameters <- par_names
 
     # create a summary table using the monitor-function in rstan
     sums <- rstan::monitor(stanfit, print = FALSE)

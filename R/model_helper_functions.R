@@ -353,7 +353,8 @@ mlts_path_decomp <- function(
     scale_decomp_ind,
     scale_decomp_F,
     y_ind_labs,
-    y_fac_labs
+    y_fac_labs,
+    decomp_F_y_offset
 ){
 
   # first get the number of nodes to plot
@@ -377,7 +378,7 @@ mlts_path_decomp <- function(
 
     ## within-level factor(s)
     ind_nodes$Wf_midx <- ind_nodes$midx
-    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/5
+    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/decomp_F_y_offset
     ind_nodes$Wf_lab  <- paste0("Y[italic(", 1:n_nodes,"*i*t)]^W")
     if(!is.null(y_fac_labs)){
       ind_nodes$Wf_lab = paste0(y_fac_labs,"[italic(i*t)]^W")
@@ -385,7 +386,7 @@ mlts_path_decomp <- function(
 
     ## between-level factor(s)
     ind_nodes$Bf_midx <- ind_nodes$midx
-    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/5
+    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/decomp_F_y_offset
     ind_nodes$Bf_lab  <- plotmath_labeller(
       class = "b", x = ind_nodes$Param,
       y_fac_labs = y_fac_labs, y_ind_labs = y_ind_labs)
@@ -428,6 +429,7 @@ mlts_path_decomp <- function(
     n_fac_w = length(unique(ind_nodes$q))
     n_fac_b = length(unique(ind_nodes$etaB_label))
 
+
     # get midpoints
     ind_nodes$midx <- get_mid_points(n_nodes, lims = c(begin.decomp.x, end.decomp.x))
     ind_nodes$midy <- get_mid_points(1, lims = c(fig_margins.y))
@@ -453,7 +455,7 @@ mlts_path_decomp <- function(
         ind_nodes$Wf_midx[i] <- get_mid_points(1, lims = c(min(ind_nodes[ind_nodes$q == fac,"midx"]),max(ind_nodes[ind_nodes$q==fac,"midx"])))
       }
     }
-    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/5
+    ind_nodes$Wf_midy <- ind_nodes$midy + w.decomp.y/decomp_F_y_offset
     ind_nodes$Wf_lab  <- plotmath_labeller(x = paste0("eta[italic(", ind_nodes$q,"*i*t)]^W"), y_fac_labs = y_fac_labs)
 
 
@@ -466,7 +468,7 @@ mlts_path_decomp <- function(
         ind_nodes$Bf_midx[i] <- ind_nodes$midx[i]
       }
     }
-    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/5
+    ind_nodes$Bf_midy <- ind_nodes$midy - w.decomp.y/decomp_F_y_offset
     ind_nodes$Bf_lab  <- plotmath_labeller("b",ind_nodes$etaB_label, y_fac_labs = y_fac_labs, y_ind_labs = y_ind_labs)
 
     ind_radx <- abs(diff(c(ind_nodes$midx[1],begin.decomp.x))) * scale_decomp_ind
@@ -494,20 +496,30 @@ mlts_path_decomp <- function(
     ind_nodes$resB_arr_y1 <- ind_nodes$midy - ind_radx/asp
 
     # mark fixed loadings
+    if(is.null(ind_nodes$lambdaB_isEqual)){
+      ind_nodes$lambdaB_isEqual <- "free"
+    }
+    ind_nodes$lambdaB_isEqual <- ifelse(is.na(ind_nodes$lambdaB_isEqual),"free", ind_nodes$lambdaB_isEqual)
+
     ind_nodes$lamW1_midx = NA
     ind_nodes$lamW1_midy = NA
     ind_nodes$lamW1_lab = 1
+    ind_nodes$lamW1_lab = ifelse(!(ind_nodes$lambdaW_isEqual %in% c("= 1", "free")),ind_nodes$lambdaW_isEqual, 1)
     ind_nodes$lamB1_midx = NA
     ind_nodes$lamB1_midy = NA
     ind_nodes$lamB1_lab = 1
+    ind_nodes$lamB1_lab = ifelse(!(ind_nodes$lambdaB_isEqual %in% c("= 1", "free")),ind_nodes$lambdaB_isEqual, 1)
+
+
     for(i in 1:nrow(ind_nodes)){
-      if( ind_nodes$lambdaW_isEqual[i] == "= 1"){
+      if( ind_nodes$lambdaW_isEqual[i] != "free"){
         ind_nodes$lamW1_midx[i] = ind_nodes$midx[i]
-        ind_nodes$lamW1_midy[i] = ind_nodes$midy[i] + abs(diff(c(ind_nodes$midy[i],ind_nodes$Wf_midy[i])))/3
+        ind_nodes$lamW1_midy[i] = ind_nodes$midy[i] + abs(diff(c(ind_nodes$midy[i],ind_nodes$Wf_midy[i])))/2.5
       }
-      if( ind_nodes$lambdaB_isEqual[i] == "= 1"){
-        ind_nodes$lamB1_midx[i] = ind_nodes$midx[i]
-        ind_nodes$lamB1_midy[i] = ind_nodes$midy[i] - abs(diff(c(ind_nodes$midy[i],ind_nodes$Bf_midy[i])))/3
+
+      if( ind_nodes$lambdaB_isEqual[i] != "free" ){
+          ind_nodes$lamB1_midx[i] = ind_nodes$midx[i]
+          ind_nodes$lamB1_midy[i] = ind_nodes$midy[i] - abs(diff(c(ind_nodes$midy[i],ind_nodes$Bf_midy[i])))/2.5
       }
     }
 

@@ -32,8 +32,8 @@
 #'
 #' # A more fine-grained between-level measurement model can be specified via:
 #' model <- mlts_model_measurement(
-#'               model, q = 1, p = 3,
-#'               btw_model = list(""))
+#'               model, q = 2, p = c(3,1),
+#'               btw_model = list(c(1:3),4))
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
 #'

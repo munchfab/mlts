@@ -505,8 +505,8 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     MMmod = model[model$Model == "Measurement",]
     model = model[model$Model != "Measurement",]
     model$group = 1
+    mod_group = model
     for(g in 2:group){
-      mod_group = model
       mod_group$group = g
       # add to model
       model = rbind(model, mod_group)

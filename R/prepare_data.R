@@ -76,10 +76,12 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
   if(!is.null(beep)){
     data$beep = data[,beep]
     data = data[order(data$num_id, data$beep),]
+    tinterval = 1
   }
   if(!is.null(days)){
     data$day = data[,days]
     data = data[order(data$num_id, data$day, data$beep),]
+    tinterval = 1
   }
 
   if(!is.null(group)){
@@ -95,8 +97,10 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
   # remove rows containing missing values
   if(length(ts) == 1){
     data$miss.NA = is.na(data[,ts])
+    data$miss.NA_all = data$miss.NA
   } else {
     data$miss.NA = rowSums(is.na(data[,ts])) > 0
+    data$miss.NA_all = rowSums(is.na(data[,ts])) == length(ts)
   }
 
   # General first step: ======================================================
@@ -138,6 +142,10 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
 
   } else if (is.numeric(tinterval)) {
     if (is.character(time)) {
+      # remove all rows with only NAs before time grid creation to avoid
+      # missing values to determine the time grid
+      data = data[data$miss.NA_all == FALSE,]
+
       # create time grid according to continuous time variable
       data = create_missings(data = data, tinterval = tinterval, id = id,
                              time = time, btw_vars = btw.vars)
@@ -157,18 +165,16 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
       if(!is.character(beep)){
         stop("No beep variable provided")
       }
-      if(tinterval != 1){
-        warning("tinterval should be 1")
-      }
+
       if(!is.numeric(n_overnight_NAs)){
-        stop("Specify the number of missings to add.")
+        stop("Specify the number of missings to add using `n_overnight_NAs`.")
       }
       # update the beep numbers by a multiple of the day number and n_overnight_NAs
       add_beep = (data$day-1) * n_overnight_NAs
       new_beep = add_beep + data$beep
       data$beep_new = new_beep
 
-      # create time grid according to continuous time variable
+      # create time grid according to running beep variable
       data = create_missings(data = data, tinterval = tinterval, id = id,
                              time = "beep_new", btw_vars = btw.vars)
       data = cbind("order" = 1:nrow(data),data)
@@ -189,6 +195,8 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
 
     # remove helper column(s)
     data[,c("miss.NA")] <- NULL
+    data[,c("miss.NA_all")] <- NULL
+
 
 
     if(!is.null(max_NA_seq)){
