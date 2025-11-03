@@ -123,18 +123,25 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
 
 
       # get cluster-specific estimates
-      for(p in 1:N){
-        g_id = object$standata$g_id[p]
-        cluster_std[[p]][j,result.cols] = round(c(
-          object$standata$group_lab[g_id],
-          mean(b_std[p,]),
-          stats::sd(b_std[p,]),
-          stats::quantile(b_std[p,], c(probs))),digits = digits)
+      if(infos$G == 1){
+        for(p in 1:N){
+          cluster_std[[p]][j,result.cols] = round(c(
+            mean(b_std[p,]),
+            stats::sd(b_std[p,]),
+            stats::quantile(b_std[p,], c(probs))),digits = digits)
+            }
+      } else {
+        for(p in 1:N){
+          g_id = object$standata$g_id[p]
+          cluster_std[[p]][j,result.cols] = round(c(
+            object$standata$group_lab[g_id],
+            mean(b_std[p,]),
+            stats::sd(b_std[p,]),
+            stats::quantile(b_std[p,], c(probs))),digits = digits)
+          }
+        }
+
       }
-    }
-
-
-
 
   } else if(object$standata$standardized == 0){  # check if SDs of latent variables are available
     warning("Variance of latent factor scores not available for standardization
