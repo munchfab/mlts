@@ -21,7 +21,12 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
   probs = c(alpha/2, 1-alpha/2)
   prob.cols = paste0(c(100-(100-(alpha/2)*100), 100-(alpha/2)*100), "%")
   # result columns
-  result.cols = c("Std.Est", "SD", prob.cols)
+  if(infos$G == 1){
+    result.cols = c("Std.Est", "SD", prob.cols)
+  } else {
+    result.cols = c("Group", "Std.Est", "SD", prob.cols)
+  }
+
 
   # prepare results object
   results.std = list()
@@ -39,7 +44,11 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
   # Average Within-Level Standardized Estimates of Dynamics ====================
   n_dim = infos$q
   SD_y_id = array(dim = c(n_dim, N, (chains*iter)))
-  within_std = infos$fix_pars_dyn[, c("Type", "Param")]
+  within_std = list()
+  for(gg in 1:infos$G){
+    within_std[[gg]] <- infos$fix_pars_dyn[, c("Type", "Param")]
+  }
+
   cluster_std <- list()
   for(p in 1:N){
     cluster_std[[p]] = infos$fix_pars_dyn[ ,c("Type", "Param")]
@@ -74,35 +83,58 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
           }
         } else {
           fix_par_no = cumsum(infos$fix_pars_dyn$isRandom == 0)
-          param_stan = paste0("b_fix[",fix_par_no[j],"]")
           for(p in 1:N){
-          b[p,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
-          b_std[p,] = b[p,] *
-            SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
-            SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
-          if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
-            b_std[p,] = b[p,] /
-              SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
-              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
-              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
-          }
+            # get fixed effect - depending on group id
+            g_id = object$standata$g_id[p]
+            param_stan = paste0("b_fix[",g_id,",",fix_par_no[j],"]")
+
+            b[p,] = rstan::extract(object$stanfit, pars = param_stan)[[1]]
+            b_std[p,] = b[p,] *
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] / # sd_x
+              SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,]   # sd_y
+
+            if(infos$fix_pars_dyn$isINT[j] == 1){  # interaction effects
+              b_std[p,] = b[p,] /
+                SD_y_id[as.integer(infos$fix_pars_dyn$Dout[j]),p,] *  # sd_y
+                SD_y_id[as.integer(infos$fix_pars_dyn$Dpred[j]),p,] *  # sd_x1
+                SD_y_id[as.integer(infos$fix_pars_dyn$Dpred2[j]),p,]   # sd_x2
+              }
           }
         }
       # calculate average standardized effect per iteration
-      b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
-      within_std[j, result.cols] = round(c(
-        mean(b_std_average),
-        stats::sd(b_std_average),
-        stats::quantile(b_std_average, c(probs))),digits = digits)
+      if(infos$G == 1){
+        b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
+        within_std[[1]][j, result.cols] = round(c(
+          mean(b_std_average),
+          stats::sd(b_std_average),
+          stats::quantile(b_std_average, c(probs))),digits = digits)
+      } else {
+        for(gg in 1:infos$G){
+          b_std_group = b_std[object$standata$g_id == gg,]
+          b_std_average = apply(b_std_group, MARGIN = 2, FUN = mean)
+          within_std[[gg]][j, result.cols] = round(c(
+            object$standata$group_lab[gg],
+            mean(b_std_average),
+            stats::sd(b_std_average),
+            stats::quantile(b_std_average, c(probs))),digits = digits)
+          }
+        }
+
+
 
       # get cluster-specific estimates
       for(p in 1:N){
+        g_id = object$standata$g_id[p]
         cluster_std[[p]][j,result.cols] = round(c(
+          object$standata$group_lab[g_id],
           mean(b_std[p,]),
           stats::sd(b_std[p,]),
           stats::quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
+
+
+
 
   } else if(object$standata$standardized == 0){  # check if SDs of latent variables are available
     warning("Variance of latent factor scores not available for standardization
@@ -181,6 +213,13 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
           stats::quantile(b_std[p,], c(probs))),digits = digits)
       }
     }
+  }
+
+  # bring list into data frame format
+  if(infos$G == 1){
+    within_std <- within_std[[1]]
+  } else {
+    within_std <- do.call(rbind, within_std)
   }
 
   if(nrow(within_std)>0){
