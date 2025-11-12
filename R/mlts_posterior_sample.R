@@ -9,19 +9,21 @@
 #' @param draw_person_pars Logical. If \code{TRUE}, samples are generated using person-specific parameters (random effects).
 #' If \code{FALSE}, only population-level parameters are used. Defaults to \code{FALSE}.
 #' @param n_draws Integer. Number of posterior draws to use for simulating replicated datasets. Ignored if \code{draws} is provided. Defaults to 10.
-#' @param draws Optional integer vector indicating specific posterior draw indices to use. If \code{NULL}, \code{n_draws} draws are randomly sampled from all available posterior samples.
+#' @param draws Optional integer vector indicating specific posterior draw indices to use. If \code{NULL}, \code{n_draws} draws are chosen with the maximum distance between posterior samples.
+#' @param as_matrix Logical. Return replications of each variable as a matrix with \code{n_draw} rows, ready to run graphical posterior predictive checks using the \code{bayesplot} package.
 #'
 #' @details
 #' The function extracts posterior samples of population-level (and optionally individual-level) parameters
 #' from a fitted \code{mlts} model and simulates replicated datasets from the posterior predictive distribution.
 #' Each replication corresponds to a different posterior draw and reflects uncertainty in the model's parameters.
+#' See \code{\link[bayesplot:PPC-overview]{PPC}} for an overview on graphical posterior predictive checks and how they can be performed.
 #'
 #' If \code{draw_person_pars = TRUE}, the function uses sampled person-specific random effects and covariate effects
 #' from the posterior to generate new data at the individual level. This requires that the model was fitted with
 #' \code{monitor_person_pars = TRUE} in \code{\link[mlts]{mlts_fit}}. If this condition is not met, the function will
 #' throw an error.
 #'
-#' Posterior draws are either selected randomly (\code{n_draws}) or specified manually using the \code{draws} argument.
+#' Posterior draws are either selected with the maximum distance between posterior samples (\code{n_draws}) or specified manually using the \code{draws} argument.
 #' Optionally, left or right censoring is respected in the simulated data if such constraints were present in the model.
 #'
 #' @return A list of replicated datasets, each as a \code{data.frame} with columns:
@@ -51,7 +53,8 @@ mlts_posterior_sample <- function(
     fit,
     draw_person_pars = FALSE,
     n_draws = 10,
-    draws = NULL
+    draws = NULL,
+    as_matrix = TRUE
 ){
 
   # get model infos
@@ -83,7 +86,9 @@ mlts_posterior_sample <- function(
   }
 
   # select draws
-  if(is.null(draws)){draws_use = sample(x = 1:n_mcmc, size = n_draws)}
+  if(is.null(draws)){
+    draws_use = as.integer(seq(from=1, to=n_mcmc, by = n_mcmc/n_draws))
+    }
 
   # list of replications
   y_reps = list()
@@ -167,6 +172,22 @@ mlts_posterior_sample <- function(
     )
 
   }
+
+
+  if( as_matrix == TRUE ){
+    mat_out <- list()
+
+    for( t in fit$standata$ts ){
+      mat_out[[t]] = matrix(nrow = n_draws, ncol = nrow(y_reps[[1]]))
+      for( j in 1:n_draws){
+        mat_out[[t]][j,] = y_reps[[j]][,t]
+      }
+    }
+
+    y_reps = mat_out
+  }
+
+
 
   return(y_reps)
 

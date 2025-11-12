@@ -106,7 +106,8 @@ mlts_pp_check <- function(
         fit = fit,
         draw_person_pars = draw_person_pars,
         n_draws = n_draws,
-        draws = draws
+        draws = draws,
+        as_matrix = FALSE
       )
     }
 
@@ -144,7 +145,8 @@ mlts_pp_check <- function(
         fit = fit_list[[j]],
         draw_person_pars = draw_person_pars,
         n_draws = n_draws,
-        draws = draws
+        draws = draws,
+        as_matrix = FALSE
       )
 
       # turn into data.frame
