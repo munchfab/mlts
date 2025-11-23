@@ -205,32 +205,3 @@ ts_descriptives <- function(data, ts, per_person = FALSE, id = NULL){
     return(final_df)
   }
 }
-
-
-# AR1_4ind = mlts_model(
-#   q = 1,          # number of time-varying (latent) constructs
-#   p = 4,          # number of manifest indicators
-#   btw_factor = T  # common between-level factor (the default)
-# )
-#
-# simAR1_4ind = mlts_sim(
-#   model = AR1_4ind,         # model object
-#   default = T,              # set to TRUE to use random true values for parameters
-#   N = 100,                  # number of subjects
-#  TP = 70,                  # number of time points per subject
-#   burn.in = 50,             # burn in for within-level process
-#   seed = 4,                 # set seed for reproducible results
-# )
-#
-#
-# df_test <- data.frame(
-#   a = c(1, 2, 3, 4, 5),
-#   b = c(10, 10, 10, 10, 10),
-#   c = c(NA, 1, 1, 1, 1)
-# )
-#
-# ts_descriptives(simAR1_4ind$data, c("Y1.1", "Y1.2", "Y1.3", "Y1.4"))
-#
-# ts_descriptives(simAR1_4ind$data, c("Y1.1", "Y1.2", "Y1.3", "Y1.4"),
-#                 per_person = T, id = "ID")
-# ts_descriptives(df_test, c("a", "b", "c"))
