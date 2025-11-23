@@ -35,8 +35,10 @@ ts_descriptives <- function(data, ts, per_person = F, id = NULL){
     # mean
     mean_ts = sapply(ts, function(x) mean(data[[x]], na.rm = T))
 
+    # median
+    median_ts = sapply(ts, function(x) stats::median(data[[x]], na.rm = T))
+
     # sample standard deviation
-    median_ts = sapply(ts, function(x) median(data[[x]], na.rm = T))
     sd_ts = sapply(ts, function(x) {
       x_vec <- data[[x]]
       n <- sum(!is.na(x_vec))
@@ -127,7 +129,7 @@ ts_descriptives <- function(data, ts, per_person = F, id = NULL){
         x_mean <- mean(x_vec_clean)
 
         # median
-        x_median <- median(x_vec_clean)
+        x_median <- stats::median(x_vec_clean)
 
         # sample stadard devation
         if (n < 2){
