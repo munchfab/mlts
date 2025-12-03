@@ -17,21 +17,31 @@
 #' @param scale_min,scale_max Optional numeric values specifying the minimum and
 #'   maximum of the measurement scale for computing floor and ceiling
 #'   percentages. If \code{NULL} (default), these are taken as the minimum and
-#*   maximum observed values in the entire dataset for each variable.
+#'   maximum observed values in \code{data[[var]]} for each time-series
+#'   variable.
+#' @param skew_type Integer (1, 2, or 3) passed to \code{e1071::skewness} that
+#'   controls the estimator of skewness (see Joanes & Gill, 1998, and the
+#'   \code{e1071} documentation). The default is \code{2}, which corresponds
+#'   to the estimator used by SPSS/SAS.
+#' @param kurt_type Integer (1, 2, or 3) passed to \code{e1071::kurtosis} that
+#'   controls the estimator of kurtosis. The default is \code{2}, matching the
+#'   skewness default.
 #'
 #' @details
 #' For each time-series variable, the function removes \code{NA} values before
-#' computing summary statistics. Skewness and kurtosis are computed manually and
-#' set to \code{NA} when the standard deviation is zero, missing, or when fewer
-#' than four complete observations are available.
+#' computing summary statistics. Skewness and kurtosis are obtained from
+#' \code{e1071::skewness} and \code{e1071::kurtosis}, respectively, using the
+#' \code{skew_type} and \code{kurt_type} arguments. When the standard deviation
+#' is zero, missing, or when fewer than four complete observations are
+#' available, both skewness and kurtosis are set to \code{NA}.
 #'
 #' Floor and ceiling effects are defined as the percentage of non-missing
 #' observations equal to \code{scale_min} and \code{scale_max}, respectively.
 #'
 #' Lag-1 completeness is computed as the number of adjacent observation pairs
-#' where both the current and next observation are non-missing. **If
+#' where both the current and next observation are non-missing. If
 #' \code{group = NULL}, this computation does not account for clustering
-#' or overnight gaps**—that is, the function assumes the
+#' or overnight gaps—that is, the function assumes the
 #' data form a single continuous time series, and lag-1 pairs may span across
 #' natural breaks in the data.
 #'
@@ -47,8 +57,10 @@
 #'   \item \code{M} — mean
 #'   \item \code{Mdn} — median
 #'   \item \code{SD} — standard deviation
-#'   \item \code{Skew} — skewness
-#'   \item \code{Kurtosis} — kurtosis (excess)
+#'   \item \code{Skew} — sample skewness (as returned by \code{e1071::skewness}
+#'         with the specified \code{skew_type})
+#'   \item \code{Kurtosis} — sample kurtosis (as returned by
+#'         \code{e1071::kurtosis} with the specified \code{kurt_type})
 #'   \item \code{floor_pc} — percent at \code{scale_min}
 #'   \item \code{ceiling_pc} — percent at \code{scale_max}
 #' }
@@ -63,7 +75,8 @@
 #' }
 #'
 #' @export
-describe_ts <- function(data, ts, group = NULL, digits = 3, scale_min = NULL, scale_max = NULL){
+describe_ts <- function(data, ts, group = NULL, digits = 3, scale_min = NULL,
+                        scale_max = NULL, skew_type = 2, kurt_type = 2){
 
   if(!is.null(group)){
     data$temp_id <- data[[group]]
@@ -82,10 +95,14 @@ describe_ts <- function(data, ts, group = NULL, digits = 3, scale_min = NULL, sc
     for (var in ts){
 
       if(is.null(scale_min)){
-        scale_min = min(data_p[[var]], na.rm = T)
+        scale_min_use = min(data[[var]], na.rm = T)
+      } else {
+        scale_min_use = scale_min
       }
       if(is.null(scale_max)){
-        scale_max = max(data_p[[var]], na.rm = T)
+        scale_max_use = max(data[[var]], na.rm = T)
+      } else{
+        scale_max_use = scale_max
       }
 
       x_vec <- data_p[[var]]
@@ -101,8 +118,8 @@ describe_ts <- function(data, ts, group = NULL, digits = 3, scale_min = NULL, sc
       x_mean      <- mean(x_vec_clean)
       x_median    <- stats::median(x_vec_clean)
       x_sd        <- stats::sd(x_vec_clean)
-      pc_floor    <- sum(x_vec_clean == scale_min) / n * 100
-      pc_ceiling  <- sum(x_vec_clean == scale_max) / n * 100
+      pc_floor    <- sum(x_vec_clean == scale_min_use) / n * 100
+      pc_ceiling  <- sum(x_vec_clean == scale_max_use) / n * 100
 
 
 
@@ -110,8 +127,8 @@ describe_ts <- function(data, ts, group = NULL, digits = 3, scale_min = NULL, sc
         x_kurt <- NA_real_
         x_skew <- NA_real_
       } else{
-        x_kurt <- sum(((x_vec_clean - x_mean) / x_sd)^4) / n - 3
-        x_skew <- sum(((x_vec_clean - x_mean) / x_sd)^3) / n
+        x_kurt <- e1071::kurtosis(x_vec_clean, type = kurt_type)
+        x_skew <- e1071::skewness(x_vec_clean, type = skew_type)
       }
 
       one_row <- list(
