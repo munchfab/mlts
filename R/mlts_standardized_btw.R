@@ -11,12 +11,6 @@
 mlts_standardized_btw <- function(object, digits = 3, prob = .95
 ){
 
-  # make sure object is of class mltsfit
-  # if(class(object) != "mltsfit")
-  if (!inherits(object, "mltsfit")) {
-    stop("Input of `object` should be of class 'mltsfit'.")
-  }
-
   # get model infos
   infos <- mlts_model_eval(object$model)
 
@@ -34,22 +28,34 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
   chains <- as.numeric(object$stanfit@sim$chains)
   warmup <- as.numeric(object$stanfit@sim$warmup)
   iter <- as.numeric(object$stanfit@sim$iter) -warmup
+  iter <- iter / object$stanfit@sim$thin
   n_random <- object$standata$n_random
   re_sds = array(dim = c(chains, iter, n_random))
   N = object$standata$N
   # get SDs of RE predictor variables
-  Wvars_sds = apply(object$standata$W, MARGIN = 2, FUN = stats::sd)
+  Wvars_sds <- list()
+  for(g in 1:infos$G){
+    Wvars_sds[[g]] <- 0 # initiate the structure to supress error
+    for(cc in 1:infos$n_cov){
+      Wvars_sds[[g]][cc] <- stats::sd(object$standata$W[object$standata$g_id==g,cc])
+    }
+  }
 
   # get/calculate model-implied RE variances ----
+  Var_RE <- list()
+
+  for(g in 1:infos$G){
+    N = object$standata$N_G[g]
+
   ## get labels of (residual) random effect SDs
-  labs_re = paste0("sd_R[",1:n_random,"]")
+  labs_re = paste0("sd_R[",g,",",1:n_random,"]")
   sigma_RE = rstan::extract(object$stanfit, pars = labs_re)
   # number of covariates used for prediction of random effects
   n_cov = object$standata$n_cov
   # as default use sigma of random effects and update respectively
-  Var_RE = sigma_RE
+  Var_RE[[g]] = sigma_RE
   for(i in 1:n_random){
-    Var_RE[[i]] = Var_RE[[i]]^2
+    Var_RE[[g]][[i]] = Var_RE[[g]][[i]]^2
   }
 
   # Part 1: Standardized estimates for random effects regressed on covariate(s)
@@ -67,9 +73,9 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         for(j in 1:n_cov_pred){
           cov_mat = object$standata$n_cov_mat
           b_pos = which(cov_mat[,1] == n_cov_pos[j] & cov_mat[,2] == i)
-          b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",b_pos,"]"))
+          b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",g,",",b_pos,"]"))
           for(k in 1:(iter*chains)){
-            y_pred[k,] = y_pred[k,] + object$standata$W[,n_cov_pos[j]] * b[[1]][k]
+            y_pred[k,] = y_pred[k,] + object$standata$W[object$standata$g_id == g,n_cov_pos[j]] * b[[1]][k]
           }
         }
         # get variance of predicted scores in each iteration
@@ -79,23 +85,29 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
         }
 
         # add variance of predicted scores to sigma in each iteration
-        Var_RE[[i]] = Var_RE[[i]] + y_pred_var
+        Var_RE[[g]][[i]] = Var_RE[[g]][[i]] + y_pred_var
       }
     }
 
 
     # now use SDs of RE to standardize regression parameters:
     # prepare object to store results
-    re_pred_std = infos$RE.PREDS[, c("Type", "Param")]
+    if(infos$G > 1){
+      re_pred_std = infos$RE.PREDS[, c("Type","group", "Param")]
+      re_pred_std$group = g
+    } else {
+      re_pred_std = infos$RE.PREDS[, c("Type", "Param")]
+    }
+
     re_pred_std[,result.cols] = NA
     for(k in 1:nrow(infos$RE.PREDS)){
 
       # get SD of covariate
-      sd_x = Wvars_sds[object$standata$n_cov_mat[k,1]]
+      sd_x = Wvars_sds[[g]][object$standata$n_cov_mat[k,1]]
       # get position of RE on RE_par_SD
-      sd_y = sqrt(Var_RE[[object$standata$n_cov_mat[k,2]]])
+      sd_y = sqrt(Var_RE[[g]][[object$standata$n_cov_mat[k,2]]])
       # get parameter label in stan model
-      b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",k,"]"))
+      b <- rstan::extract(object$stanfit, pars = paste0("b_re_pred[",g,",",k,"]"))
       b_std <- b[[1]] * sd_x / sd_y
       # save summary statistics
       re_pred_std[k, result.cols] = round(c(
@@ -105,29 +117,42 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     }
 
     result = rbind(result, re_pred_std)
+    }
   }
 
   # Part 2: Standardized estimates for outcomes regressed on random effects
   if(object$standata$n_out > 0){
+
+    for(g in 1:infos$G){
+
     # prepare final object to store results
-    out_pred_std = infos$OUT[, c("Type", "Param")]
+    if(infos$G>1){
+      out_pred_std = infos$OUT[, c("Type","group", "Param")]
+      out_pred_std$group = g
+    } else {
+      out_pred_std = infos$OUT[, c("Type", "Param")]
+    }
+
     out_pred_std[,result.cols] = NA
 
     # get SDs of outcomes
-    SDs_out = apply(object$standata$out, FUN = stats::sd, MARGIN = 1)
+    for(i in 1:infos$n_out){
+      SDs_out[i] = stats::sd(object$standata$out[i,object$standata$g_id==g])
+    }
+
     # add variances of additional covariates used as predictor
     if(object$standata$n_z > 0){
       for(i in 1:object$standata$n_z){
-        Var_RE[[n_random+i]] <- stats::var(object$standata$Z[,i])
+        Var_RE[[g]][[n_random+i]] <- stats::var(object$standata$Z[,i])
       }
     }
 
     for(i in 1:nrow(infos$OUT)){
       # get unstandardized estimate
-      lab_out = object$pop.pars.summary$Param_stan[which(object$pop.pars.summary$Param == infos$OUT$Param[i])]
+      lab_out = object$pop.pars.summary$Param_stan[which(object$pop.pars.summary$Param == infos$OUT$Param[i] & object$pop.pars.summary$group == g)]
       b = rstan::extract(object$stanfit, pars = c(lab_out))
       sd_y = SDs_out[infos$OUT$out_var_no[i]]
-      sd_x = sqrt(Var_RE[[infos$OUT$Pred_no[i]]])
+      sd_x = sqrt(Var_RE[[g]][[infos$OUT$Pred_no[i]]])
       b_std = b[[1]] * sd_x / sd_y
       # save summary statistics
       out_pred_std[i, result.cols] = round(c(
@@ -138,6 +163,8 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 
     row.names(result) <- NULL
     result = rbind(result, out_pred_std)
+
+    }
   }
 
   ## Standardization of constant dynamic parameters ----------------------------
@@ -146,68 +173,88 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
 
   # run standardization for single-indicator models ----------------------------
   if(isLatent == FALSE){
-  # check that for each dimension:
-  # all dynamic parameters are fixed
-  # all innovation variances of dependent and independent dimensions are fixed
-  fix_dyn = infos$fix_pars_dyn[infos$fix_pars_dyn$isRandom == 0,]
-  if(nrow(fix_dyn) > 0){
-    # use average of observed intraindividual variance for standardization of
-    # constant dynamic parameters
-    VarYw = array(dim = c(infos$q))
-    for(i in 1:infos$q){
-      ivar = c()
-      for(p in 1:N){
-        ivar[p] = stats::var(object$data[object$data$num_id==p,object$standata$ts[i]], na.rm=TRUE)
-      }
-      VarYw[i] = mean(ivar)
-    }
 
+    for(g in 1:infos$G){
+      # check that for each dimension:
+      # all dynamic parameters are fixed
+      # all innovation variances of dependent and independent dimensions are fixed
+      fix_dyn = infos$fix_pars_dyn[infos$fix_pars_dyn$isRandom == 0,]
 
-    # run checks looped over dynamic parameters
-    for(i in 1:nrow(fix_dyn)){
-      # 1. check if all dynamic parameters predicting the respective construct
-      # are constant across subjects
-      dim_out = fix_dyn$Dout[i]
-      all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
-      # 2. check if innovation variances of involved constructs are constant
-      dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
-      if(fix_dyn$isINT[i] == 1){
-        dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
-      }
-      # check based on parameter labels
-      InnoVar_labs = paste0("sigma_",dim_pred)
-      all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
-
-      # run standardization
-      if(all_dynPars_fixed & all_InnoVars_fixed){
-        # get unstandardized estimates per iteration
-        par_label = fix_dyn$Param[i]
-        par_stan = object$param.labels$Param_stan[object$param.labels$Param == par_label]
-        b = rstan::extract(object$stanfit, pars = c(par_stan))
-        sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
-        sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
-        b_std <- b[[1]] * sd_x / sd_y
-        if(fix_dyn$isINT[i] == 1){
-          sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
-          sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
-          sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
-          b_std <- b[[1]] / sd_y * sd_x * sd_x2
+      if(nrow(fix_dyn) > 0){
+        # use average of observed intraindividual variance for standardization of
+        # constant dynamic parameters
+        VarYw = array(dim = c(infos$q))
+        for(i in 1:infos$q){
+          ivar = c()
+          for(p in 1:object$standata$N_G[g]){
+            sub_id = object$standata$g_id_pos[g,p]
+            ivar[p] = stats::var(object$data[object$data$num_id==sub_id,object$standata$ts[i]], na.rm=TRUE)
+          }
+          VarYw[i] = mean(ivar)
         }
 
-        b_std = round(c(
-          mean(unlist(b_std)),
-          stats::sd(unlist(b_std)),
-          stats::quantile(unlist(b_std), c(probs))),digits = digits)
-        b_std = cbind.data.frame(
-          "Type" = "Dynamic",
-          "Param" = par_label,
-          t(b_std)
-        )
-        colnames(b_std) = c("Type", "Param", result.cols)
-        result = rbind(result, b_std)
+
+        # run checks looped over dynamic parameters
+        for(i in 1:nrow(fix_dyn)){
+          # 1. check if all dynamic parameters predicting the respective construct
+          # are constant across subjects
+          dim_out = fix_dyn$Dout[i]
+          all_dynPars_fixed = sum(infos$fix_pars_dyn[infos$fix_pars_dyn$Dout == dim_out,"isRandom"]) == 0
+          # 2. check if innovation variances of involved constructs are constant
+          dim_pred = infos$fix_pars_dyn$Dpred[infos$fix_pars_dyn$Dout == dim_out]
+          if(fix_dyn$isINT[i] == 1){
+            dim_pred = c(dim_pred, infos$fix_pars_dyn$Dpred2[infos$fix_pars_dyn$Dout == dim_out])
+          }
+          # check based on parameter labels
+          InnoVar_labs = paste0("sigma_",dim_pred)
+          all_InnoVars_fixed = sum(!(InnoVar_labs %in% infos$fix_pars$Param)) == 0
+
+          # run standardization
+          if(all_dynPars_fixed & all_InnoVars_fixed){
+            # get unstandardized estimates per iteration
+            par_label = fix_dyn$Param[i]
+            par_stan = object$param.labels$Param_stan[object$param.labels$Param == par_label &
+                                                        object$param.labels$group == g]
+            b = rstan::extract(object$stanfit, pars = c(par_stan))
+            sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+            sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+            b_std <- b[[1]] * sd_x / sd_y
+            if(fix_dyn$isINT[i] == 1){
+              sd_x = sqrt(VarYw[as.integer(fix_dyn$Dpred[i])])
+              sd_x2 = sqrt(VarYw[as.integer(fix_dyn$Dpred2[i])])
+              sd_y = sqrt(VarYw[as.integer(fix_dyn$Dout[i])])
+              b_std <- b[[1]] / sd_y * sd_x * sd_x2
+            }
+
+            b_std = round(c(
+              mean(unlist(b_std)),
+              stats::sd(unlist(b_std)),
+              stats::quantile(unlist(b_std), c(probs))),digits = digits)
+
+            if(object$standata$G > 2){
+              b_std = cbind.data.frame(
+                "Type" = "Dynamic",
+                "Param" = par_label,
+                "Group" = object$standata$group_lab[g],
+                t(b_std)
+              )
+              colnames(b_std) = c("Type", "Param", "Group", result.cols)
+            } else {
+              b_std = cbind.data.frame(
+                "Type" = "Dynamic",
+                "Param" = par_label,
+                t(b_std)
+              )
+              colnames(b_std) = c("Type", "Param", result.cols)
+            }
+
+
+            result = rbind(result, b_std)
+          }
+        }
       }
+
     }
-  }
   }
 
 
@@ -290,5 +337,6 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     }
   }
 
+  row.names(result) <- NULL
   return(result)
 }

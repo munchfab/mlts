@@ -9,7 +9,7 @@
   priors = FALSE,
   se = FALSE,
   prob = 0.95,
-  bpe = c("mean", "median"),
+  bpe = c("mean"),
   digits = 3,
   flag_signif = FALSE,
   ...

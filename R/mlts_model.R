@@ -57,7 +57,7 @@
 #' @param out_pred_add_btw A character vector. If `out_pred` is a character (vector), all
 #' inputs will be treated as between-level covariates to be used as additional predictors of
 #' all outcomes specified in `out_pred`.
-#' @param fixef_group A character vector (not yet supported). Add a binary coded (0 vs. 1) variable to include
+#' @param group An integer specifying the number of groups (not yet supported). Add a binary coded (0 vs. 1) variable to include
 #' group differences in fixed effects (intercepts). When dynamic or variance parameters
 #' are allowed to vary by cluster, you can enter the grouping variable to `re_pred`.
 #' @param is_exogenous Integer or a vector of integers. Indicate if any of the constructs
@@ -171,7 +171,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           inno_covs_dir = NULL,
                           fixef_zero = NULL, ranef_zero = NULL,
                           ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL,
-                          fixef_group = NULL,
+                          group = NULL,
                           is_exogenous = NULL,
                           incl_t0_effects = NULL,
                           incl_interaction_effects = NULL,
@@ -201,6 +201,11 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
 
   if(!is.null(p) & !is.null(is_exogenous) & any(p[is_exogenous] > 1)){
     stop("Measurment model specification for exogenous construct is not supported.")
+  }
+
+  if(!is.null(p) & !is.null(group)){
+    stop("Multiple group analyses are currently limited to manifest model ",
+         "(without measurement model specification).")
   }
 
   if(q >= 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
@@ -490,26 +495,28 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   }
 
 
-  # Fixed effect - Group Differences ===========================================
-  if(!is.null(fixef_group)){
-    # add parameters to the model
-    FEdiffs <- model[model$Type == "Fixed effect", ]
-    # update
-    FEdiffs$Type <- "FE Group Diff"
-    FEdiffs$Param <- paste0(FEdiffs$Param,"_diff")
-
-    # add to model
-    model = rbind(model, FEdiffs)
-
-  }
-
-
   # Any exogenous variables? ===================================================
   if(!is.null(is_exogenous)){
     model <- mod_update_exo(model, is_exo = is_exogenous)
   }
 
+  # Fixed effect - Group Differences ===========================================
+  if(!is.null(group)){
+    MMmod = model[model$Model == "Measurement",]
+    model = model[model$Model != "Measurement",]
+    model$group = 1
+    mod_group = model
+    for(g in 2:group){
+      mod_group$group = g
+      # add to model
+      model = rbind(model, mod_group)
+    }
 
+    if(nrow(MMmod)>0){
+      MMmod$group = NA
+      model <- rbind(model, MMmod)
+    }
+  }
 
   return(model)
 }

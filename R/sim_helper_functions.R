@@ -2,6 +2,7 @@ mlts_sim_within <- function(
     infos,
     burn.in,
     N,
+    group_ids,
     TP,       # single integer or a vector of length N
     btw,
     mm_pars = NULL,
@@ -17,6 +18,11 @@ mlts_sim_within <- function(
     "ID"   = unlist(lapply(1:N, function(x){rep(x,TP[x])})),
     "time" = unlist(lapply(unname(TP), function(x){1:x}))
   )
+
+  if(infos$G > 1){
+    within$group = unlist(lapply(1:N, function(x){rep(group_ids[x],TP[x])}))
+  }
+
 
   q = infos$q                # number of constructs
   y_cols = paste0("Y",1:q)   # prepare columns
@@ -39,6 +45,7 @@ mlts_sim_within <- function(
 
   for(i in 1:N){
     NT <- TP[i] + burn.in
+    use_group <- group_ids[i]
 
     # build person-specific transition matrix
     transition = matrix(nrow = q, ncol = q*infos$maxLag, data = 0)
@@ -70,11 +77,11 @@ mlts_sim_within <- function(
       if(infos$n_inno_cors > 0){
         for(xx in 1:q){
           for(yy in 1:q){
-            par_is_there = cor_pars$sample[cor_pars$Param == paste0("r.zeta_",xx,yy)]
+            par_is_there = cor_pars$sample[cor_pars$group==use_group & cor_pars$Param == paste0("r.zeta_",xx,yy)]
             if(xx < yy & length(par_is_there) > 0){
               x_pos = infos$D_cen_pos[xx]
               y_pos = infos$D_cen_pos[yy]
-              cor = cor_pars$sample[cor_pars$Param == paste0("r.zeta_",xx,yy)]
+              cor = cor_pars$sample[cor_pars$group==use_group & cor_pars$Param == paste0("r.zeta_",xx,yy)]
               cov = cor * sqrt(inno_var_mat[x_pos,x_pos]) * sqrt(inno_var_mat[y_pos,y_pos])
               inno_var_mat[x_pos,y_pos] <- inno_var_mat[y_pos,x_pos] <- cov
             }
@@ -213,6 +220,26 @@ mlts_sim_within <- function(
 
 }
 
+# helper function to filter model object and add starting values for data generation
+add_trues <- function(model, type = NULL, label = NULL, group = NULL, which = NULL, values, adjust_size = FALSE){
+
+  select <- rep(TRUE, nrow(model))
+
+  if(!is.null(type)){ select <- model$Type == type & select}
+  if(!is.null(label)){ select <- model$Param_Label == label & select}
+  if(!is.null(which)){ select <- which & select}
+  if(!is.null(group)){ select <- model$group == group & select}
+
+
+  if( adjust_size == TRUE ) { # fix length of values
+    values = values[1:sum(select == TRUE)]
+  }
+
+  model$true.val[select] <- values
+
+  return(model)
+}
+
 
 # reconstruct matrix of person-parameters of a fitted mlts.fit-object
 get_person_par_mat <- function(
@@ -222,6 +249,7 @@ get_person_par_mat <- function(
 
   # construct matrix
   N = fit$standata$N
+  g_id = fit$standata$g_id
   btw <- matrix(data = NA, nrow = N, ncol = infos$n_pars)
 
   # fill with samples
@@ -229,7 +257,9 @@ get_person_par_mat <- function(
   n_rand = infos$n_random
   samples = rstan::extract(fit$stanfit, pars = paste0("b_free"))
   for(i in 1:n_rand){
-    btw[,infos$is_random[i]] <- samples$b_free[iter,,i]
+    for(gg in 1:infos$G){
+      btw[g_id==gg,infos$is_random[i]] <- samples$b_free[iter,g_id==gg,i]
+    }
   }
 
   ## constants
@@ -238,7 +268,9 @@ get_person_par_mat <- function(
   if(n_fix > 0){
     samples = rstan::extract(fit$stanfit, pars = paste0("b_fix"))
     for(i in 1:n_fix){
-      btw[,infos$is_fixed[i]] <- samples$b_fix[iter,i]
+      for(gg in 1:infos$G){
+      btw[g_id==gg,infos$is_fixed[i]] <- samples$b_fix[iter,gg,i]
+      }
     }
   }
   ### innovation SDs
@@ -246,7 +278,9 @@ get_person_par_mat <- function(
   if(n_innos_fix > 0){
     samples = rstan::extract(fit$stanfit, pars = paste0("sigma"))
     for(i in 1:n_innos_fix){
-      btw[,infos$innos_pos[i]] <- samples$sigma[iter,i]
+      for(gg in 1:infos$G){
+        btw[g_id==gg,infos$innos_pos[i]] <- samples$sigma[iter,gg,i]
+      }
     }
   }
 
@@ -266,46 +300,52 @@ get_new_person_par_mat <- function(
     re_pred_samples,
     W){
 
-  # get regression estimates
-  b_re_pred_mat = matrix(NA, nrow = infos$n_cov, ncol = infos$n_random)
-  for(j in 1:nrow(gamma_pars)){
-    b_re_pred_mat[1,] = gamma_samples$gammas[iter,]
-  }
-  if(infos$n_cov>1){
-    for(k in 1:infos$n_cov_bs){
-      xx = infos$n_cov_mat[k,1]
-      yy = infos$n_cov_mat[k,2]
-      b_re_pred_mat[xx,yy] = re_pred_samples[[re_pred_pars$Param_stan[k]]][iter]
+
+  # initial objects
+  N = fit$standata$N
+  g_id = fit$standata$g_id
+  b_re_pred_mat <- list()
+  bmu <- matrix(NA, nrow = N, ncol = infos$n_random)
+  btw <- matrix(data = NA, nrow = N, ncol = infos$n_pars)
+  n_rand <- infos$n_random
+  b_free <- matrix(data = NA, nrow = N, ncol = n_rand)
+
+
+  # loop over (potential groups)
+  for(gg in 1:infos$G){
+    b_re_pred_mat[[gg]] = matrix(NA, nrow = infos$n_cov, ncol = infos$n_random)
+    for(j in 1:nrow(gamma_pars[gamma_pars$group==gg])){
+      b_re_pred_mat[[gg]][1,] = gamma_samples$gammas[iter,gg,]
     }
-  }
+    if(infos$n_cov>1){
+      for(k in 1:infos$n_cov_bs){
+        xx = infos$n_cov_mat[k,1]
+        yy = infos$n_cov_mat[k,2]
+        b_re_pred_mat[[gg]][xx,yy] = re_pred_samples[[re_pred_pars$Param_stan[re_pred_pars$group==gg][k]]][iter]
+        }
+      }
 
   # calculate population means
-  bmu = W %*% b_re_pred_mat
-
-  # construct matrix
-  N = fit$standata$N
-  btw <- matrix(data = NA, nrow = N, ncol = infos$n_pars)
-
-  # fill with samples
-  ## random parameters
-  n_rand = infos$n_random
-  b_free <-  matrix(data = NA, nrow = N, ncol = n_rand)
+  bmu[g_id == gg,1:infos$n_random] = W[g_id == gg,] %*% b_re_pred_mat[[gg]]
+  }
 
   # reconstruct var-cov-matrix
-  re_SDs = sd_R_samples$sd_R[iter,]
-  if(n_rand > 1){
-    bcorr = as.matrix(bcorr_samples$bcorr[iter,,])
-    SIGMA = diag(re_SDs) %*% bcorr %*% diag(re_SDs)
-    gammas = gamma_samples$gammas[iter,]
-    for(p in 1:N){
+  for(p in 1:N){
+    gg <- g_id[p]
+    re_SDs = sd_R_samples$sd_R[iter,gg,]
+    if(n_rand > 1){
+      bcorr = as.matrix(bcorr_samples$bcorr[iter,gg,,])
+      SIGMA = diag(re_SDs) %*% bcorr %*% diag(re_SDs)
+      gammas = gamma_samples$gammas[iter,gg,]
       b_free[p,] = mvtnorm::rmvnorm(n = 1, mean = bmu[p,], sigma = SIGMA)
+
+      } else {
+      b_free[p,1] = bmu[p,1] + stats::rnorm(n = 1, mean = 0, sd = sd_R_samples$sd_R[iter,gg,1])
+      }
     }
-  } else {
-    b_free[,1] = bmu[,1] + stats::rnorm(n = N, mean = 0, sd = sd_R_samples$sd_R[iter,1])
-  }
-  for(i in 1:n_rand){
-    btw[,infos$is_random[i]] <- b_free[,i]
-  }
+    for(i in 1:n_rand){
+      btw[,infos$is_random[i]] <- b_free[,i]
+    }
 
   ## constants
   ### dynamic parameters
@@ -313,7 +353,9 @@ get_new_person_par_mat <- function(
   if(n_fix > 0){
     samples = rstan::extract(fit$stanfit, pars = paste0("b_fix"))
     for(i in 1:n_fix){
-      btw[,infos$is_fixed[i]] <- samples$b_fix[iter,i]
+      for(gg in 1:infos$G){
+      btw[g_id == gg,infos$is_fixed[i]] <- samples$b_fix[iter,gg,i]
+      }
     }
   }
   ### innovation SDs
@@ -321,7 +363,9 @@ get_new_person_par_mat <- function(
   if(n_innos_fix > 0){
     samples = rstan::extract(fit$stanfit, pars = paste0("sigma"))
     for(i in 1:n_innos_fix){
-      btw[,infos$innos_pos[i]] <- samples$sigma[iter,i]
+      for(gg in 1:infos$G){
+        btw[g_id == gg,infos$innos_pos[i]] <- samples$sigma[iter,gg,i]
+      }
     }
   }
 

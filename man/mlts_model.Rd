@@ -22,7 +22,7 @@ mlts_model(
   ranef_pred = NULL,
   out_pred = NULL,
   out_pred_add_btw = NULL,
-  fixef_group = NULL,
+  group = NULL,
   is_exogenous = NULL,
   incl_t0_effects = NULL,
   incl_interaction_effects = NULL,
@@ -106,7 +106,7 @@ in \code{model$Param} will be treated as additional between-level predictors.}
 inputs will be treated as between-level covariates to be used as additional predictors of
 all outcomes specified in \code{out_pred}.}
 
-\item{fixef_group}{A character vector (not yet supported). Add a binary coded (0 vs. 1) variable to include
+\item{group}{An integer specifying the number of groups (not yet supported). Add a binary coded (0 vs. 1) variable to include
 group differences in fixed effects (intercepts). When dynamic or variance parameters
 are allowed to vary by cluster, you can enter the grouping variable to \code{re_pred}.}
 

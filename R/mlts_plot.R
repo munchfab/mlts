@@ -89,7 +89,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor", "int"), bpe = c("media
     # extract data used for plotting
     p.data <- fit$pop.pars.summary
     # order fix effects
-    p.data$Param <- factor(p.data$Param, levels = rev(p.data$Param))
+    p.data$Param <- factor(p.data$Param, levels = rev(unique(p.data$Param)))
     # add parameter type used for facets
     p.data$Param_type <- p.data$Type
 
@@ -109,15 +109,31 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor", "int"), bpe = c("media
 
     # build general plot
     aes <- ggplot2::aes
-    P <- ggplot2::ggplot(data = p.data, aes(y = .data$Param, x = .data$bpe)) +
-          ggplot2::geom_point(color = dot_color, size = dot_size, shape = dot_shape) +
-          ggplot2::geom_errorbar(aes(xmin = .data$`2.5%`, xmax = .data$`97.5%`),
-                                 color = errorbar_color,
-                                 width = errorbar_width) +
-          ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = TRUE) +
-          ggplot2::labs(x = xlab, y = ylab) +
-          ggplot2::scale_x_continuous(n.breaks = 8) +
-          ggplot2::theme_bw()
+    if(fit$standata$G == 1){
+      P <- ggplot2::ggplot(data = p.data, aes(y = .data$Param, x = .data$bpe)) +
+        ggplot2::geom_point(color = dot_color, size = dot_size, shape = dot_shape) +
+        ggplot2::geom_errorbar(aes(xmin = .data$`2.5%`, xmax = .data$`97.5%`),
+                               color = errorbar_color,
+                               width = errorbar_width) +
+        ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = TRUE) +
+        ggplot2::labs(x = xlab, y = ylab) +
+        ggplot2::scale_x_continuous(n.breaks = 8) +
+        ggplot2::theme_bw()
+    } else {
+      p.data$group = factor(p.data$group, levels = 1:fit$standata$G, labels = fit$standata$group_lab)
+      P <- ggplot2::ggplot(data = p.data, aes(y = .data$Param, x = .data$bpe, color = .data$group)) +
+        ggplot2::geom_point(size = dot_size, shape = dot_shape,
+                            position = ggplot2::position_dodge(width = 0.5)) +
+        ggplot2::geom_errorbar(aes(xmin = .data$`2.5%`, xmax = .data$`97.5%`),
+                               position = ggplot2::position_dodge(width = 0.5),
+                               width = errorbar_width) +
+        ggplot2::facet_wrap(~.data$Param_type, ncol = facet_ncol, scales = "free", shrink = TRUE) +
+        ggplot2::labs(x = xlab, y = ylab) +
+        ggplot2::scale_x_continuous(n.breaks = 8) +
+        ggplot2::theme_bw()
+
+    }
+
 
     # optional add true scores
     if(add_true == TRUE){
@@ -303,7 +319,7 @@ mlts_plot <- function(fit, type = c("fe", "re", "re.cor", "int"), bpe = c("media
 
   if(type == "int"){
 
-    stop("Work in progress!")
+    stop("Work in progress! Currently not supported.")
 
     # check if interactions are involved
     if(fit$standata$n_int==0){

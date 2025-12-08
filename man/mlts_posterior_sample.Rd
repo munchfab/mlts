@@ -8,7 +8,8 @@ mlts_posterior_sample(
   fit,
   draw_person_pars = FALSE,
   n_draws = 10,
-  draws = NULL
+  draws = NULL,
+  as_matrix = TRUE
 )
 }
 \arguments{
@@ -19,7 +20,9 @@ If \code{FALSE}, only population-level parameters are used. Defaults to \code{FA
 
 \item{n_draws}{Integer. Number of posterior draws to use for simulating replicated datasets. Ignored if \code{draws} is provided. Defaults to 10.}
 
-\item{draws}{Optional integer vector indicating specific posterior draw indices to use. If \code{NULL}, \code{n_draws} draws are randomly sampled from all available posterior samples.}
+\item{draws}{Optional integer vector indicating specific posterior draw indices to use. If \code{NULL}, \code{n_draws} draws are chosen with the maximum distance between posterior samples.}
+
+\item{as_matrix}{Logical. Return replications of each variable as a matrix with \code{n_draw} rows, ready to run graphical posterior predictive checks using the \code{bayesplot} package.}
 }
 \value{
 A list of replicated datasets, each as a \code{data.frame} with columns:
@@ -39,25 +42,46 @@ simulate data under the population model or based on individual-specific (random
 The function extracts posterior samples of population-level (and optionally individual-level) parameters
 from a fitted \code{mlts} model and simulates replicated datasets from the posterior predictive distribution.
 Each replication corresponds to a different posterior draw and reflects uncertainty in the model's parameters.
+See \code{\link[bayesplot:PPC-overview]{PPC}} for an overview on graphical posterior predictive checks and how they can be performed.
 
 If \code{draw_person_pars = TRUE}, the function uses sampled person-specific random effects and covariate effects
 from the posterior to generate new data at the individual level. This requires that the model was fitted with
 \code{monitor_person_pars = TRUE} in \code{\link[mlts]{mlts_fit}}. If this condition is not met, the function will
 throw an error.
 
-Posterior draws are either selected randomly (\code{n_draws}) or specified manually using the \code{draws} argument.
+Posterior draws are either selected with the maximum distance between posterior samples (\code{n_draws}) or specified manually using the \code{draws} argument.
 Optionally, left or right censoring is respected in the simulated data if such constraints were present in the model.
 }
 \examples{
 \dontrun{
+# build a simple vector-autoregressive mlts model with two time-series variables
+var_model <- mlts_model(q = 2)
+
+# simulate data from this model with default true values
+# (true values are randomly drawn from normal distribution)
+var_data <- mlts_sim(
+  model = var_model,
+  N = 50, TP = 30, # number of units and number of measurements per unit
+  default = TRUE # use default parameter values
+)
+
+# fit model
+fit <- mlts_fit(
+  model = var_model,
+  data = var_data,
+  id = "ID", ts = c("Y1", "Y2"),
+  time = "time",
+  monitor_person_pars = TRUE
+)
+
 # Simulate 20 replications from the posterior
-y_reps <- mlts_posterior_sample(fit = my_model_fit, n_draws = 20)
+yreps <- mlts_posterior_sample(fit = fit, n_draws = 20)
 
 # Include person-specific parameters in simulation
-y_reps <- mlts_posterior_sample(fit = my_model_fit, draw_person_pars = TRUE)
+yreps <- mlts_posterior_sample(fit = fit, draw_person_pars = TRUE)
 
 # Use specific posterior draws
-y_reps <- mlts_posterior_sample(fit = my_model_fit, draws = c(10, 50, 100))
+yreps <- mlts_posterior_sample(fit = fit, draws = c(10, 50, 100))
 }
 
 }

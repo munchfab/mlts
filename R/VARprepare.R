@@ -38,16 +38,33 @@
 #'
 #'
 VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
-                       outcome_pred_btw = NULL, center_covs = TRUE
+                       outcome_pred_btw = NULL, center_covs = TRUE, group = NULL
 ){
 
+  # extract model infos
+  infos = mlts_model_eval(model)
 
   # data entered here should be preprocessed prior (e.g., handling of missing values...)
 
   # data specific information: -------------------------------------------------
-  N = length(unique(data$num_id))         # number of subjects
-  D = length(ts)                          # number of time-varying constructs
-  N_obs = nrow(data)                      # total number of observations (obs)
+  N = length(unique(data$num_id))          # number of subjects
+  G = infos$G
+  N_G = as.array(sapply(sort(unique(data$group_int)), function(x){ # number of subjects by group
+    length(table(data$num_id[data$group_int==x], data$group_int[data$group_int==x]))
+  }))
+  g_id = sapply(1:N, function(x){unique(data$group_int[data$num_id==x])})
+  g_id_pos = array(data = 0, dim = c(G, max(N_G)))
+  for(g in 1:G){
+    g_id_pos[g, 1:N_G[g]] <- which(g_id==g)
+  }
+  if(!is.null(group)){
+    group_lab = sapply(1:G, function(x){unique(data[data$group_int == x,group])})
+  } else {
+    group_lab = NA
+  }
+
+  D = length(ts)                           # number of time-varying constructs
+  N_obs = nrow(data)                       # total number of observations (obs)
   N_obs_id = data.frame(table(data$num_id))$Freq # number of obs per subject
 
   ## handling of missing values
@@ -71,7 +88,6 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # ----
 
   # model specific information: ------------------------------------------------
-  infos = mlts_model_eval(model)
 
   D_cen = infos$D_cen
   D_cen_pos = infos$D_cen_pos
@@ -126,7 +142,13 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
         W[p,i] = unique(data[data$num_id == p, names(covariates)[cov.use]])
       }
       if(center_covs==TRUE){
-        W[,i] = W[,i] - mean(W[,i])
+        if(G > 1){
+          for(g in 1:G){
+            W[g_id[g_id==g],i] = W[g_id[g_id==g],i] - mean(W[g_id[g_id==g],i])
+          }
+        } else {
+          W[,i] = W[,i] - mean(W[,i])
+        }
       }
     }
   }
@@ -245,7 +267,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   # combine all information
   standata = rstan::nlist(
     # data specifications
-    N, D, D_cen, D_cen_pos, is_wcen, maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
+    N, G, N_G, g_id, g_id_pos, group_lab, D, D_cen, D_cen_pos, is_wcen, maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
     # model specifications
     n_pars, n_random, n_fixed, is_random, is_fixed,
     N_pred, D_pred, D_pred2, Lag_pred, Lag_pred2, n_int, Dpos1, Dpos2,

@@ -1,6 +1,7 @@
 // autoregressive DSEM with manifest variables
 data {
   int<lower=1> N; 	// number of observational units
+  int<lower=1> G;   // number of groups
   int<lower=1> D; 	// number of time-varying constructs
   int<lower=1> D_cen;
   int<lower=1, upper=3> maxLag; // maximum lag
@@ -75,6 +76,11 @@ data {
   matrix[n_out_bs_sum,2] prior_b_out;
   matrix[n_out,2] prior_sigma_out;
 
+  // group-specific?
+  array[G] int N_G;               // number of clusters by group
+  array[N] int g_id;              // index group per cluster
+  array[G,max(N_G)] int g_id_pos; // index group by G*N_G array
+
   // - covariances of innovations:
   // int<lower=1> n_inno_covs; // number of potential innovation covs to include
   // int<lower=0,upper=1> inno_cov0;    // fixed to zero
@@ -87,36 +93,39 @@ data {
 
 parameters {
   array[N] vector[n_random] b_free;            // person-specific parameter
-  vector<lower=0>[n_random] sd_R;        // random effect SD
-  vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
-  cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
-  cholesky_factor_corr[D_cen] L_inno;        // cholesky factor of prediction errors
+  array[G] vector<lower=0>[n_random] sd_R; // random effect SD
+  array[G] vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
+  array[G] cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
+  array[G] cholesky_factor_corr[D_cen] L_inno;        // cholesky factor of prediction errors
+  array[G] row_vector[n_random] gammas;           // fixed effect (intercepts)
+  array[G] vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
+  array[G] vector[n_fixed] b_fix;
+  array[G] vector[n_out] alpha_out;               // outcome precition intercepts
+  array[G] vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
+  array[G] vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
   vector[n_miss] y_impute;               // vector to store imputed values
   vector<upper=censL_val>[n_censL] y_impute_censL;
   vector<lower=censR_val>[n_censR] y_impute_censR;
-  row_vector[n_random] gammas;           // fixed effect (intercepts)
-  vector[n_cov_bs] b_re_pred;            // regression coefs of RE prediction
-  vector[n_fixed] b_fix;
-  vector[n_out] alpha_out;               // outcome precition intercepts
-  vector<lower=0>[n_out] sigma_out;      // residual SD(s) of outcome(s)
-  vector[n_out_bs_sum] b_out_pred;       // regression coefs of out prediction
 }
 
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
   matrix[N,n_pars] b;
   array[N] vector[D_cen] sd_noise;
-  matrix[n_cov, n_random] b_re_pred_mat = rep_matrix(0, n_cov, n_random);
+  array[G] matrix[n_cov, n_random] b_re_pred_mat;
 
  // REs regressed on covariates
-  b_re_pred_mat[1,] = gammas;
-  if(n_cov>1){
-     for(i in 1:n_cov_bs){
-     b_re_pred_mat[n_cov_mat[i,1],n_cov_mat[i,2]] = b_re_pred[i];
+  for(g in 1:G){
+    b_re_pred_mat[g] = rep_matrix(0, n_cov, n_random);
+    b_re_pred_mat[g,1,] = gammas[g,];
+    if(n_cov>1){
+      for(i in 1:n_cov_bs){
+      b_re_pred_mat[g,n_cov_mat[i,1],n_cov_mat[i,2]] = b_re_pred[g,i];
+      }
     }
+    // calculate population means (intercepts) of person-specific parameters
+    bmu[g_id_pos[g,1:N_G[g]],] = W[g_id_pos[g,1:N_G[g]],] * b_re_pred_mat[g];
   }
-  // calculate population means (intercepts) of person-specific parameters
-  bmu = W * b_re_pred_mat;
 
   // create array of (person-specific) parameters to use in model
   for(i in 1:n_random){
@@ -124,14 +133,18 @@ transformed parameters {
   }
   if(n_fixed>0){
     for(i in 1:n_fixed){
-      b[,is_fixed[1,i]] = rep_vector(b_fix[i],N);
+      for(g in 1:G){
+        b[g_id_pos[g,1:N_G[g]],is_fixed[1,i]] = rep_vector(b_fix[g,i],N_G[g]);
+      }
     }
   }
 
   // transformation of log-innovation variances if modeled as person-specific
   for(i in 1:D_cen){
     if(innos_rand[i] == 0){
-      sd_noise[,i] = to_array_1d(rep_vector(sigma[innos_fix_pos[i]],N));
+      for(g in 1:G){
+        sd_noise[g_id_pos[g,1:N_G[g]],i] = to_array_1d(rep_vector(sigma[g,innos_fix_pos[i]],N_G[g]));
+        }
     } else {
       sd_noise[,i] = to_array_1d(sqrt(exp(b[,innos_pos[i]])));
     }
@@ -145,8 +158,11 @@ model {
   int p_censR = 1;
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   array[D] vector[N_obs] y_merge;
-  matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R, L);
-  matrix[D_cen, D_cen] SIGMA_inno = diag_pre_multiply(sd_noise[1,], L_inno);
+  array[G] matrix[n_random, n_random] SIGMA;
+
+  for(g in 1:G){
+    SIGMA[g,] = diag_pre_multiply(sd_R[g,], L[g,]);
+  }
 
   y_merge = y;      // add observations
 
@@ -172,38 +188,43 @@ model {
   }
 
   // (Hyper-)Priors
-  target += normal_lpdf(gammas | prior_gamma[,1],prior_gamma[,2]);
-  target += cauchy_lpdf(sd_R | prior_sd_R[,1], prior_sd_R[,2]);
-  target += lkj_corr_cholesky_lpdf(L | prior_LKJ);
-  target += lkj_corr_cholesky_lpdf(L_inno | prior_LKJ);
+  for(g in 1:G){
+    target += normal_lpdf(gammas[g,] | prior_gamma[,1],prior_gamma[,2]);
+    target += cauchy_lpdf(sd_R[g,] | prior_sd_R[,1], prior_sd_R[,2]);
+    target += lkj_corr_cholesky_lpdf(L[g,] | prior_LKJ);
+    target += lkj_corr_cholesky_lpdf(L_inno[g,] | prior_LKJ);
 
-  if(n_innos_fix>0){
-    target += cauchy_lpdf(sigma | prior_sigma[,1], prior_sigma[,2]);
-  }
+    if(n_innos_fix>0){
+      target += cauchy_lpdf(sigma[g,] | prior_sigma[,1], prior_sigma[,2]);
+    }
 
-  if(n_cov > 1){
-    target += normal_lpdf(b_re_pred | prior_b_re_pred[,1], prior_b_re_pred[,2]);
-  }
-  if(n_out > 0){
-    target += normal_lpdf(alpha_out | prior_alpha_out[,1], prior_alpha_out[,2]);
-    target += normal_lpdf(b_out_pred | prior_b_out[,1], prior_b_out[,2]);
-    target += cauchy_lpdf(sigma_out | prior_sigma_out[,1], prior_sigma_out[,2]);
-  }
+    if(n_cov > 1){
+      target += normal_lpdf(b_re_pred[g,] | prior_b_re_pred[,1], prior_b_re_pred[,2]);
+    }
+    if(n_out > 0){
+      target += normal_lpdf(alpha_out[g,] | prior_alpha_out[,1], prior_alpha_out[,2]);
+      target += normal_lpdf(b_out_pred[g,] | prior_b_out[,1], prior_b_out[,2]);
+      target += cauchy_lpdf(sigma_out[g,] | prior_sigma_out[,1], prior_sigma_out[,2]);
+    }
 
-  if(n_fixed > 0){
-    target += normal_lpdf(b_fix | prior_b_fix[,1],prior_b_fix[,2]);
+    if(n_fixed > 0){
+      target += normal_lpdf(b_fix[g,] | prior_b_fix[,1],prior_b_fix[,2]);
+    }
   }
 
   for (pp in 1:N) {
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
+    // obtain group
+    int pp_g = g_id[pp];
+
     array[obs_id - maxLag] vector[D_cen] y_use;
 
     // individual parameters from (multivariate) normal distribution
     if(n_random == 1){
-      target += normal_lpdf(b_free[pp,1] | bmu[pp,1], sd_R[1]);
+      target += normal_lpdf(b_free[pp,1] | bmu[pp,1], sd_R[pp_g,1]);
     } else {
-      target += multi_normal_cholesky_lpdf(b_free[pp, 1:n_random] | bmu[pp, 1 : n_random], SIGMA);
+      target += multi_normal_cholesky_lpdf(b_free[pp, 1:n_random] | bmu[pp, 1 : n_random], SIGMA[pp_g]);
     }
 
     // local variable declaration: array of predicted values
@@ -246,9 +267,9 @@ model {
 
     // sampling statement
     if(n_innos_fix == D_cen){
-      target += multi_normal_cholesky_lpdf(y_use | mus, SIGMA_inno);
+      target += multi_normal_cholesky_lpdf(y_use | mus, diag_pre_multiply(sd_noise[pp,], L_inno[pp_g,]));
     } else {
-      target += multi_normal_cholesky_lpdf(y_use | mus, diag_pre_multiply(sd_noise[pp,], L_inno));
+      target += multi_normal_cholesky_lpdf(y_use | mus, diag_pre_multiply(sd_noise[pp,], L_inno[pp_g,]));
     }
 
     // update index variables
@@ -257,20 +278,25 @@ model {
 
   // outcome prediction: get expectations of outcome values
   if(n_out > 0){
-    int k = 1;
-    matrix[N,n_random+n_z] b_z = append_col(b[,is_random],Z);
-    for(i in 1:n_out){
-      int n_bs = n_out_bs[i,1];      // number of predictors for each outcome
-      target += normal_lpdf(out[i,] | alpha_out[i] + b_z[,n_out_b_pos[i,1:n_bs]] * segment(b_out_pred,k,n_bs), sigma_out[i]);
-      k = k + n_bs; // update index
+    for(g in 1:G){
+      int k = 1;
+      matrix[N_G[g],n_random+n_z] b_z = append_col(b[g_id_pos[g,1:N_G[g]],],Z[g_id_pos[g,1:N_G[g]],]);
+      for(i in 1:n_out){
+        int n_bs = n_out_bs[i,1];      // number of predictors for each outcome
+        target += normal_lpdf(out[i,g_id_pos[g,1:N_G[g]]] | alpha_out[g,i] + b_z[,n_out_b_pos[i,1:n_bs]] * segment(b_out_pred[g,],k,n_bs), sigma_out[g,i]);
+        k = k + n_bs; // update index
+        }
     }
   }
-  }
+
+}
 
 
 generated quantities{
-  matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
-  matrix[D_cen,D_cen] bcorr_inn; // random coefficients correlation matrix
-  bcorr = multiply_lower_tri_self_transpose(L);
-  bcorr_inn = multiply_lower_tri_self_transpose(L_inno);
+  array[G] matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
+  array[G] matrix[D_cen,D_cen] bcorr_inn; // random coefficients correlation matrix
+  for(g in 1:G){
+    bcorr[g,] = multiply_lower_tri_self_transpose(L[g,]);
+    bcorr_inn[g,] = multiply_lower_tri_self_transpose(L_inno[g,]);
+  }
 }

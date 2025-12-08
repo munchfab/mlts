@@ -13,6 +13,11 @@ mlts_param_labels <- function(model){
   # eval model
   infos = mlts_model_eval(model)
 
+  # add grouping variable if not present
+  if(is.null(model$group)){
+    model$group <- 1
+  }
+
   # helper function to map names of parameters used in model with
   # parameter labels used in the stan models
   model$Param_stan = NA
@@ -22,95 +27,114 @@ mlts_param_labels <- function(model){
   # first add infos to model to extract variable names
   ##### FIXED EFFECT INTERCEPTS ================================================
   FEints = model[model$Type=="Fixed effect" & model$isRandom==1,]
-  FEints$Param_stan = paste0("gammas[",1:nrow(FEints),"]")
+  FEints$Param_stan = paste0("gammas[",FEints$group,",",rep(1:nrow(FEints[FEints$group==1,]),infos$G),"]")
 
   ##### CONSTANT DYNAMIC PARAMETERS ============================================
   FEdyn = model[model$Type=="Fixed effect" & model$isRandom==0 & model$Param_Label=="Dynamic",]
   if(nrow(FEdyn)>0){
-    FEdyn$Param_stan = paste0("b_fix[",1:nrow(FEdyn),"]")
+    FEdyn$Param_stan = paste0("b_fix[",FEdyn$group,",",rep(1:nrow(FEdyn[FEdyn$group==1,]),infos$G),"]")
   }
 
   ##### CONSTANT INNOVATION VARIANCES ==========================================
   FEsigma = model[model$Type=="Fixed effect" & model$isRandom==0 & model$Param_Label=="Innovation Variance",]
   if(nrow(FEsigma)>0){
-    FEsigma$Param_stan = paste0("sigma[",1:nrow(FEsigma),"]")
+    FEsigma$Param_stan = paste0("sigma[",FEsigma$group,",",rep(1:nrow(FEsigma[FEsigma$group==1,]),infos$G),"]")
   }
 
   ##### RANDOM EFFECT SDs ======================================================
   REsds = model[model$Type == "Random effect SD",]
-  REsds$Param_stan = paste0("sd_R[",1:nrow(REsds),"]")
+  REsds$Param_stan = paste0("sd_R[",REsds$group,",",rep(1:nrow(REsds[REsds$group==1,]),infos$G),"]")
 
 
   ##### RE CORRELATIONS ========================================================
-  REcors = model[model$Type == "RE correlation",]
-  if(nrow(REcors > 0)){
-    rand_pars = FEints$Param
-    rand_pars_pos = 1:length(rand_pars)
-    REcors$Param_stan = REcors$Param
-    for(i in 1:length(rand_pars)){
-      REcors$Param_stan = gsub(REcors$Param_stan,
+  REcors = list()
+  for(g in 1:infos$G){
+    REcors[[g]] = model[model$Type == "RE correlation" & model$group==g,]
+    if(nrow(REcors[[g]] > 0)){
+      rand_pars = FEints$Param[FEints$group==g]
+      rand_pars_pos = 1:length(rand_pars)
+      REcors[[g]]$Param_stan = REcors[[g]]$Param
+      for(i in 1:length(rand_pars)){
+        REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan,
                                pattern = rand_pars[i],
                                replacement = rand_pars_pos[i], fixed = TRUE)
+      }
+      REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan, fixed = TRUE,
+                               pattern = ".", replacement = ",")
+      REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan, fixed = TRUE,
+                                 pattern = "r_", replacement = paste0("bcorr[",g,","))
+      REcors[[g]]$Param_stan = paste0(REcors[[g]]$Param_stan,"]")
     }
-    REcors$Param_stan = gsub(REcors$Param_stan, fixed = TRUE,
-                                 pattern = ".", replacement = ",")
-    REcors$Param_stan = gsub(REcors$Param_stan, fixed = TRUE,
-                                 pattern = "r_", replacement = "bcorr[")
-    REcors$Param_stan = paste0(REcors$Param_stan,"]")
   }
+  REcors = do.call(rbind,REcors)
 
   ###### INNOVATION COVARIANCE =================================================
-  Fix.Covs = model[startsWith(model$Param, prefix = "r.zeta"),]
+  Fix.Covs <- list()
+  for(g in 1:infos$G){
+    Fix.Covs[[g]] = model[startsWith(model$Param, prefix = "r.zeta") & model$group==g,]
 
-  if(nrow(Fix.Covs)>0){
-    if(infos$D_cen == infos$q){
-    Fix.Covs$Param_stan = paste0("bcorr_inn[",
-                                 substr(Fix.Covs$Param, start = 8, 8),",",
-                                 substr(Fix.Covs$Param, start = 9, 9),"]")
-    } else {
-      D1 = as.integer(substr(Fix.Covs$Param, start = 8, 8))
-      D2 = as.integer(substr(Fix.Covs$Param, start = 9, 9))
-      # replace
-      D1 = unlist(lapply(D1, function(x){infos$D_cen_pos[x]}))
-      D2 = unlist(lapply(D2, function(x){infos$D_cen_pos[x]}))
-      Fix.Covs$Param_stan = paste0("bcorr_inn[",D1,",",D2,"]")
-      }
+    if(nrow(Fix.Covs[[g]])>0){
+      if(infos$D_cen == infos$q){
+      Fix.Covs[[g]]$Param_stan = paste0("bcorr_inn[",g,",",
+                                 substr(Fix.Covs[[g]]$Param, start = 8, 8),",",
+                                 substr(Fix.Covs[[g]]$Param, start = 9, 9),"]")
+      } else {
+        D1 = as.integer(substr(Fix.Covs[[g]]$Param, start = 8, 8))
+        D2 = as.integer(substr(Fix.Covs[[g]]$Param, start = 9, 9))
+        # replace
+        D1 = unlist(lapply(D1, function(x){infos$D_cen_pos[x]}))
+        D2 = unlist(lapply(D2, function(x){infos$D_cen_pos[x]}))
+        Fix.Covs[[g]]$Param_stan = paste0("bcorr_inn[",g,",",D1,",",D2,"]")
+        }
     }
+  }
+  Fix.Covs = do.call(rbind, Fix.Covs)
 
   ###### RE on BETWEEN-LEVEL COVARIATES ========================================
-  REpred = model[model$Type == "RE prediction",]
-  if(nrow(REpred)>0){
-    infos$RE.PREDS$Param_stan = paste0("b_re_pred[",infos$RE.PREDS$re_pred_b_no,"]")
-    REpred$Param_stan <- NULL
-    REpred = merge(REpred,y = infos$RE.PREDS[,c("Param", "Param_stan")],
+  REpred <- list()
+  for(g in 1:infos$G){
+    REpred[[g]] = model[model$Type == "RE prediction" & model$group == g,]
+    if(nrow(REpred[[g]])>0){
+      infos$RE.PREDS$Param_stan = paste0("b_re_pred[",g,",",infos$RE.PREDS$re_pred_b_no,"]")
+      REpred[[g]]$Param_stan <- NULL
+      REpred[[g]] = merge(REpred[[g]],y = infos$RE.PREDS[,c("Param", "Param_stan")],
                    by = "Param", sort = FALSE)
-  }
+      }
+    }
+  REpred <- do.call(rbind, REpred)
+
 
   ###### OUTCOME PREDICTION ====================================================
   # get the order of parameters in stan model
-  OUTpred = model[model$Type == "Outcome prediction",]
-  if(nrow(OUTpred) > 0){
+
+  OUTpred <- list()
+  for(g in 1:infos$G){
+  OUTpred[[g]] = model[model$Type == "Outcome prediction" & model$group==g,]
+  if(nrow(OUTpred[[g]]) > 0){
     # regression parameter
     infos$OUT = infos$OUT[order(infos$OUT$out_var_no, infos$OUT$Pred_no),]
-    infos$OUT$Param_stan = paste0("b_out_pred[",1:nrow(infos$OUT),"]")
+    infos$OUT$Param_stan = paste0("b_out_pred[",g,",",1:nrow(infos$OUT),"]")
 
     # add the helper columns
-    OUTpred$Param_stan <- NULL
-    OUTpred = merge(OUTpred, y = infos$OUT[,c("Param", "out_var_no", "Param_stan")],
+    OUTpred[[g]]$Param_stan <- NULL
+    OUTpred[[g]] = merge(OUTpred[[g]], y = infos$OUT[,c("Param", "out_var_no", "Param_stan")],
                     by = c("Param"), all = T, sort = FALSE)
 
     for(i in 1:infos$n_out){
-      OUTpred$out_var_no[endsWith(OUTpred$Param, infos$out_var[i])] = i
+      OUTpred[[g]]$out_var_no[endsWith(OUTpred[[g]]$Param, infos$out_var[i])] = i
     }
       # intercepts and residual SDs
-    OUTpred$Param_stan[OUTpred$Param_Label == "intercept"] <- paste0(
-      "alpha_out[",OUTpred$out_var_no[OUTpred$Param_Label == "intercept"],"]")
-    OUTpred$Param_stan[OUTpred$Param_Label == "Residual SD"] <- paste0(
-      "sigma_out[",OUTpred$out_var_no[OUTpred$Param_Label == "Residual SD"],"]")
+    OUTpred[[g]]$Param_stan[OUTpred[[g]]$Param_Label == "intercept"] <- paste0(
+      "alpha_out[",g,",",OUTpred[[g]]$out_var_no[OUTpred[[g]]$Param_Label == "intercept"],"]")
+    OUTpred[[g]]$Param_stan[OUTpred[[g]]$Param_Label == "Residual SD"] <- paste0(
+      "sigma_out[",g,",",OUTpred[[g]]$out_var_no[OUTpred[[g]]$Param_Label == "Residual SD"],"]")
 
     # remove helper columns
-    OUTpred = OUTpred[,colnames(FEints)]
+    OUTpred[[g]] = OUTpred[[g]][,colnames(FEints)]
+    }
   }
+  OUTpred = do.call(rbind, OUTpred)
+
 
   ### MEASUREMENT MODEL PARAMETERS =============================================
   if(infos$isLatent == TRUE){

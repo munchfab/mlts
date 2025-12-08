@@ -69,26 +69,36 @@ object:
 
 ``` r
 ar1_model
-#>        Model   Level             Type                   Param
-#> 1 Structural  Within     Fixed effect                    mu_1
-#> 2 Structural  Within     Fixed effect               phi(1)_11
-#> 3 Structural  Within     Fixed effect             ln.sigma2_1
-#> 4 Structural Between Random effect SD              sigma_mu_1
-#> 5 Structural Between Random effect SD         sigma_phi(1)_11
-#> 6 Structural Between Random effect SD       sigma_ln.sigma2_1
-#> 7 Structural Between   RE correlation        r_mu_1.phi(1)_11
-#> 8 Structural Between   RE correlation      r_mu_1.ln.sigma2_1
-#> 9 Structural Between   RE correlation r_phi(1)_11.ln.sigma2_1
-#>               Param_Label isRandom prior_type prior_location prior_scale
-#> 1                   Trait        1     normal              0        10.0
-#> 2                 Dynamic        1     normal              0         2.0
-#> 3 Log Innovation Variance        1     normal              0        10.0
-#> 4                   Trait        0     cauchy              0         2.5
-#> 5                 Dynamic        0     cauchy              0         2.5
-#> 6 Log Innovation Variance        0     cauchy              0         2.5
-#> 7                  RE Cor        0        LKJ              1          NA
-#> 8                  RE Cor        0        LKJ              1          NA
-#> 9                  RE Cor        0        LKJ              1          NA
+#>                              Model   Level             Type
+#> mu_1                    Structural  Within     Fixed effect
+#> phi(1)_11               Structural  Within     Fixed effect
+#> ln.sigma2_1             Structural  Within     Fixed effect
+#> sigma_mu_1              Structural Between Random effect SD
+#> sigma_phi(1)_11         Structural Between Random effect SD
+#> sigma_ln.sigma2_1       Structural Between Random effect SD
+#> r_mu_1.phi(1)_11        Structural Between   RE correlation
+#> r_mu_1.ln.sigma2_1      Structural Between   RE correlation
+#> r_phi(1)_11.ln.sigma2_1 Structural Between   RE correlation
+#>                                           Param             Param_Label
+#> mu_1                                       mu_1                   Trait
+#> phi(1)_11                             phi(1)_11                 Dynamic
+#> ln.sigma2_1                         ln.sigma2_1 Log Innovation Variance
+#> sigma_mu_1                           sigma_mu_1                   Trait
+#> sigma_phi(1)_11                 sigma_phi(1)_11                 Dynamic
+#> sigma_ln.sigma2_1             sigma_ln.sigma2_1 Log Innovation Variance
+#> r_mu_1.phi(1)_11               r_mu_1.phi(1)_11                  RE Cor
+#> r_mu_1.ln.sigma2_1           r_mu_1.ln.sigma2_1                  RE Cor
+#> r_phi(1)_11.ln.sigma2_1 r_phi(1)_11.ln.sigma2_1                  RE Cor
+#>                         isRandom prior_type prior_location prior_scale
+#> mu_1                           1     normal              0        10.0
+#> phi(1)_11                      1     normal              0         2.0
+#> ln.sigma2_1                    1     normal              0        10.0
+#> sigma_mu_1                     0     cauchy              0         2.5
+#> sigma_phi(1)_11                0     cauchy              0         2.5
+#> sigma_ln.sigma2_1              0     cauchy              0         2.5
+#> r_mu_1.phi(1)_11               0        LKJ              1          NA
+#> r_mu_1.ln.sigma2_1             0        LKJ              1          NA
+#> r_phi(1)_11.ln.sigma2_1        0        LKJ              1          NA
 ```
 
 When `mlts_model()` sets up this model, all model parameters are free
@@ -117,6 +127,7 @@ mlts_model_formula(ar1_model)
 ```
 
 <center>
+
 Decomposition.
 </center>
 
@@ -133,6 +144,7 @@ y_{1, it}^w \\
 $$
 
 <center>
+
 Within-level model.
 </center>
 
@@ -144,6 +156,7 @@ y_{1, it}^w \\
 $$
 
 <center>
+
 Between-level model.
 </center>
 
@@ -161,16 +174,9 @@ $$
 $$
 
 Furthermore, a path model can also be produced with the function
-`mlts_model_paths()`. Again, the function produces an RMarkdown and pdf
-file by default. A png file for each level can also be produced by
-calling `add_png = TRUE` and the TeX code for the path model can be kept
-with `keep_tex = TRUE`.
+`mlts_paths()` with many options for adjustment.
 
-``` r
-mlts_model_paths(ar1_model)
-```
-
-<img src="vignettes/pathmodel_ar1.png" width="50%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="50%" style="display: block; margin: auto;" />
 
 To fit the above model, we pass it together with the data set to
 `mlts_fit()`. The data set for this example is an artificial data set
@@ -208,49 +214,36 @@ The model `summary()` shows general information about the model and
 data:
 
 ``` r
-summary(ar1_fit)
-#> Call:
-#> mlts_model(q = 1, max_lag = 1)
+summary(ar1_fit, digits = 2)
 #> Time series variables as indicated by parameter subscripts: 
 #>    1 --> Y1
 #> Data: 2500 observations in 50 IDs
 #> Model convergence criteria: 
-#>   Maximum Potential Scale Reduction Factor (PSR; Rhat): 1.009 (should be < 1.01)
-#>   Minimum Bulk ESS: 575 (should be > 200, 100 per chain) 
-#>   Minimum Tail ESS: 566 (should be > 200, 100 per chain) 
+#>   Maximum Potential Scale Reduction Factor (PSR; Rhat): 1.005 (should be < 1.01)
+#>   Minimum Bulk ESS: 574 (should be > 200, 100 per chain) 
+#>   Minimum Tail ESS: 864 (should be > 200, 100 per chain) 
 #>   Number of divergent transitions: 0 (should be 0) 
 #> 
+#> Posterior Summary Statistics
 #> Fixed Effects:
-#>              Post. Mean Post. Median Post. SD   2.5%  97.5% Rhat Bulk_ESS
-#>         mu_1      0.731        0.731    0.090  0.552  0.910    1     5357
-#>    phi(1)_11      0.275        0.276    0.029  0.218  0.331    1     2433
-#>  ln.sigma2_1     -0.304       -0.304    0.043 -0.392 -0.217    1     2964
-#>  Tail_ESS
-#>      2695
-#>      3051
-#>      3013
+#>               Mean   SD  2.5% 97.5% Rhat Bulk_ESS Tail_ESS
+#>         mu_1  0.73 0.09  0.56  0.91    1     4267     3055
+#>    phi(1)_11  0.27 0.03  0.22  0.33    1     2081     2724
+#>  ln.sigma2_1 -0.30 0.04 -0.39 -0.22    1     2445     2648
 #> 
 #> Random Effects SDs:
-#>              Post. Mean Post. Median Post. SD  2.5% 97.5%  Rhat Bulk_ESS
-#>         mu_1      0.600        0.595    0.068 0.481 0.749 1.000     5042
-#>    phi(1)_11      0.134        0.134    0.032 0.069 0.198 1.009      582
-#>  ln.sigma2_1      0.231        0.229    0.045 0.147 0.323 1.002     1266
-#>  Tail_ESS
-#>      3082
-#>       566
-#>      1376
+#>                    Mean   SD 2.5% 97.5% Rhat Bulk_ESS Tail_ESS
+#>         sigma_mu_1 0.60 0.07 0.48  0.75 1.00     3793     2800
+#>    sigma_phi(1)_11 0.13 0.03 0.07  0.20 1.01      709      910
+#>  sigma_ln.sigma2_1 0.23 0.04 0.15  0.32 1.00      934     1705
 #> 
 #> Random Effects Correlations:
-#>                        Post. Mean Post. Median Post. SD   2.5% 97.5%  Rhat
-#>         mu_1.phi(1)_11      0.017        0.018    0.213 -0.396 0.435 1.001
-#>       mu_1.ln.sigma2_1      0.217        0.224    0.187 -0.159 0.569 1.000
-#>  phi(1)_11.ln.sigma2_1      0.114        0.118    0.260 -0.391 0.607 1.000
-#>  Bulk_ESS Tail_ESS
-#>      2116     2477
-#>      2398     2726
-#>      1056     1736
+#>                        Mean   SD  2.5% 97.5% Rhat Bulk_ESS Tail_ESS
+#>         mu_1.phi(1)_11 0.01 0.20 -0.39  0.41    1     2094     2947
+#>       mu_1.ln.sigma2_1 0.22 0.18 -0.16  0.55    1     2401     2345
+#>  phi(1)_11.ln.sigma2_1 0.12 0.26 -0.41  0.61    1      821     1899
 #> 
-#> Samples were drawn using NUTS on Thu Apr 25 12:39:28 2024.
+#> Samples were drawn using NUTS on Mon Dec  8 09:33:20 2025.
 #> For each parameter, Bulk_ESS and Tail_ESS are measures of effective
 #> sample size, and Rhat is the potential scale reduction factor
 #> on split chains (at convergence, Rhat = 1).
@@ -268,10 +261,8 @@ The section `Fixed Effects` provides information about the fixed effects
 in the model, i.e., $\gamma_{0, \mu_1}$, $\gamma_{0, \phi_{(1)11}}$, and
 $\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}$ in the above formula. For
 example, the posterior mean of the autoregressive effect parameter
-`phi(1)_11` is estimated at .275 with 95%-credible interval \[.218,
-.331\]. The log variance of the innovations $\zeta_{1t}$ is estimated at
--.304. The estimate needs to be exponentiated to be on the original
-scale: exp(-.304) = 0.738.
+`phi(1)_11` is estimated at .27 with 95%-credible interval \[.22, .33\].
+The log variance of the innovations $\zeta_{1t}$ is estimated at -.30.
 
 The section `Random Effects SDs` shows standard deviations of the random
 effects $\upsilon_{\mu_{1},i}$, $\upsilon_{\phi_{(1)11},i}$, and
@@ -279,9 +270,9 @@ $\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}$. The section
 `Random Effects Correlations` shows correlations between random effects.
 For example, while random effects of the person mean
 $\upsilon_{\mu_{1},i}$ and the autoregressive effect
-$\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, 0.017, there
+$\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, 0.01, there
 is a positive correlation between the person mean and log innovation
-variance, 0.217. This indicates that individuals with a higher person
+variance, 0.22. This indicates that individuals with a higher person
 mean in the variable `Y1` also tend to have a higher innovation
 variance.
 
@@ -299,7 +290,7 @@ mlts_plot(ar1_fit, type = "fe", what = "Fixed effect")
 ## References
 
 <div id="refs" class="references csl-bib-body hanging-indent"
-line-spacing="2">
+entry-spacing="0" line-spacing="2">
 
 <div id="ref-Asparouhov2018" class="csl-entry">
 
