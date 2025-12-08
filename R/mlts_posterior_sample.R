@@ -34,21 +34,41 @@
 #'   \item{...}{One column per time-series variable defined in the model.}
 #' }
 #'
-#' @examples
-#' \donttest{
-#' # Simulate 20 replications from the posterior
-#' y_reps <- mlts_posterior_sample(fit = my_model_fit, n_draws = 20)
-#'
-#' # Include person-specific parameters in simulation
-#' y_reps <- mlts_posterior_sample(fit = my_model_fit, draw_person_pars = TRUE)
-#'
-#' # Use specific posterior draws
-#' y_reps <- mlts_posterior_sample(fit = my_model_fit, draws = c(10, 50, 100))
-#' }
-#'
 #' @seealso \code{\link[mlts]{mlts_pp_check}} for plotting posterior predictive checks.
 #' @export
-
+#'
+#' @examples
+#' \dontrun{
+#' # build a simple vector-autoregressive mlts model with two time-series variables
+#' var_model <- mlts_model(q = 2)
+#'
+#' # simulate data from this model with default true values
+#' # (true values are randomly drawn from normal distribution)
+#' var_data <- mlts_sim(
+#'   model = var_model,
+#'   N = 50, TP = 30, # number of units and number of measurements per unit
+#'   default = TRUE # use default parameter values
+#' )
+#'
+#' # fit model
+#' fit <- mlts_fit(
+#'   model = var_model,
+#'   data = var_data,
+#'   id = "ID", ts = c("Y1", "Y2"),
+#'   time = "time",
+#'   monitor_person_pars = TRUE
+#' )
+#'
+#' # Simulate 20 replications from the posterior
+#' yreps <- mlts_posterior_sample(fit = fit, n_draws = 20)
+#'
+#' # Include person-specific parameters in simulation
+#' yreps <- mlts_posterior_sample(fit = fit, draw_person_pars = TRUE)
+#'
+#' # Use specific posterior draws
+#' yreps <- mlts_posterior_sample(fit = fit, draws = c(10, 50, 100))
+#' }
+#'
 mlts_posterior_sample <- function(
     fit,
     draw_person_pars = FALSE,
@@ -87,7 +107,9 @@ mlts_posterior_sample <- function(
 
   # select draws
   if(is.null(draws)){
-    draws_use = as.integer(seq(from=1, to=n_mcmc, by = n_mcmc/n_draws))
+      draws_use = as.integer(seq(from=1, to=n_mcmc, by = n_mcmc/n_draws))
+  } else {
+      draws_use = draws
     }
 
   # list of replications

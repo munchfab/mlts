@@ -82,29 +82,21 @@ If \code{draw_person_pars = TRUE}, simulated datasets incorporate subject-specif
 This requires that \code{monitor_person_pars = TRUE} was set during model fitting.
 }
 \examples{
-\donttest{
-# Set up censored AR(1) model
-ar1_cens <- mlts_model(q = 1, censor_left = -1)
+\dontrun{
+# Set up AR(1) model
+ar1 <- mlts_model(q = 1, censor_left = -1)
 
-# Simulate data under the censored AR(1) model
-simData <- mlts_sim(model = ar1_cens, N = 50, TP =100, default = TRUE)
+# Simulate data under the AR(1) model
+simData <- mlts_sim(model = ar1, N = 50, TP =100, default = TRUE)
 
 # Fit the model
-fit_censAR <- mlts_fit(model = ar1_cens, data = simData$data,
-                       id = "ID", ts = "Y1_cens", monitor_person_pars = TRUE)
-
-# As a comparison fit AR(1) model to the same data
-ar1 <- mlts_model(q = 1)
 fit_AR <- mlts_fit(model = ar1, data = simData$data,
-                 id = "ID", ts = "Y1_cens", monitor_person_pars = T)
+                   id = "ID", ts = "Y1", monitor_person_pars = TRUE)
 
 # Run posterior predictive check
-mlts_pp_check(fit_list = list(fit_censAR, fit_AR),
-              model_lab = c("Censored AR(1)", "censored AR(1)"),
-              y_rep_col = c("steelblue", "darkred"))
-
-# Check only selected individuals
-mlts_pp_check(fit = fit_censAR, cluster_ids = c(1, 5, 10), by_cluster = TRUE)
+mlts_pp_check(fit = fit_AR,
+              model_lab = "AR(1)",
+              y_rep_col = "steelblue")
 
 }
 

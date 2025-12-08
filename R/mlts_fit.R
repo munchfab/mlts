@@ -284,7 +284,46 @@ mlts_fit <- function(model,
   isLatent <- ifelse(sum(model$Model == "Measurement")>0,TRUE,FALSE)
 
 
-  # BY MODEL TYPE ========================================================
+  # PRIOR CHECKS =========================================================
+  ## grand-means of ts variables
+
+  ts_means = unlist(lapply(ts, function(x){mean(data[,x], na.rm=TRUE)}))
+
+  ## naive comparison against priors for fixed effects of mean levels
+  if(isLatent == FALSE){
+    ts_means = ts_means[infos$is_wcen == 1]
+    prior_distr = infos$prior_gamma[1:length(ts_means),]
+    prior_distr$ts_means = ts_means
+    # obtain p-values under prior distribution
+    ps = unlist(lapply(1:length(ts_means), FUN = function(x){
+      stats::pnorm(q    = prior_distr$ts_means[x],
+                   mean = prior_distr$prior_location[x],
+                   sd   = prior_distr$prior_scale[x])
+    }))
+    fail = any(ps < .10) | any(1-ps < .10)
+
+    if(fail == TRUE){
+      fail_text = c("\nCurrent prior specification appears to not match the observed grand-means of ts-variables. Consider adjusting the priors or rescaling ts-variables to a smaller range (e.g., -3 to 3).")
+      warning(fail_text)
+    }
+
+
+  } else {
+    ts_means = ts_means[infos$p_is_wcen == 1]
+    fail = any(abs(ts_means) > 10)
+
+    if(fail == TRUE){
+      fail_text = c("\nObserved grand-means of ts-variables > 10 (or < -10) detected. Make sure that priors are adjusted accordingly or consider rescaling ts-variables to a smaller range (e.g., -3 to 3).")
+      message(fail_text)
+    }
+
+  }
+
+
+
+  # ======================================================================
+
+  # ESTIMATION BY MODEL TYPE ==================================================
   # VAR(1) Models -------------------------------------------------------------
 
   ## Single-indicator VAR(1) model

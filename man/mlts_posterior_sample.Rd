@@ -53,15 +53,35 @@ Posterior draws are either selected with the maximum distance between posterior 
 Optionally, left or right censoring is respected in the simulated data if such constraints were present in the model.
 }
 \examples{
-\donttest{
+\dontrun{
+# build a simple vector-autoregressive mlts model with two time-series variables
+var_model <- mlts_model(q = 2)
+
+# simulate data from this model with default true values
+# (true values are randomly drawn from normal distribution)
+var_data <- mlts_sim(
+  model = var_model,
+  N = 50, TP = 30, # number of units and number of measurements per unit
+  default = TRUE # use default parameter values
+)
+
+# fit model
+fit <- mlts_fit(
+  model = var_model,
+  data = var_data,
+  id = "ID", ts = c("Y1", "Y2"),
+  time = "time",
+  monitor_person_pars = TRUE
+)
+
 # Simulate 20 replications from the posterior
-y_reps <- mlts_posterior_sample(fit = my_model_fit, n_draws = 20)
+yreps <- mlts_posterior_sample(fit = fit, n_draws = 20)
 
 # Include person-specific parameters in simulation
-y_reps <- mlts_posterior_sample(fit = my_model_fit, draw_person_pars = TRUE)
+yreps <- mlts_posterior_sample(fit = fit, draw_person_pars = TRUE)
 
 # Use specific posterior draws
-y_reps <- mlts_posterior_sample(fit = my_model_fit, draws = c(10, 50, 100))
+yreps <- mlts_posterior_sample(fit = fit, draws = c(10, 50, 100))
 }
 
 }
