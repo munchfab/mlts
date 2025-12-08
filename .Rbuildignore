@@ -9,3 +9,4 @@ stanExports_*
 ^CRAN-SUBMISSION$
 ^doc$
 ^Meta$
+^revdep$
