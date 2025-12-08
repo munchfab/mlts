@@ -1,16 +1,19 @@
-## Resubmission
-This is a resubmission. In this version we have:
-
-* Changed all 'T' and 'F' to 'TRUE' and 'FALSE', respectively.
-* Replaced \dontrun{} with \donttest{} in mlts_model_formula.R and mlts_model_paths.R.
-
-Thank you for your feedback!
-
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors ✔ | 0 warnings ✔ | 5 notes ✖
 
-* This is a new release.
+  * checking installed package size ... NOTE
+    installed size is  8.6Mb
+    sub-directories of 1Mb or more:
+      libs   7.0Mb
+  * checking for future file timestamps ... NOTE
+    unable to verify current time
+  * checking line endings in C/C++/Fortran sources/headers
+  * checking for GNU extensions in Makefiles
+    GNU make is a SystemRequirements.
+  * checking for non-standard things in the check directory
+    Found the following files/directories:
+    'formula.pdf' 'formula.rmd' 'pathmodel.pdf' 'pathmodel.rmd'
 
 ## revdepcheck results
 There are currently no downstream dependencies for this package:
