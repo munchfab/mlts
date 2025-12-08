@@ -117,14 +117,10 @@ Between-level model.
   \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega})  \end{gathered}
 \]
 
-Furthermore, a path model can also be produced with the function `mlts_model_paths()`. Again, the function produces an RMarkdown and pdf file by default. A png file for each level can also be produced by calling `add_png = TRUE` and the TeX code for the path model can be kept with `keep_tex = TRUE`.
+Furthermore, a path model can also be produced with the function `mlts_paths()` with many options for adjustment. 
 
-```{r eval=FALSE}
-mlts_model_paths(ar1_model)
-```
-
-```{r echo=FALSE, out.width="50%", fig.align='center'}
-knitr::include_graphics(c("vignettes/pathmodel_ar1.png"))
+```{r echo=FALSE, out.width="50%", fig.align='center',fig.width=7, fig.height=5}
+mlts_paths(ar1_model)
 ```
 
 To fit the above model, we pass it together with the data set to `mlts_fit()`. The data set for this example is an artificial data set simulated from an autoregressive model:
@@ -152,7 +148,7 @@ ar1_fit <- readRDS("vignettes/ar1_fit.rds")
 The model `summary()` shows general information about the model and data:
 
 ```{r}
-summary(ar1_fit)
+summary(ar1_fit, digits = 2)
 ```
 
 The line `Time series variables as indicated by parameter subscripts: 1 --> Y1` shows that model parameters indexed by a `_1` refer to the variable `Y1` in the data set.
@@ -160,14 +156,12 @@ The `Model convergence criteria` provide an overview across convergence diagnost
 For the simple AR1-model, all parameters converged well after 4,000 iterations.
 
 The section `Fixed Effects` provides information about the fixed effects in the model, i.e., $\gamma_{0, \mu_1}$, $\gamma_{0, \phi_{(1)11}}$, and $\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}$ in the above formula.
-For example, the posterior mean of the autoregressive effect parameter `phi(1)_11` is estimated at .275 with 95%-credible interval [.218, .331].
-The log variance of the innovations $\zeta_{1t}$ is estimated at -.304.
-The estimate needs to be exponentiated to be on the original scale: exp(-.304) = `r round(exp(-.304), 3)`.
+For example, the posterior mean of the autoregressive effect parameter `phi(1)_11` is estimated at .27 with 95%-credible interval [.22, .33].
+The log variance of the innovations $\zeta_{1t}$ is estimated at -.30.
 
 The section `Random Effects SDs` shows standard deviations of the random effects $\upsilon_{\mu_{1},i}$, $\upsilon_{\phi_{(1)11},i}$, and $\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}$.
-The section `Random Effects Correlations` shows correlations between random effects. For example, while random effects of the person mean $\upsilon_{\mu_{1},i}$ and the autoregressive effect $\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.phi(1)_11", "mean"], 3)`,
-there is a positive correlation between the person mean and log innovation variance,
-`r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 3)`. This indicates that individuals with a higher person mean in the variable `Y1` also tend to have a higher innovation variance.
+The section `Random Effects Correlations` shows correlations between random effects. For example, while random effects of the person mean $\upsilon_{\mu_{1},i}$ and the autoregressive effect $\upsilon_{\phi_{(1)11},i}$ display nearly no correlation, `r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.phi(1)_11", "mean"], 2)`, there is a positive correlation between the person mean and log innovation variance,
+`r round(ar1_fit$pop.pars.summary[ar1_fit$pop.pars.summary$Param == "r_mu_1.ln.sigma2_1", "mean"], 2)`. This indicates that individuals with a higher person mean in the variable `Y1` also tend to have a higher innovation variance.
 
 The parameter estimates can also be plotted with the `mtls_plot()`-function. By default, forest plots of model parameters are produced. The `what`-argument controls what parameter types are plotted (e.g., fixed effects, random effect standard deviations, and other).
 
