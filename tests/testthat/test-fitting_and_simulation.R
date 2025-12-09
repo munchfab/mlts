@@ -132,7 +132,6 @@ test_that("Neue simulierte Daten mit gleichem Seed die gleichen pop.pars haben",
                   0.000,  0.150,  0.150,  0.000,  0.150,  0.150,  1.000,  0.750,
                   0.900,  1.000,  0.800,  0.750,  0.150,  0.200,  0.200,  0.200,
                   0.200,  0.250))
-
 })
 
 
