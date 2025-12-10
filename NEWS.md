@@ -1,7 +1,4 @@
 
-
-# mlts 
-
 ## mlts 2.0.1 
 ### Bug Fixes
 * Selection of true values for data generation in `mlts_sim()` was spurious for residual SDs of outcome variables. Now set to 0.5. 
