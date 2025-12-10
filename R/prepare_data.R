@@ -135,10 +135,10 @@ prepare_data <- function(data, id, ts, time = NULL, tinterval = NULL,
     data <- data[data$miss.NA == FALSE,]
 
     # print warning for NA removal and tinterval
-    if (is.numeric(tinterval)) {
-      warning("Removing NAs with \"na.rm = TRUE\" does not allow to approximate",
-              " a continuous time model.")
-    }
+    # if (is.numeric(tinterval)) {
+    #   warning("Removing NAs with \"na.rm = TRUE\" does not allow to approximate",
+    #           " a continuous time model.")
+    # }
 
   } else if (is.numeric(tinterval)) {
     if (is.character(time)) {

@@ -438,9 +438,10 @@ w_arr_l2.ar <- w_arr
 
 
 # BETWEEN ======================================================================
-n_nod_b <- infos$n_random
+n_nod_b <- infos$n_random + infos$n_z
 has_out <- ifelse(infos$n_out>0,1,0)
 has_cov <- ifelse(infos$n_cov>1,1,0)
+has_Z <- ifelse(infos$n_z>0,1,0)
 n_cov <- infos$n_cov-1
 n_out <- infos$n_out
 n_cov_paths <- nrow(infos$RE.PREDS)
@@ -499,13 +500,13 @@ if(b_style == "h"){
     b_r_arrows_y1 <- rep(b_poses_y,n_nod_b) - b_radx/asp
   }
 } else {        # vertical ....
-  b_poses_x = get_mid_points(1, lims = c(end.btw.x, begin.btw.x))
+  b_poses_x = get_mid_points(1,       lims = c(end.btw.x, begin.btw.x))
   b_poses_y = get_mid_points(n_nod_b, lims = c(end.btw.y, begin.btw.y))
   b_radx <- diff(b_poses_y[1:2])*0.45
 }
 # get random pars -------
 b_nodes = infos$re_pars
-b_nodes$midx = b_poses_x
+b_nodes$midx = b_poses_x[1:nrow(b_nodes)]
 b_nodes$midy = b_poses_y
 b_nodes$lab = plotmath_labeller(x = b_nodes$Param, y_fac_labs = y_fac_labs,
                                 remove_lag_lab = remove_lag_lab, y_fac_lab_sep = y_fac_lab_sep)
@@ -528,7 +529,7 @@ if(has_out == 1){
   outs$midx <- out_midx
   outs$midy <- out_midy
   outs$lab <- outs$Var
-  arr.out <- infos$OUT
+  arr.out <- infos$OUT[is.na(infos$OUT$Pred_Z),]
   for(i in 1:nrow(arr.out)){
     arr.out$x1[i] <- unique(outs$midx[outs$Var == arr.out$Var[i]])
     arr.out$x0[i] <- unique(b_nodes$midx[b_nodes$Param == arr.out$Pred[i]])
@@ -536,6 +537,27 @@ if(has_out == 1){
     arr.out$y0[i] <- unique(b_nodes$midy[b_nodes$Param == arr.out$Pred[i]]) - b_radx/asp
   }
 }
+
+if(has_Z == 1){
+  z_vars = infos$OUT[!is.na(infos$OUT$Pred_Z),]
+  z_vars = z_vars[!(duplicated(z_vars$Pred_Z)),]
+  z_vars$midx <- b_poses_x[(nrow(b_nodes)+1):length(b_poses_x)]
+  z_vars$midy <- b_poses_y
+  z_vars$lab  <- z_vars$Pred_Z
+  arr.z <- infos$OUT[!is.na(infos$OUT$Pred_Z),]
+  for(i in 1:nrow(arr.z)){
+    arr.z$x1[i] <- unique(outs$midx[outs$Var == arr.z$Var[i]])
+    arr.z$x0[i] <- unique(z_vars$midx[z_vars$Param == arr.z$Param[i]])
+    arr.z$y1[i] <- unique(outs$midy[outs$Var == arr.z$Var[i]]) + b_radx/asp
+    arr.z$y0[i] <- unique(z_vars$midy[z_vars$Param == arr.z$Param[i]]) - b_radx/asp
+  }
+}
+
+
+
+
+
+
 ##### PLOTTING =================================================================
 # add the midpoints
 radx = 0.1 * diff(c(begin.decomp.x, end.decomp.x))
@@ -790,6 +812,16 @@ if(has_out == 1){
     diagram::straightarrow(from = c(arr.out$x0[i],arr.out$y0[i]), to = c(arr.out$x1[i],arr.out$y1[i]),lwd = 0.9, lty = "solid", arr.type ="triangle", endhead = T, arr.pos = 1-0.75*arrHead_b, arr.length = arrHead_b)
   }
 }
+# between-level covariates used as out pred (Z-Vars)
+if(has_Z == 1){
+  for(i in 1:infos$n_z){
+    diagram::textrect(lab = z_vars$lab[i],mid = c(z_vars$midx[i], z_vars$midy[i]), radx = b_nodes$radx[i], rady = b_nodes$radx[i]/asp, shadow.size = 0, cex=cex_b, lwd=lwd_nodes, family=family)
+  }
+  for(i in 1:nrow(arr.z)){
+    diagram::straightarrow(from = c(arr.z$x0[i],arr.z$y0[i]), to = c(arr.z$x1[i],arr.z$y1[i]),lwd = 0.9, lty = "solid", arr.type ="triangle", endhead = T, arr.pos = 1-0.75*arrHead_b, arr.length = arrHead_b)
+  }
+}
+
 
 if(!is.null(file)){
   grDevices::dev.off()

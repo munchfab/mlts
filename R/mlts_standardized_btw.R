@@ -136,6 +136,7 @@ mlts_standardized_btw <- function(object, digits = 3, prob = .95
     out_pred_std[,result.cols] = NA
 
     # get SDs of outcomes
+    SDs_out <- c()
     for(i in 1:infos$n_out){
       SDs_out[i] = stats::sd(object$standata$out[i,object$standata$g_id==g])
     }

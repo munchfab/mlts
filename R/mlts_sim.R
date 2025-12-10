@@ -258,7 +258,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
         model$true.val[model$Type == type & grepl(pattern = "phi",model$Param)] * 5
 
       model <- add_trues(model, type = type, label ="intercept", group = gg, values = 0)
-      model <- add_trues(model, type = type, label ="Residual SD", group = gg, values = 0)
+      model <- add_trues(model, type = type, label ="Residual SD", group = gg, values = 0.5)
 
       # ---
 
@@ -317,7 +317,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
   for(i in 1:infos$n_random){
     # get expected individual parameters
     pred_use = infos$RE.PREDS[infos$RE.PREDS$re_no ==i,]
-    val_use = model$true.val[model$group==gg & model$Param == pred_use$Param]
+    val_use = model$true.val[model$group==gg & model$Param %in% pred_use$Param]
 
     if(nrow(pred_use)>0){
       bmu[,i] = W[[gg]][,c(1,pred_use$pred_no+1)] %*% c(gammas[i], val_use)
