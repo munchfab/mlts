@@ -486,18 +486,18 @@ if(b_style == "h"){
   b_cor_col <- ifelse(has_cov == 1 & has_out == 1, "grey", "black")
   b_cor_lty <- ifelse(has_cov == 1 & has_out == 1, "dashed", "solid")
   if(b_cor_pos == "t"){
-    b_r_l_x <- c(min(b_poses_x) + b_cor_offset, max(b_poses_x) + b_cor_offset)
-    b_r_arrows_x0 <- b_poses_x + b_cor_offset
-    b_r_arrows_y0 <- rep(b_r_l_y,n_nod_b)
-    b_r_arrows_x1 <- b_poses_x + 0.5*b_cor_offset
-    b_r_arrows_y1 <- rep(b_poses_y,n_nod_b) + b_radx/asp
+    b_r_l_x <- c(min(b_poses_x) + b_cor_offset, max(b_poses_x[infos$n_random]) + b_cor_offset)
+    b_r_arrows_x0 <- b_poses_x[1:infos$n_random] + b_cor_offset
+    b_r_arrows_y0 <- rep(b_r_l_y,infos$n_random)
+    b_r_arrows_x1 <- b_poses_x[1:infos$n_random] + 0.5*b_cor_offset
+    b_r_arrows_y1 <- rep(b_poses_y,infos$n_random) + b_radx/asp
   }
   if(b_cor_pos == "b"){
-    b_r_l_x <- c(min(b_poses_x)- b_cor_offset, max(b_poses_x)- b_cor_offset)
-    b_r_arrows_x0 <- b_poses_x - b_cor_offset
-    b_r_arrows_y0 <- rep(b_r_l_y,n_nod_b)
-    b_r_arrows_x1 <- b_poses_x -b_cor_offset/2
-    b_r_arrows_y1 <- rep(b_poses_y,n_nod_b) - b_radx/asp
+    b_r_l_x <- c(min(b_poses_x)- b_cor_offset, max(b_poses_x[infos$n_random])- b_cor_offset)
+    b_r_arrows_x0 <- b_poses_x[1:infos$n_random] - b_cor_offset
+    b_r_arrows_y0 <- rep(b_r_l_y,infos$n_random)
+    b_r_arrows_x1 <- b_poses_x[1:infos$n_random] -b_cor_offset/2
+    b_r_arrows_y1 <- rep(b_poses_y,infos$n_random) - b_radx/asp
   }
 } else {        # vertical ....
   b_poses_x = get_mid_points(1,       lims = c(end.btw.x, begin.btw.x))
