@@ -207,7 +207,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
       }
       # calculate average standardized effect per iteration
       b_std_average = apply(b_std, MARGIN = 2, FUN = mean)
-      within_std[j, result.cols] = round(c(
+      within_std[[1]][j, result.cols] = round(c(
         mean(b_std_average),
         stats::sd(b_std_average),
         stats::quantile(b_std_average, c(probs))),digits = digits)
