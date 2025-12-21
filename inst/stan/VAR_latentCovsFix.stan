@@ -1,4 +1,7 @@
 // autoregressive DSEM with manifest variables
+functions{
+  #include "function_missings_and_censoring.stan"
+}
 data {
   int<lower=1> N; 	        // number of observational units
 int<lower=1> G;   // number of groups

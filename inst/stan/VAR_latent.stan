@@ -1,7 +1,10 @@
 // autoregressive DSEM with manifest variables
+functions{
+  #include "function_missings_and_censoring.stan"
+}
 data {
   int<lower=1> N; 	        // number of observational units
-int<lower=1> G;   // number of groups
+  int<lower=1> G;   // number of groups
   int<lower=1> D;           // number of latent constructs
   int<lower=1> D_cen;
   array[D] int<lower=1> D_np;     // number of indicators per construct

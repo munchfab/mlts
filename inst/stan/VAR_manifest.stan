@@ -1,7 +1,10 @@
 // autoregressive DSEM with manifest variables
+functions{
+  #include "function_missings_and_censoring.stan"
+}
 data {
   int<lower=1> N; 	// number of observational units
-int<lower=1> G;   // number of groups
+  int<lower=1> G;   // number of groups
   int<lower=1> D; 	// number of time-varying constructs
   int<lower=1> D_cen;
   int<lower=1, upper=3> maxLag;   // maximum lag
