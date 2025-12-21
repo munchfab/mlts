@@ -1,7 +1,10 @@
 // autoregressive DSEM with manifest variables
+functions{
+  #include "function_missings_and_censoring.stan"
+}
 data {
   int<lower=1> N; 	// number of observational units
-int<lower=1> G;   // number of groups
+  int<lower=1> G;   // number of groups
   int<lower=1> D; 	// number of time-varying constructs
   int<lower=1> D_cen;
   int<lower=1, upper=3> maxLag;   // maximum lag
@@ -165,9 +168,6 @@ transformed parameters {
 
 model {
   int pos = 1;       // initialize position indicator
-  int p_miss = 1;    // running counter variable to index positions on y_impute
-  int p_censL = 1;
-  int p_censR = 1;
   int pos_cov = 1;   // covariance position
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   array[D] vector[N_obs] y_merge;
@@ -178,27 +178,10 @@ model {
   }
 
   y_merge = y;      // add observations
+  y_merge = missings_and_censoring(y_merge, n_miss_D, pos_miss_D, y_impute);
+  y_merge = missings_and_censoring(y_merge, n_censL_D, pos_censL_D, y_impute_censL);
+  y_merge = missings_and_censoring(y_merge, n_censR_D, pos_censR_D, y_impute_censR);
 
-  for(i in 1:D){
-    if(n_miss_D[i]>0){
-    // add imputed values for missings on each indicator
-    y_merge[i,pos_miss_D[i,1:n_miss_D[i]]] = segment(y_impute, p_miss, n_miss_D[i]);
-    p_miss = p_miss + n_miss_D[i];    // update counter for next indicator i+1
-    }
-  }
-  // replace values at censor thresholds
-  for(i in 1:D){
-    if(n_censL_D[i]>0){
-    // add imputed values for observations at floor (threshold for censoring)
-    y_merge[i,pos_censL_D[i,1:n_censL_D[i]]] = segment(y_impute_censL, p_censL, n_censL_D[i]);
-    p_censL = p_censL + n_censL_D[i];    // update counter for next indicator i+1
-    }
-    if(n_censR_D[i]>0){
-    // add imputed values for observations at ceiling (threshold for censoring)
-    y_merge[i,pos_censR_D[i,1:n_censR_D[i]]] = segment(y_impute_censR, p_censR, n_censR_D[i]);
-    p_censR = p_censR + n_censR_D[i];    // update counter for next indicator i+1
-    }
-  }
 
   // (Hyper-)Priors
   for(g in 1:G){
