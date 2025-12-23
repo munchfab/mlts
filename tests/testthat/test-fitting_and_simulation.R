@@ -1,4 +1,4 @@
-test_that("Das Modell schätzt die gleichen Werte wie immer ", {
+test_that("fitting", {
   skip_on_cran()
 
   m1 <- mlts_model(q = 1)
@@ -81,9 +81,7 @@ test_that("Das Modell schätzt die gleichen Werte wie immer ", {
 
 
 # testing
-# vermutlich nicht sehr sinnvoll, wenn default = T, weil dann sowieso immer
-# gleiche pop pars ausgewählt werden - habe es trotzdem mal hinzugefügt
-test_that("Neue simulierte Daten mit gleichem Seed die gleichen pop.pars haben", {
+test_that("simulation", {
   skip_on_cran()
 
   m1 <- mlts_model(q = 1)
