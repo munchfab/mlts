@@ -17,7 +17,7 @@ test_that("fitting", {
 
   # neues fitting
   new_fit1 <- mlts_fit(model = m1,
-                        data = initial_simData1,
+                        data = initial_simData1$data,
                         id = "ID",
                         ts = "Y1",
                         chains = 2,
@@ -26,7 +26,7 @@ test_that("fitting", {
                         seed = 5)$pop.pars.summary
 
   new_fit2 <- mlts_fit(model = m2,
-                        data = initial_simData2,
+                        data = initial_simData2$data,
                         id = "ID",
                         ts = c("Y1","Y2"),
                         chains = 2,
@@ -35,7 +35,7 @@ test_that("fitting", {
                         cores = 1)$pop.pars.summary
 
   new_fit3 <- mlts_fit(model = m3,
-                       data = initial_simData3,
+                       data = initial_simData3$data,
                        id = "ID",
                        ts = c("Y1.1","Y1.2", "Y1.3"),
                        chains = 2,
@@ -44,7 +44,7 @@ test_that("fitting", {
                        cores = 1)$pop.pars.summary
 
   new_fit4 <- mlts_fit(model = m4,
-                       data = initial_simData4,
+                       data = initial_simData4$data,
                        id = "ID",
                        ts = c("Y1.1", "Y1.2", "Y1.3",
                               "Y2.1", "Y2.2", "Y2.3"),
