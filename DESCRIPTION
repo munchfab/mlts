@@ -39,7 +39,8 @@ Imports:
     shape,
     diagram,
     grDevices,
-    graphics
+    graphics,
+    e1071
 Suggests: 
     knitr,
     testthat (>= 3.0.0)

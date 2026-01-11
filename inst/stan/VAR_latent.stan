@@ -1,7 +1,10 @@
 // autoregressive DSEM with manifest variables
+functions{
+  #include "function_missings_and_censoring.stan"
+}
 data {
   int<lower=1> N; 	        // number of observational units
-int<lower=1> G;   // number of groups
+  int<lower=1> G;   // number of groups
   int<lower=1> D;           // number of latent constructs
   int<lower=1> D_cen;
   array[D] int<lower=1> D_np;     // number of indicators per construct
@@ -218,9 +221,6 @@ transformed parameters {
 model {
   int pos = 1;       // initialize position indicator
   int pos_cov = 1;   // covariance position
-  int p_miss = 1;    // running counter variable to index positions on y_impute
-  int p_censL = 1;
-  int p_censR = 1;
   int obs_id = 1;    // declare local variable to store variable number of obs per person
   matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R[1,], L[1,]);
   array[n_p] vector[N_obs] y_merge;
@@ -228,27 +228,9 @@ model {
   array[n_p] vector[N] YB;
 
   y_merge = y;          // add observations
-  // add imputed values for missings on each indicator
-  for(i in 1:n_p){
-    if(n_miss_p[i]>0){
-      y_merge[i,pos_miss_p[i,1:n_miss_p[i]]] = segment(y_impute, p_miss, n_miss_p[i]);
-      p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
-    }
-  }
-
-  // replace values at censor thresholds
-  for(i in 1:n_p){
-    if(n_censL_p[i]>0){
-    // add imputed values for observations at floor (threshold for censoring)
-    y_merge[i,pos_censL_p[i,1:n_censL_p[i]]] = segment(y_impute_censL, p_censL, n_censL_p[i]);
-    p_censL = p_censL + n_censL_p[i];    // update counter for next indicator i+1
-    }
-    if(n_censR_p[i]>0){
-    // add imputed values for observations at ceiling (threshold for censoring)
-    y_merge[i,pos_censR_p[i,1:n_censR_p[i]]] = segment(y_impute_censR, p_censR, n_censR_p[i]);
-    p_censR = p_censR + n_censR_p[i];    // update counter for next indicator i+1
-    }
-  }
+  y_merge = missings_and_censoring(y_merge, n_miss_p, pos_miss_p, y_impute);
+  y_merge = missings_and_censoring(y_merge, n_censL_p, pos_censL_p, y_impute_censL);
+  y_merge = missings_and_censoring(y_merge, n_censR_p, pos_censR_p, y_impute_censR);
 
   // (Hyper-)Priors
  for(g in 1:G){
