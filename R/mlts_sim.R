@@ -170,6 +170,14 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       }
 
       vals  <- round(phis$true.val,3)
+
+      # add rdsem-paths:
+      if(sum(infos$N_pred_rdsem)>0){
+        rdsem_vals = sample(c(seq(from = -0.7, to = -0.1, by = 0.1),seq(from = 0.1, to = 0.7, by = 0.1)),
+                            size = sum(infos$N_pred_rdsem))
+        vals <- round(c(rdsem_vals, vals),3)
+      }
+
       model <- add_trues(model, type = type, label = "Dynamic", group = gg, values = vals)
       #-
 
@@ -178,7 +186,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       if(nrow(t0_effect) > 0){
         for(i in 1:nrow(t0_effect)){
           # choose value according to the respective lagged effect - if present
-          lag_value = model$true.val[model$group == gg, model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
+          lag_value = model$true.val[model$group == gg & model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
 
           if(is.numeric(lag_value)){
             vals <- 1.2 * lag_value

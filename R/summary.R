@@ -10,6 +10,9 @@
 #' @param bpe Bayesian posterior estimate can be either "mean" (the default)
 #' or the "median" of the posterior distribution.
 #' @param digits Number of digits.
+#' @param diag_incl_pp Logical. Should person-specific parameters be included in the
+#' calculation of model convergence diagnostics (default = `FALSE`).
+#' Note this is only relevant if the model was estimated with `monitor_person_pars = TRUE`.
 #' @param flag_signif Add significance flags based on `prob` (default = FALSE).
 #' @param priors Add prior information (default = FALSE).
 #' @param ... Additional arguments affecting the summary produced.
@@ -36,7 +39,7 @@
 #' summary(fit)
 #' }
 summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
-                            bpe = c("mean"),
+                            bpe = c("mean"), diag_incl_pp = FALSE,
                             digits = 3, flag_signif = FALSE, ...) {
 
   object <- object
@@ -58,7 +61,13 @@ summary.mltsfit <- function(object, priors = FALSE, se = FALSE, prob = .95,
   # get CIs based on prob
   # create a summary table using the monitor-function in rstan
   par_labels = mlts_param_labels(object$model)
-  sums <- rstan::monitor(object$stanfit, probs = probs, print = FALSE)
+  if(diag_incl_pp == TRUE){
+    sums <- rstan::monitor(object$stanfit, probs = probs, print = FALSE)
+  } else {
+    sums <- rstan::monitor(
+      rstan::extract(object$stanfit, pars = object$param.labels$Param_stan, permuted = FALSE, inc_warmup = TRUE),
+      probs = probs, print = FALSE)
+  }
   conv <- sums # backup to use for convergence checks
   sums <- round(sums[1:dim(sums)[1], 1:ncol(sums)], digits)
   sums$Param_stan = row.names(sums)

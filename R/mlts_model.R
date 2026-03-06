@@ -63,12 +63,18 @@
 #' @param is_exogenous Integer or a vector of integers. Indicate if any of the constructs
 #' should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
 #' Adding a dichotomous time-varying predictor variable.
-#' @param incl_t0_effects A character vector. Experimental: Add contemporaneous effects to the model.
+#' @param incl_t0_effects A character vector. Add contemporaneous effects to the model.
 #' For example, to include an effect of the first construct on the second construct at time $t$,
 #' following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
 #' specifying `phi(0)_21` where the `0` indicates the lag, the first subscript letter (`2`) the dependent,
 #' and the latter subscript (`1`) the independent construct. The respective within-level correlation/covariance
 #' of innovations between involved constructs will be excluded from the model accordingly.
+#' @param incl_rDSEM_effects A character vector. Add a structural (contemporaneous) regression effect(s) to the model.
+#' For each construct (`q`) which functions as dependent variable in any of the specified effects,
+#' all remaining dynamic (e.g., AR) effects are assumed for the residuals. Note that this residual DSEM approach
+#' substantially differs from the common DSEM approach! Following the general pattern for naming of dynamic parameters
+#' in the mlts framework, can be included by specifying `phi(s)_21` where the `s` indicates a structural effect,
+#' the first subscript letter (`2`) the dependent, and the latter subscript (`1`) the independent construct.
 #' @param incl_interaction_effects A character vector. Add interaction terms on
 #' the dynamic within-level. For example, to add an interaction term between the first
 #' construct at time $t$ (lag of 0) and the second construct at $t-1$ (lag of 1) to
@@ -174,6 +180,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                           group = NULL,
                           is_exogenous = NULL,
                           incl_t0_effects = NULL,
+                          incl_rDSEM_effects = NULL,
                           incl_interaction_effects = NULL,
                           censor_left = NULL, censor_right = NULL, silent = FALSE){
 
@@ -245,14 +252,14 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     }
   }
 
+  # check for structural regressions effects (rDSEM)
+  if(!is.null(incl_rDSEM_effects)){
+    rdsem_effs = eval_rDSEM_effects(incl_rDSEM_effects, q = q)
+  }
+
   # check for interaction effects on the within-level
   if(!is.null(incl_interaction_effects)){
-    if(q == 1){
-      if(silent == F){warning("Input of 'incl_interaction_effects' will be ignored in AR models (q = 1).")}
-    }
-    if(q > 1){
-      int_effs = eval_int_effects(int_input = incl_interaction_effects, q = q)
-    }
+    int_effs = eval_int_effects(int_input = incl_interaction_effects, q = q)
   }
 
   if(q > 2 & fix_inno_covs == FALSE & any(is_exogenous < 3)){
@@ -267,6 +274,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   n_mus = q                                 # trait level parameters
   mus_pars = paste0("mu_",1:n_mus)
 
+  ### dynamic effects
   n_phi = (q^2)*max_lag+length(incl_t0_effects) # dynamic parameters
   phi_order = rep(paste0("phi(",0:max_lag,")_"), each = q, times = q)
   phis = paste0(rep(1:q, each = q*(max_lag+1)), rep(1:q, times = q*max_lag))
@@ -285,6 +293,13 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
     phi_pars = phi_pars_int
     n_phi = n_phi + nrow(int_effs)
   }
+
+  if(!is.null(incl_rDSEM_effects)){
+    n_phi = n_phi+length(incl_rDSEM_effects)
+    phi_pars = c(sort(incl_rDSEM_effects), phi_pars)
+  }
+
+
   # innovation variances
   n_sigma = q
   sigma_pars = paste0("ln.sigma2_", 1:q)

@@ -70,9 +70,7 @@ int<lower=1> G;   // number of groups
   matrix[n_random,2] prior_sd_R;
   real prior_LKJ;
   matrix[n_fixed,2] prior_b_fix;
-//  matrix[n_fixed,2] prior_b_fix_diff;
   matrix[n_innos_fix,2] prior_sigma;
-//  matrix[n_innos_fix,2] prior_sigma_diff;
   matrix[n_cov_bs,2] prior_b_re_pred;
   matrix[n_out,2] prior_alpha_out;
   matrix[n_out_bs_sum,2] prior_b_out;
@@ -92,6 +90,11 @@ array[G,max(N_G)] int g_id_pos; // index group by G*N_G array
   //
   array[D] int<lower=0,upper=1> is_wcen;
   array[D] int<lower=0,upper=D> D_cen_pos;
+
+  array[D] int<lower=0,upper=1> is_rdsem;
+  array[D] int<lower=0> N_pred_rdsem;
+  array[D,max(N_pred_rdsem)] int<lower=0> D_pred_rdsem;
+  array[D] int Dpos1_rdsem;
 }
 
 
@@ -249,11 +252,21 @@ model {
     // create latent mean centered versions of observations
     array[D] vector[obs_id] y_cen;
 
-    for(d in 1:D){ // start loop over dimensions
+    for(d in 1:D){
       if(is_wcen[d] == 1){
         y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)] - b[pp,D_cen_pos[d]];
       } else {
         y_cen[d,] = y_merge[d,pos:(pos+obs_id-1)];
+      }
+    }
+
+    if( sum(is_rdsem) > 0 ){
+      for (d in 1:D) {
+        if (is_rdsem[d] == 1 ) {
+          for(k in 1:N_pred_rdsem[d]){
+             y_cen[d,] = y_cen[d,] - b[pp,(Dpos1_rdsem[d]+(k-1))] * y_cen[D_pred_rdsem[d,k],];
+          }
+        }
       }
     }
 
@@ -285,11 +298,11 @@ model {
          b_use[N_pred[d]+1] = inno_cov_load[d];
          }
 
-        mus[D_cen_pos[d],] = b[pp,D_cen_pos[d]] + b_mat * b_use;
+        mus[D_cen_pos[d],] = b_mat * b_use;
         }
 
         // sampling statement
-        target += normal_lpdf(y_merge[d,(pos+maxLag):(pos+(obs_id-1))] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
+       target += normal_lpdf(y_cen[d,(maxLag+1):obs_id] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
        }
       }
     }

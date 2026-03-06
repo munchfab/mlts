@@ -151,6 +151,41 @@ eval_t0_effects <- function(t0_input, q){
 }
 
 
+# function to evaluate input of rdsem_paths
+eval_rDSEM_effects <- function(input, q){
+
+  # initial check
+  check1 <- sum(startsWith(prefix = "phi(s)_", x = input))
+  if(check1 != length(input)){
+    stop("Invalid input of 'incl_rDSEM_effects', see ?mlts_model.")
+  }
+
+  t0_effs <- lapply(input, function(x){
+    df <- data.frame(
+      "DV" = strsplit(strsplit(x, split = "_")[[1]][2], split = "")[[1]][1],
+      "IV" = strsplit(strsplit(x, split = "_")[[1]][2], split = "")[[1]][2]
+    )
+    df
+  })
+  t0_effs <- do.call(rbind, t0_effs)
+
+  # post sanity checks
+  # bidirectional effects
+  n_bi <- paste0(t0_effs$DV,t0_effs$IV)  %in% paste0(t0_effs$IV,t0_effs$DV)
+
+  if(sum(n_bi)>0){
+    stop("Invalid input of 'incl_rDSEM_effects': bidrectional paths are not allowed (e.g., phi(s)_21 and phi(s)_12.")
+  }
+
+  if(max(t0_effs$DV) > q | max(t0_effs$IV) > q){
+    stop("Invalid input of 'incl_rDSEM_effects': input refers to variables outside the number of included constructs ('q').")
+  }
+
+
+  return(t0_effs)
+}
+
+
 # function to evaluate input of incl_interaction_effects
 eval_int_effects <- function(int_input, q){
 

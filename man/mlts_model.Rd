@@ -25,6 +25,7 @@ mlts_model(
   group = NULL,
   is_exogenous = NULL,
   incl_t0_effects = NULL,
+  incl_rDSEM_effects = NULL,
   incl_interaction_effects = NULL,
   censor_left = NULL,
   censor_right = NULL,
@@ -114,12 +115,19 @@ are allowed to vary by cluster, you can enter the grouping variable to \code{re_
 should be treated as exogenous (i.e., no latent mean centering will be performed). Probable use case:
 Adding a dichotomous time-varying predictor variable.}
 
-\item{incl_t0_effects}{A character vector. Experimental: Add contemporaneous effects to the model.
+\item{incl_t0_effects}{A character vector. Add contemporaneous effects to the model.
 For example, to include an effect of the first construct on the second construct at time $t$,
 following the general pattern for naming of dynamic parameters in the mlts framework, can be included by
 specifying \verb{phi(0)_21} where the \code{0} indicates the lag, the first subscript letter (\code{2}) the dependent,
 and the latter subscript (\code{1}) the independent construct. The respective within-level correlation/covariance
 of innovations between involved constructs will be excluded from the model accordingly.}
+
+\item{incl_rDSEM_effects}{A character vector. Add a structural (contemporaneous) regression effect(s) to the model.
+For each construct (\code{q}) which functions as dependent variable in any of the specified effects,
+all remaining dynamic (e.g., AR) effects are assumed for the residuals. Note that this residual DSEM approach
+substantially differs from the common DSEM approach! Following the general pattern for naming of dynamic parameters
+in the mlts framework, can be included by specifying \verb{phi(s)_21} where the \code{s} indicates a structural effect,
+the first subscript letter (\code{2}) the dependent, and the latter subscript (\code{1}) the independent construct.}
 
 \item{incl_interaction_effects}{A character vector. Add interaction terms on
 the dynamic within-level. For example, to add an interaction term between the first

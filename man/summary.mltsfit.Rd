@@ -10,6 +10,7 @@
   se = FALSE,
   prob = 0.95,
   bpe = c("mean"),
+  diag_incl_pp = FALSE,
   digits = 3,
   flag_signif = FALSE,
   ...
@@ -28,6 +29,10 @@ interval. Default is .95.}
 
 \item{bpe}{Bayesian posterior estimate can be either "mean" (the default)
 or the "median" of the posterior distribution.}
+
+\item{diag_incl_pp}{Logical. Should person-specific parameters be included in the
+calculation of model convergence diagnostics (default = \code{FALSE}).
+Note this is only relevant if the model was estimated with \code{monitor_person_pars = TRUE}.}
 
 \item{digits}{Number of digits.}
 

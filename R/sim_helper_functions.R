@@ -157,8 +157,18 @@ mlts_sim_within <- function(
       exo_pos = exo_pos +1
     }
 
+    # add structural regressions paths (rDSEM)
+    if(infos$n_rdsem.pars > 0){
+      for(l in 1:nrow(infos$fix_pars_rdsem)){
+        dv <- as.integer(infos$fix_pars_rdsem$Dout[l])
+        iv <- as.integer(infos$fix_pars_rdsem$Dpred[l])
+        y[,dv] = y[,dv] + btw[i,infos$fix_pars_rdsem$no[l]] * y[,iv]
+      }
+    }
+
     # remove burn-in
     within[within$ID==i, y_cols] = y[(burn.in+1) : (burn.in+TP[i]),]
+
 
     # add trait scores (for manifest indicators)
     if(infos$isLatent == FALSE){

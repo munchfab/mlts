@@ -128,6 +128,13 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   n_int = infos$n_int
   Dpos1 = as.array(infos$Dpos1)
   Dpos2 = as.array(infos$Dpos2)
+
+  is_rdsem = infos$is_rdsem
+  N_pred_rdsem = as.array(infos$N_pred_rdsem)
+  D_pred_rdsem = infos$D_pred_rdsem
+  Dpos1_rdsem = as.array(infos$Dpos1_rdsem)
+
+
   # covariate(s) as predictor(s) of random effects
   RE.PREDS = infos$RE.PREDS
   n_cov = infos$n_cov
@@ -271,6 +278,8 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     # model specifications
     n_pars, n_random, n_fixed, is_random, is_fixed,
     N_pred, D_pred, D_pred2, Lag_pred, Lag_pred2, n_int, Dpos1, Dpos2,
+    is_rdsem, N_pred_rdsem, D_pred_rdsem, Dpos1_rdsem,
+
     ## innovations
     innos_rand, innos_pos, n_innos_fix,
     ## innovation covariances
