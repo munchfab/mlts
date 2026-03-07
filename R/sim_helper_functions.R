@@ -30,10 +30,12 @@ mlts_sim_within <- function(
 
   # get positions to fill transition matrix
   dyn = infos$fix_pars_dyn
+  if(nrow(dyn)>0){
+    dyn$tran_pos = NA
+    dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
+  }
   dyn_int = dyn[dyn$isINT == 1,]
   dyn = dyn[dyn$isINT != 1,]
-  dyn$tran_pos = NA
-  dyn$tran_pos = as.integer(dyn$Dpred) + q*(as.numeric(dyn$Lag)-1)
   # remove t0-effects at this points
   dyn_t0 = dyn[dyn$Lag == 0,]
   dyn = dyn[dyn$Lag!=0,]
@@ -93,7 +95,7 @@ mlts_sim_within <- function(
     # generate the within-level process in a loop over time points
     for(t in 1:NT){
 
-      if(t <= infos$maxLag){
+      if(t <= infos$maxLag | t == 1){
         # starting values
         init = matrix(data = NA, nrow = 1, ncol = q)
         init[,wcen_logical] = mvtnorm::rmvnorm(n = 1, mean = rep(0, n_wcen), sigma = inno_var_mat)
@@ -115,13 +117,21 @@ mlts_sim_within <- function(
 
         if(q > 1 | infos$maxLag > 1){
           # get expected values using matrix multiplication
-          y[t,1:q] = y_lag %*% t(transition)
+          if( ncol(transition)  == 0 ) {
+            y[t,1:q] = 0
+          } else {
+            y[t,1:q] = y_lag %*% t(transition)
+          }
           if(any(infos$is_wcen == 0)){
             y[t,!wcen_logical] = exogenous[exo_pos, ]
           }
-        } else {
+
+        } else if( ncol(transition) >0 ) {
           # or for AR(1):
           y[t,] = y_lag * transition
+        } else if( ncol(transition) == 0) {
+          # for location scale models
+          y[t,] = 0
         }
 
         # add innovations

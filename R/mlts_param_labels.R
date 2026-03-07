@@ -53,17 +53,19 @@ mlts_param_labels <- function(model){
     if(nrow(REcors[[g]] > 0)){
       rand_pars = FEints$Param[FEints$group==g]
       rand_pars_pos = 1:length(rand_pars)
-      REcors[[g]]$Param_stan = REcors[[g]]$Param
-      for(i in 1:length(rand_pars)){
-        REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan,
-                               pattern = rand_pars[i],
-                               replacement = rand_pars_pos[i], fixed = TRUE)
+      mvn1_pars = rand_pars[infos$pos_mvn1]
+      mvn2_pars = rand_pars[infos$pos_mvn2]
+      temp = t(combn(1:length(mvn1_pars),2))
+      mvn1_pars_stan = paste0("bcorr[",g,",",temp[,1],",",temp[,2],"]")
+
+      if(length(mvn2_pars)>0){
+        temp = t(combn(1:length(mvn2_pars),2))
+        mvn2_pars_stan = paste0("bcorr2[",g,",",temp[,1],",",temp[,2],"]")
+        mvn1_pars_stan = c(mvn1_pars_stan, mvn2_pars_stan)
       }
-      REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan, fixed = TRUE,
-                               pattern = ".", replacement = ",")
-      REcors[[g]]$Param_stan = gsub(REcors[[g]]$Param_stan, fixed = TRUE,
-                                 pattern = "r_", replacement = paste0("bcorr[",g,","))
-      REcors[[g]]$Param_stan = paste0(REcors[[g]]$Param_stan,"]")
+
+      REcors[[g]]$Param_stan = c(mvn1_pars_stan)
+
     }
   }
   REcors = do.call(rbind,REcors)

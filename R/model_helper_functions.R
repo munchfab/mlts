@@ -7,36 +7,41 @@ update_model_REcors <- function(model) {
   model <- model[model$Type != "RE correlation", ]
 
   # update random effect correlations
-  rand.pars <- (model[model$Type == "Fixed effect" & model$isRandom == 1, "Param"])
-  n_rand <- length(rand.pars)
-  btw.cov_pars <- c()
-  if (n_rand > 1) {
-    n_cors <- (n_rand * (n_rand - 1)) / 2
-    qs <- c()
-    ps <- c()
-    for (i in 1:(n_rand - 1)) {
-      qs <- c(qs, rep(rand.pars[i], each = n_rand - i))
-    }
-    for (i in 2:n_rand) {
-      ps <- c(ps, rep(rand.pars[i:n_rand], 1))
-    }
+  rand.pars <- model[model$Type == "Fixed effect" & model$isRandom == 1, "Param"]
 
-    btw.cov_pars <- paste0("r_", qs, ".", ps)
+  # check settings
+  rand.pars_types = model$Random_type[model$Param %in% rand.pars]
 
-    ## random effect correlations
+  if(all(rand.pars_types == "iid") | length(rand.pars) == 1){
+    btw.cov_pars <- c()
+  }
+
+  if(all(rand.pars_types == "mvn")){
+    temp = t(combn(rand.pars,2))
+    btw.cov_pars <- paste0("r_", temp[,1], ".", temp[,2])
+  }
+
+  if(any(rand.pars_types == "mvn")){
+    temp = t(combn(rand.pars[rand.pars_types == "mvn"],2))
+    btw.cov_pars <- paste0("r_", temp[,1], ".", temp[,2])
+  }
+  if(any(rand.pars_types == "mvn2")){
+    temp = t(combn(rand.pars[rand.pars_types == "mvn2"],2))
+    btw.cov_pars <- c(btw.cov_pars, paste0("r_", temp[,1], ".", temp[,2]))
+  }
+
+  if(length(btw.cov_pars)>0){
     REcors <- data.frame(
       "Model" = "Structural",
       "Level" = "Between",
-      "Type" = rep("RE correlation", n_cors),
+      "Type" = "RE correlation",
       "Param" = btw.cov_pars,
       "Param_Label" = "RE Cor",
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
     model <- dplyr::bind_rows(model, mlts_model_priors(REcors, default = TRUE))
-  } else if (n_rand == 1) {
-    model <- model[model$Type != "RE Cor", ]
   }
-
 
   # add row labels
   row.names(model) <- model$Param

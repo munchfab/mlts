@@ -335,7 +335,7 @@ mlts_fit <- function(model,
                           center_covs = center_covs, group = group)
 
     # model fit
-    pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr",
+    pars <- c("gammas","b_fix", "sigma", "sd_R", "bcorr", "bcorr2",
               "b_re_pred", "b_out_pred", "alpha_out", "sigma_out")
     if(monitor_person_pars == TRUE){
       pars = c(pars, "b_free")

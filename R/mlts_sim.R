@@ -152,24 +152,27 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       ## PHIs ====
 
       # dynamic parameters separately for each lag
-      phis = infos$fix_pars_dyn
-      phis$true.val = NA
-      ## start with lag 1 ARs
-      n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
-      phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = TRUE, size = n_sample)
-      n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
-      phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = TRUE, size = n_sample)
-      ## add higher order effects
-      if(infos$maxLag>1){
-        for(i in 1:nrow(phis)){
-          if(phis$Lag[i] > 1){
-            phi.lag1 = phis$true.val[phis$Param == paste0("phi(1)_",phis$Dout[i],phis$Dpred[i])]
-            phis$true.val[i] = phi.lag1/as.numeric(phis$Lag[i])
+      if(nrow(infos$fix_pars_dyn)>0){
+        phis = infos$fix_pars_dyn
+        phis$true.val = NA
+        ## start with lag 1 ARs
+        n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 1,])
+        phis$true.val[phis$Lag == 1 & phis$isAR == 1] = sample(x = seq(from=.15,to=0.3,by=0.05), replace = TRUE, size = n_sample)
+        n_sample = nrow(phis[phis$Lag == 1 & phis$isAR == 0,])
+        phis$true.val[phis$Lag == 1 & phis$isAR == 0] = sample(x = seq(from=-0.2,to=0.1,by=0.05),replace = TRUE, size = n_sample)
+        ## add higher order effects
+        if(infos$maxLag>1){
+          for(i in 1:nrow(phis)){
+            if(phis$Lag[i] > 1){
+              phi.lag1 = phis$true.val[phis$Param == paste0("phi(1)_",phis$Dout[i],phis$Dpred[i])]
+              phis$true.val[i] = phi.lag1/as.numeric(phis$Lag[i])
+            }
           }
         }
+        vals  <- round(phis$true.val,3)
+      } else {
+        vals <- c()
       }
-
-      vals  <- round(phis$true.val,3)
 
       # add rdsem-paths:
       if(sum(infos$N_pred_rdsem)>0){
@@ -347,6 +350,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       for(j in 1:n_random){
         if(i < j){
           r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j]) & model$group == gg]
+          if(length(r) == 0){r = 0}
           cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
         }
       }
@@ -356,6 +360,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
 
   #### sample random effects from multivariate normal distribution and add to bmus
   btw_random = matrix(NA, nrow = N_G[gg], ncol = infos$n_random)
+
   if(n_random == 1){
     btw_random = bmu + stats::rnorm(n = N_G[gg], mean = 0, sd = cov_mat)
   } else {

@@ -29,6 +29,14 @@
 #' (Note: this also results in removing the random effect variance of the respective parameter).
 #' @param ranef_zero Character. A character vector to index which random effect variances
 #' (referring to the parameter labels in `model$Param`) should be constrained to zero.
+#' @param ranef_str Character or list. Specify (joint) random effects distribution using
+#' `mvn` (the default) to assume all random effects to stem from a joint multivariate-normal distribution.
+#' Set to `iid` to assume all random effects to be independently normally distributed. Complex specifications
+#' assuming sets of random effects to stem from a joint MVN distribution can be entered as list of
+#' character vectors (referring to the parameter names). This is currently restricted to two MVN distributions.
+#' All remaining random effects that are not part of the list will be assumed iid.
+#' @param ranef_iid Character. Vector of random effects to be assumed uncorrelated from the remaining random effects
+#' (see also `ranef_str`). Only works in combination with `ranef_str = TRUE`.
 #' @param btw_factor Logical. If `TRUE` (the default), a common between-level factor
 #' is modeled across all indicator variables per construct `q`. If `FALSE`, instead of a between-level
 #' factor, indicator mean levels will be included as individual (random) effects drawn
@@ -170,19 +178,20 @@
 #' }
 
 mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
-                          btw_factor = TRUE, btw_model = NULL,
-                          equal_loads_levels = FALSE,
-                          fix_dynamics = FALSE, fix_inno_vars = FALSE,
-                          fix_inno_covs = TRUE, inno_covs_zero = FALSE,
-                          inno_covs_dir = NULL,
-                          fixef_zero = NULL, ranef_zero = NULL,
-                          ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL,
-                          group = NULL,
-                          is_exogenous = NULL,
-                          incl_t0_effects = NULL,
-                          incl_rDSEM_effects = NULL,
-                          incl_interaction_effects = NULL,
-                          censor_left = NULL, censor_right = NULL, silent = FALSE){
+                       btw_factor = TRUE, btw_model = NULL,
+                       equal_loads_levels = FALSE,
+                       fix_dynamics = FALSE, fix_inno_vars = FALSE,
+                       fix_inno_covs = TRUE, inno_covs_zero = FALSE,
+                       inno_covs_dir = NULL,
+                       fixef_zero = NULL, ranef_zero = NULL,
+                       ranef_str = "mvn", ranef_iid = NULL,
+                       ranef_pred = NULL, out_pred=NULL, out_pred_add_btw = NULL,
+                       group = NULL,
+                       is_exogenous = NULL,
+                       incl_t0_effects = NULL,
+                       incl_rDSEM_effects = NULL,
+                       incl_interaction_effects = NULL,
+                       censor_left = NULL, censor_right = NULL, silent = FALSE){
 
   if(length(max_lag) == 3){
     max_lag = 1
@@ -350,7 +359,8 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
         rep("Log Innovation Variance", n_sigma),
         rep("Log Innovation Covariance", n_covs)
       ),
-      "isRandom" = 1
+      "isRandom" = 1,
+      "Random_type" = "mvn"
     )
     RE = data.frame(
       "Model" = "Structural",
@@ -363,7 +373,8 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
         rep("Log Innovation Variance", n_sigma),
         rep("Log Innovation Covariance", n_covs)
       ),
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
     ## combine
     df.pars = rbind(FE, RE)
@@ -381,7 +392,8 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
         rep("Trait", n_mus),
         rep("Dynamic", n_phi),
         rep("Log Innovation Variance", n_sigma)
-      ), "isRandom" = 1
+      ), "isRandom" = 1,
+      "Random_type" = "mvn"
     )
     ## random effect variances
     RE = data.frame(
@@ -394,40 +406,35 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
         rep("Dynamic", n_phi),
         rep("Log Innovation Variance", n_sigma)
       ),
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
   }
 
   ## add random effect correlations
   rand.pars = FE[FE$isRandom == 1,"Param"]
   n_rand = length(rand.pars)
-  btw.cov_pars = c()
   if(n_rand>1){
-    n_cors = (n_rand * (n_rand-1))/2
-    qs = c()
-    ps = c()
-    for(i in 1:(n_rand-1)){
-      qs = c(qs, rep(rand.pars[i], each = n_rand-i))
-    }
-    for(i in 2:n_rand){
-      ps = c(ps, rep(rand.pars[i:n_rand], 1))
-    }
-
-    btw.cov_pars = paste0("r_", qs,".", ps)
+    temp = t(combn(rand.pars,2))
+    btw.cov_pars = paste0("r_", temp[,1],".", temp[,2])
 
     ## random effect correlations
     REcors = data.frame(
       "Model" = "Structural",
       "Level" = "Between",
-      "Type" = rep("RE correlation",n_cors),
+      "Type" = "RE correlation",
       "Param" = btw.cov_pars,
       "Param_Label" = "RE Cor",
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
 
     ## combine
     model = rbind(FE, RE, REcors)
   }
+
+
+
 
   # ---
   if(q >= 2 & inno_covs_zero == FALSE & fix_inno_covs == FALSE){
@@ -457,12 +464,15 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
      fix_inno_covs == TRUE | !is.null(fixef_zero) |
-     !is.null(ranef_zero) | inno_covs_zero == TRUE) {
+     !is.null(ranef_zero) | inno_covs_zero == TRUE|
+     (is.list(ranef_str) | ranef_str == "iid")[1] |
+     !is.null(ranef_iid)) {
     model = mlts_model_constraint(
       model = model,
       fix_dynamics = fix_dynamics, fix_inno_vars = fix_inno_vars,
       inno_covs_zero = inno_covs_zero,
-      fix_inno_covs = fix_inno_covs, fixef_zero = fixef_zero, ranef_zero = ranef_zero)
+      fix_inno_covs = fix_inno_covs, fixef_zero = fixef_zero, ranef_zero = ranef_zero,
+      ranef_str = ranef_str, ranef_iid = ranef_iid)
   }
 
   # MEASUREMENT MODEL =========================================================

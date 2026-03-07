@@ -95,6 +95,12 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
 
   n_pars = infos$n_pars       # no of dynamic parameters (including means, CRs, innovation variance)
   n_random = infos$n_random   # no of individual (random) effects
+  n_iid = infos$n_iid
+  n_mvn1 = infos$n_mvn1
+  n_mvn2 = infos$n_mvn2
+  pos_iid = infos$pos_iid
+  pos_mvn1 = infos$pos_mvn1
+  pos_mvn2 = infos$pos_mvn2
   n_fixed = infos$n_fixed     # no of fixed dynamic parameters (AR and CR effects)
   is_random = as.array(infos$is_random) # which parameters (in order of Fixed effect parameters in model) to model as random effect
   is_fixed = infos$is_fixed   # a matrix of n_fixed x 1, indicating which parameter to model as constant
@@ -129,7 +135,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
   Dpos1 = as.array(infos$Dpos1)
   Dpos2 = as.array(infos$Dpos2)
 
-  is_rdsem = infos$is_rdsem
+  is_rdsem = as.array(infos$is_rdsem)
   N_pred_rdsem = as.array(infos$N_pred_rdsem)
   D_pred_rdsem = infos$D_pred_rdsem
   Dpos1_rdsem = as.array(infos$Dpos1_rdsem)
@@ -276,7 +282,8 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     # data specifications
     N, G, N_G, g_id, g_id_pos, group_lab, D, D_cen, D_cen_pos, is_wcen, maxLag, N_obs, N_obs_id, y, n_miss, n_miss_D, pos_miss_D,
     # model specifications
-    n_pars, n_random, n_fixed, is_random, is_fixed,
+    n_pars, n_random, n_iid, n_mvn1, n_mvn2, pos_iid, pos_mvn1, pos_mvn2,
+    n_fixed, is_random, is_fixed,
     N_pred, D_pred, D_pred2, Lag_pred, Lag_pred2, n_int, Dpos1, Dpos2,
     is_rdsem, N_pred_rdsem, D_pred_rdsem, Dpos1_rdsem,
 

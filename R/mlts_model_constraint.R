@@ -60,8 +60,10 @@
 
 mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = FALSE,
                                   fix_inno_covs = FALSE, inno_covs_zero = FALSE,
-                                  fixef_zero = NULL, ranef_zero = NULL
+                                  fixef_zero = NULL, ranef_zero = NULL, ranef_str = "mvn",
+                                  ranef_iid = NULL
 ){
+
 
   if(fix_dynamics == TRUE){
 
@@ -151,8 +153,38 @@ mlts_model_constraint <- function(model, fix_dynamics = FALSE, fix_inno_vars = F
   }
 
 
+  # eval inputs of random effect structure
+  ranef_pars = model$Param[model$isRandom == 1]
+  if(any(ranef_str == "mvn") & is.null(ranef_iid)){
+    ranef_ids = list()
+    ranef_ids[[1]] = ranef_pars
+  }
+
+  if(any(ranef_str == "iid")){
+    model$Random_type[model$Param %in% ranef_pars] <- "iid"
+  }
+
+  if(is.list(ranef_str)){
+    ranef_ids = ranef_str
+    model$Random_type[model$Param %in% ranef_pars] <- "iid"
+    for(x in 1:length(ranef_ids)){
+      lab = ifelse(x == 1, "mvn",paste0("mvn",x))
+      model$Random_type[model$Param %in% ranef_ids[[x]]] <- lab
+    }
+  }
+  if(any(ranef_str == "mvn") & !is.null(ranef_iid)){
+    model$Random_type[model$Param %in% ranef_iid] <- "iid"
+  }
+  model$Random_type = ifelse(model$isRandom == 0, " ", model$Random_type)
+
+
   # update RE correlations
   model = update_model_REcors(model)
+
+
+
+
+
 
   # update priors =============================================================
   model = mlts_model_priors(model = model, default = TRUE)

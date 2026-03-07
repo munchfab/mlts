@@ -19,6 +19,8 @@ mlts_model(
   inno_covs_dir = NULL,
   fixef_zero = NULL,
   ranef_zero = NULL,
+  ranef_str = "mvn",
+  ranef_iid = NULL,
   ranef_pred = NULL,
   out_pred = NULL,
   out_pred_add_btw = NULL,
@@ -85,6 +87,16 @@ argument to \code{pos}, or \code{neg} respectively.}
 
 \item{ranef_zero}{Character. A character vector to index which random effect variances
 (referring to the parameter labels in \code{model$Param}) should be constrained to zero.}
+
+\item{ranef_str}{Character or list. Specify (joint) random effects distribution using
+\code{mvn} (the default) to assume all random effects to stem from a joint multivariate-normal distribution.
+Set to \code{iid} to assume all random effects to be independently normally distributed. Complex specifications
+assuming sets of random effects to stem from a joint MVN distribution can be entered as list of
+character vectors (referring to the parameter names). This is currently restricted to two MVN distributions.
+All remaining random effects that are not part of the list will be assumed iid.}
+
+\item{ranef_iid}{Character. Vector of random effects to be assumed uncorrelated from the remaining random effects
+(see also \code{ranef_str}). Only works in combination with \code{ranef_str = TRUE}.}
 
 \item{ranef_pred}{A character vector or a named list. Include between-level covariate(s)
 as predictor(s) of all random effects in \code{model} by entering a vector of unique variable
