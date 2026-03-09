@@ -91,7 +91,7 @@ mlts_model_eval <- function(model){
                         ifelse(length(has_inno)>0,max(has_inno),0))))
 
 
-  maxLag = ifelse(n_dyn.pars==0, 0, max(as.numeric(fix_pars_dyn$Lag), na.rm = TRUE))
+  maxLag = ifelse(n_dyn.pars==0, 0, max(c(as.numeric(fix_pars_dyn$Lag),as.numeric(fix_pars_dyn$Lag2)), na.rm = TRUE))
 
 
   # lagged relations between constructs

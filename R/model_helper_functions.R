@@ -21,11 +21,11 @@ update_model_REcors <- function(model) {
     btw.cov_pars <- paste0("r_", temp[,1], ".", temp[,2])
   }
 
-  if(any(rand.pars_types == "mvn")){
+  if(any(rand.pars_types == "mvn") & sum(rand.pars_types == "mvn") > 1){
     temp = t(combn(rand.pars[rand.pars_types == "mvn"],2))
     btw.cov_pars <- paste0("r_", temp[,1], ".", temp[,2])
   }
-  if(any(rand.pars_types == "mvn2")){
+  if(any(rand.pars_types == "mvn2") & sum(rand.pars_types == "mvn2") > 1){
     temp = t(combn(rand.pars[rand.pars_types == "mvn2"],2))
     btw.cov_pars <- c(btw.cov_pars, paste0("r_", temp[,1], ".", temp[,2]))
   }

@@ -37,7 +37,8 @@
 #' # Which models a common latent factor on the between-level for the first three
 #' # indicators and a random indicator mean for the fourth indicator.
 #'
-mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL, silent = FALSE){
+mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = NULL, silent = FALSE,
+                                   ranef_str, ranef_iid){
 
   if(1 %in% p & silent == F){
     message(
@@ -109,6 +110,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Param" = paste0("etaB_",i),
         "Param_Label" = "Trait (latent factor)",
         "isRandom" = 1,
+        "Random_type" = "mvn",
         "Constraint"= c(NA)
       )
       etaB.rand = data.frame(
@@ -118,6 +120,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Param" = paste0("sigma_etaB_",i),
         "Param_Label" = "Trait (latent factor)",
         "isRandom" = 0,
+        "Random_type" = " ",
         "Constraint"= c(NA)
       )
     }
@@ -129,6 +132,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Param" = paste0("mu_",i,".",inds_means),
         "Param_Label" = "Trait (indicator-specific)",
         "isRandom" = 1,
+        "Random_type" = "mvn",
         "Constraint"= c(NA)
       )
       mus.rand = data.frame(
@@ -138,6 +142,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Param" = paste0("sigma_mu_",i,".",inds_means),
         "Param_Label" = "Trait (indicator-specific)",
         "isRandom" = 0,
+        "Random_type" = " ",
         "Constraint"= c(NA)
       )
     }
@@ -162,6 +167,31 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
     row_to_repl = which(model$Param %in% c(paste0("sigma_mu_",i),paste0("sigma_etaB_",i)) & model$Type == "Random effect SD")
     model = replace_model_row(model, row_to_repl, rand)
 
+    # eval inputs of random effect structure
+    ranef_pars = model$Param[model$isRandom == 1]
+    if(any(ranef_str == "mvn") & is.null(ranef_iid)){
+      ranef_ids = list()
+      ranef_ids[[1]] = ranef_pars
+    }
+
+    if(any(ranef_str == "iid")){
+      model$Random_type[model$Param %in% ranef_pars] <- "iid"
+    }
+
+    if(is.list(ranef_str)){
+      ranef_ids = ranef_str
+      model$Random_type[model$Param %in% ranef_pars] <- "iid"
+      for(x in 1:length(ranef_ids)){
+        lab = ifelse(x == 1, "mvn",paste0("mvn",x))
+        model$Random_type[model$Param %in% ranef_ids[[x]]] <- lab
+      }
+    }
+    if(any(ranef_str == "mvn") & !is.null(ranef_iid)){
+      model$Random_type[model$Param %in% ranef_iid] <- "iid"
+    }
+    model$Random_type = ifelse(model$isRandom == 0, " ", model$Random_type)
+
+
     # update the random effect correlations
     model = update_model_REcors(model)
 
@@ -176,6 +206,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Type" = "Item intercepts",
         "Param"= c(paste0("alpha_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
+        "Random_type" = " ",
         "Constraint" = c("= 0", rep("free", (N_etaB_inds-1)))
       )
 
@@ -186,6 +217,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Type" = "Loading",
         "Param"= c(paste0("lambdaB_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
+        "Random_type" = " ",
         "Constraint" = c("= 1", rep("free", (N_etaB_inds-1))))
 
       ## Residual variances
@@ -195,6 +227,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
         "Type" = "Measurement Error SD",
         "Param"= c(paste0("sigmaB_",i,".",1:N_etaB_inds)),
         "Param_Label" = c(""),
+        "Random_type" = " ",
         "Constraint" = c("= 0", rep("free", (N_etaB_inds-1)))
       )
 
@@ -221,6 +254,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       "Type" = "Loading",
       "Param"= c(paste0("lambdaW_",i,".",1:p[i])),
       "Param_Label" = c(""),
+      "Random_type" = " ",
       "Constraint" = c("= 1", rep("free", (p[i]-1)))
     )
 
@@ -231,6 +265,7 @@ mlts_model_measurement <- function(model, q, p, btw_factor = TRUE, btw_model = N
       "Type" = "Measurement Error SD",
       "Param"= c(paste0("sigmaW_",i,".",1:p[i])),
       "Param_Label" = c(""),
+      "Random_type" = " ",
       "Constraint" = "free"
     )
 

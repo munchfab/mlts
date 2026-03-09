@@ -223,7 +223,6 @@ model {
   for(g in 1:G){
     target += normal_lpdf(gammas[g,] | prior_gamma[,1],prior_gamma[,2]);
     target += cauchy_lpdf(sd_R[g,] | prior_sd_R[,1], prior_sd_R[,2]);
-    target += lkj_corr_cholesky_lpdf(L[g,] | prior_LKJ);
     if(n_mvn1>0){
       target += lkj_corr_cholesky_lpdf(L[g,] | prior_LKJ);
     }

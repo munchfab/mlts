@@ -177,7 +177,7 @@
 #'
 #' }
 
-mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
+mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(0,1,2,3),
                        btw_factor = TRUE, btw_model = NULL,
                        equal_loads_levels = FALSE,
                        fix_dynamics = FALSE, fix_inno_vars = FALSE,
@@ -193,7 +193,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
                        incl_interaction_effects = NULL,
                        censor_left = NULL, censor_right = NULL, silent = FALSE){
 
-  if(length(max_lag) == 3){
+  if(length(max_lag) == 4){
     max_lag = 1
   }
 
@@ -478,7 +478,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   # MEASUREMENT MODEL =========================================================
   if(!is.null(p)){
     model = mlts_model_measurement(
-      model = model, q = q, p = p,
+      model = model, q = q, p = p, ranef_iid = ranef_iid, ranef_str = ranef_str,
       btw_factor = btw_factor, btw_model = btw_model, silent = silent)
 
     # update equality constraints on loading parameters across levels
@@ -502,8 +502,8 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(1,2,3),
   # BETWEEN-MODEL =============================================================
   if(!is.null(ranef_pred) | !is.null(out_pred)){
     model = mlts_model_betw(model = model,
-                               ranef_pred =ranef_pred, out_pred=out_pred,
-                               out_pred_add_btw = out_pred_add_btw)
+                            ranef_pred =ranef_pred, out_pred=out_pred,
+                            out_pred_add_btw = out_pred_add_btw)
   }
 
 
