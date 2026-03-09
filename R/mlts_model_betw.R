@@ -102,7 +102,8 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
       "Type" = "RE prediction",
       "Param" = b_pred_params,
       "Param_Label" = "regression weight",
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
 
     # add priors
@@ -161,7 +162,8 @@ mlts_model_betw <- function(model,ranef_pred = NULL, out_pred=NULL, out_pred_add
       "Param" = out_pred_params,
       "Param_Label" = ifelse(startsWith(out_pred_params,"sigma_"),
                              "Residual SD", "regression weight"),
-      "isRandom" = 0
+      "isRandom" = 0,
+      "Random_type" = " "
     )
     # intercept
     OUT.PRED$Param_Label = ifelse(

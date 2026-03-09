@@ -8,7 +8,7 @@ mlts_model(
   class = c("VAR"),
   q,
   p = NULL,
-  max_lag = c(1, 2, 3),
+  max_lag = c(0, 1, 2, 3),
   btw_factor = TRUE,
   btw_model = NULL,
   equal_loads_levels = FALSE,
