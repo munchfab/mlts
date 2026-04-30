@@ -19,6 +19,8 @@ mlts_paths(
   cex_w = 1,
   cex_decomp = 1,
   cex_loads = 0.8,
+  cex_title = 1,
+  title_labs = c("Decomposition", "Within-Level", "Between-Level"),
   b_style = "h",
   w_y_offset = 0,
   decomp_F_y_offset = 4,
@@ -41,6 +43,8 @@ mlts_paths(
   y_fac_lab_sep = ",",
   remove_lag_lab = FALSE,
   adj_load_x = 1.25,
+  rdsem_resid_offset = c(0.5, -0.5),
+  w_x_offset = 0,
   ...
 )
 }
@@ -80,8 +84,10 @@ section. Defaults to 0.8.}
 \item{cex_decomp}{Numeric value specifying the scaling of text in the decomposition
 section. Defaults to 0.8.}
 
-\item{cex_loads}{Numeric value specifying the scaling of text of loading parameters.
+\item{cex_loads}{Numeric value specifying the font size of section titles.
 Defaults to 0.8.}
+
+\item{title_labs}{Character vector of section titles. Defaults to c("Decomposition", "Within-Level", "Between-Level").}
 
 \item{b_style}{A character string specifying the style of the between-level plot
 ("h" for horizontal). Defaults to \code{"h"}.}

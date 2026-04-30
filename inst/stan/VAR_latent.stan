@@ -159,7 +159,7 @@ parameters {
 
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
-  matrix[N,n_pars] b;
+  matrix[N, n_pars-n_innos_fix] b;
   array[D_cen] vector[N] sd_noise;
   array[n_inno_covs] vector[N] sd_inncov;
   array[G] matrix[n_cov, n_random] b_re_pred_mat;

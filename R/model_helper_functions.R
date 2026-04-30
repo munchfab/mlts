@@ -16,7 +16,7 @@ update_model_REcors <- function(model) {
     btw.cov_pars <- c()
   }
 
-  if(all(rand.pars_types == "mvn")){
+  if(all(rand.pars_types == "mvn") & length(rand.pars)>1){
     temp = t(combn(rand.pars,2))
     btw.cov_pars <- paste0("r_", temp[,1], ".", temp[,2])
   }

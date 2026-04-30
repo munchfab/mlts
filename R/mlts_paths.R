@@ -28,6 +28,9 @@
 #'   section. Defaults to 0.8.
 #' @param cex_loads Numeric value specifying the scaling of text of loading parameters.
 #'   Defaults to 0.8.
+#' @param cex_loads Numeric value specifying the font size of section titles.
+#'   Defaults to 0.8.
+#' @param title_labs Character vector of section titles. Defaults to c("Decomposition", "Within-Level", "Between-Level").
 #' @param adj_load_x Numeric value specifying the x-axis offset loading parameter labels.
 #'   Defaults to 1.25.
 #' @param w_y_offset Numeric value specifying the vertical width of the within-level part. Defaults to 0.
@@ -108,6 +111,8 @@ mlts_paths <- function(
     cex_w = 1,
     cex_decomp = 1,
     cex_loads = 0.8,
+    cex_title = 1,
+    title_labs = c("Decomposition", "Within-Level", "Between-Level"),
     b_style = "h",
     w_y_offset = 0,
     decomp_F_y_offset = 4,
@@ -131,6 +136,9 @@ mlts_paths <- function(
     y_fac_lab_sep = ",",
     remove_lag_lab = FALSE,
     adj_load_x = 1.25,
+
+    rdsem_resid_offset = c(0.5, -0.5),
+    w_x_offset = 0,
     ...
     ) {
 
@@ -138,6 +146,11 @@ mlts_paths <- function(
 infos <- mlts_model_eval(model)
 
 # set the widths between nodes in the within-level model:
+if(infos$maxLag == 0){
+  within_x_pos <- c(40)
+  within_inno_pos <- 60
+}
+
 if(infos$maxLag == 1){
   within_x_pos <- c(60,15)
   within_inno_pos <- 80
@@ -230,6 +243,7 @@ w_ys <- get_mid_points(n = n_nod_w_y, lims = c(end.wth.y, begin.wth.y))
 w_ys <- w_ys + w_y_offset
 
 w_xs <- get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[within_x_pos]
+w_xs <- w_xs
 w_radx <- diff(get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[c(10,30)])*scale_within
 w_inno_x <- get_mid_points(n = 100, lims = c(begin.wth.x, end.wth.x))[within_inno_pos]
 w_inno_x2 <- w_inno_x + w_radx
@@ -237,6 +251,33 @@ for(i in 1:nrow(w_nodes)){
   w_nodes$midx[i] <- w_xs[w_nodes$lag[i]+1]
   w_nodes$midy[i] <- w_ys[w_nodes$construct[i]]
 }
+
+for(i in 1:length(w_x_offset)){
+  w_nodes$midx[w_nodes$construct==i] <- w_nodes$midx[w_nodes$construct==i] + w_x_offset[i]
+}
+
+
+
+# update for RDSEM:
+n_rdsem = nrow(infos$fix_pars_rdsem)
+if(n_rdsem>0){
+  rdsem_DV   = unique(infos$fix_pars_rdsem$Dout)
+  n_rdsem_DV = length(rdsem_DV)
+
+  w_nodes_resid = w_nodes[w_nodes$construct %in% rdsem_DV,]
+  w_nodes_resid$midx = w_nodes_resid$midx + rdsem_resid_offset[1]
+  w_nodes_resid$midy = w_nodes_resid$midy + rdsem_resid_offset[2]
+  if(is.null(y_ind_labs)){
+    w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "Y", replacement="epsilon")
+  } else {
+    w_nodes_resid$lab = paste0("epsilon[",w_nodes_resid$lab,"]")
+  }
+} else {
+  rdsem_DV   =0
+}
+
+
+
 # INNOVATION VARIANCES =========================================================
 inno <- infos$fix_pars
 inno <- inno[grepl(inno$Param_Label, pattern = "Innovation Variance"),]
@@ -255,7 +296,21 @@ for(i in 1:nrow(inno)){
   inno$x1[i] <- w_nodes$midx[w_nodes$construct==inno$q[i]&w_nodes$lag==0] + w_radx
   inno$y0[i] <- w_ys[inno$q[i]]
   inno$y1[i] <- w_ys[inno$q[i]]
+
+  if(n_rdsem>0){
+    if(i %in% rdsem_DV){
+      inno$midy[i] <- inno$midy[i] + rdsem_resid_offset[2]
+      inno$y0[i] <- inno$y0[i] + rdsem_resid_offset[2]
+      inno$y1[i] <- inno$y1[i] + rdsem_resid_offset[2]
+      inno$x1[i] <- inno$x1[i] + rdsem_resid_offset[1]
+    }
+  }
 }
+
+
+
+
+
 
 # innovation covariance factors
 if(infos$n_inno_covs == 1){
@@ -282,6 +337,17 @@ if(infos$n_inno_covs == 1){
     inno_cov$y1[i] <- w_ys[inno$q[i]]
     inno_cov$arr_pos[i] <- get_arr_pos(inno_cov$x0[i],inno_cov$x1[i],y0 = inno_cov$y0[i],inno_cov$y1[i],radx = inno_radx+0.5*arrHead_w)
     inno_cov$loads[i] <- infos$inno_cov_load[i]
+
+    if(n_rdsem>0){
+      if(i %in% rdsem_DV){
+        inno_cov$midy[i] <- inno_cov$midy[i] + rdsem_resid_offset[2]
+        inno_cov$y0[i] <- inno_cov$y0[i] + rdsem_resid_offset[2]
+        inno_cov$y1[i] <- inno_cov$y1[i] + rdsem_resid_offset[2]
+        inno_cov$x1[i] <- inno_cov$x1[i] + rdsem_resid_offset[1]
+        inno_cov$arr_pos[i] <- get_arr_pos(inno_cov$x0[i],inno_cov$x1[i],y0 = inno_cov$y0[i],inno_cov$y1[i],radx = inno_radx+0.5*arrHead_w)
+      }
+    }
+
     }
   }
 
@@ -353,8 +419,10 @@ if(infos$n_int > 0){
   }
 }
 # Arrows of lag 0 ==============================================================
-w_arr <- infos$fix_pars_dyn[infos$fix_pars_dyn$Lag == "0",]
+w_arr <- rbind(infos$fix_pars_dyn[infos$fix_pars_dyn$Lag %in% c("0"),],
+               infos$fix_pars_rdsem)
 if(nrow(w_arr)>0){
+  w_arr$Lag <- 0
   w_arr$Dpred = as.integer(w_arr$Dpred)
   w_arr$Dout = as.integer(w_arr$Dout)
   w_arr$Lag = as.integer(w_arr$Lag)
@@ -377,20 +445,48 @@ if(nrow(w_arr)>0){
 } else {
   w_arr_l0 <- NULL
 }
+
+#### RDSEM inno-paths:
+if(n_rdsem > 0){
+  w_arr <- infos$fix_pars_rdsem
+  w_arr$Dpred = as.integer(w_arr$Dpred)
+  w_arr$Dout = as.integer(w_arr$Dout)
+  w_arr$Lag = as.integer(0)
+  for(i in 1:nrow(w_arr)){
+    w_arr$x0[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == (w_arr$Lag[i]), "midx"] + rdsem_resid_offset[1]
+    w_arr$x1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == w_arr$Lag[i], "midx"]
+    w_arr$y0[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == (w_arr$Lag[i]), "midy"] + rdsem_resid_offset[2]
+    w_arr$y1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == w_arr$Lag[i], "midy"]
+    w_arr$arrpos[i] <- get_arr_pos(w_arr$x0[i], w_arr$x1[i],w_arr$y0[i], w_arr$y1[i], radx = (w_radx+0.5*arrHead_w))
+  }
+  w_arr_rdsem = w_arr
+}
+
+
 # Arrows of lag 1 =============================================================
 
 w_arr <- infos$fix_pars_dyn[infos$fix_pars_dyn$Lag == "1",]
 w_arr$Dpred = as.integer(w_arr$Dpred)
 w_arr$Dout = as.integer(w_arr$Dout)
 w_arr$Lag = as.integer(w_arr$Lag)
-for(i in 1:nrow(w_arr)){
-  w_arr$x0[i] <- w_nodes[w_nodes$construct == w_arr$Dpred[i] & w_nodes$lag == (w_arr$Lag[i]), "midx"] + w_radx
-  w_arr$x1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag+1 == w_arr$Lag[i], "midx"]
-  w_arr$y0[i] <- w_nodes[w_nodes$construct == w_arr$Dpred[i] & w_nodes$lag == (w_arr$Lag[i]), "midy"]
-  w_arr$y1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag+1 == w_arr$Lag[i], "midy"]
-  w_arr$arr_pos[i] <- get_arr_pos(w_arr$x0[i], w_arr$x1[i],w_arr$y0[i], w_arr$y1[i], radx = (w_radx+0.5*arrHead_w))
+if(nrow(w_arr)>0){
+  for(i in 1:nrow(w_arr)){
+    w_arr$x0[i] <- w_nodes[w_nodes$construct == w_arr$Dpred[i] & w_nodes$lag == (w_arr$Lag[i]), "midx"]
+    w_arr$x1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag+1 == w_arr$Lag[i], "midx"]
+    w_arr$y0[i] <- w_nodes[w_nodes$construct == w_arr$Dpred[i] & w_nodes$lag == (w_arr$Lag[i]), "midy"]
+    w_arr$y1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag+1 == w_arr$Lag[i], "midy"]
+    w_arr$arr_pos[i] <- get_arr_pos(w_arr$x0[i], w_arr$x1[i],w_arr$y0[i], w_arr$y1[i], radx = (w_radx+0.5*arrHead_w))
+  }
+  w_arr$x0[w_arr$Dpred %in% rdsem_DV] <- w_arr$x0[w_arr$Dpred %in% rdsem_DV] + rdsem_resid_offset[1]
+  w_arr$y0[w_arr$Dpred %in% rdsem_DV] <- w_arr$y0[w_arr$Dpred %in% rdsem_DV] + rdsem_resid_offset[2]
+  w_arr$x1[w_arr$Dout %in% rdsem_DV] <- w_arr$x1[w_arr$Dout %in% rdsem_DV] + rdsem_resid_offset[1]
+  w_arr$y1[w_arr$Dout %in% rdsem_DV] <- w_arr$y1[w_arr$Dout %in% rdsem_DV] + rdsem_resid_offset[2]
+  for(i in 1:nrow(w_arr)){
+    w_arr$arr_pos[i] <- get_arr_pos(w_arr$x0[i], w_arr$x1[i],w_arr$y0[i], w_arr$y1[i], radx = (w_radx+0.5*arrHead_w))
+  }
 }
 w_arr_l1 <- w_arr
+
 #### Greyed version if max_lag > 1
 if(infos$maxLag > 1){
   w_arr <- infos$fix_pars_dyn[infos$fix_pars_dyn$Lag == "2",]
@@ -575,9 +671,9 @@ diagram::openplotmat(graphics::par(mai = c(0,0,0,0)), ylim = fig_margins.y, xlim
 diagram::straightarrow(from = c(end.decomp.x,fig_margins.y[1]), to = c(end.decomp.x, fig_margins.y[2]), lty="dashed", segment=c(0.05, 0.95),arr.type = "none", lwd=.9)
 diagram::straightarrow(from = c(end.decomp.x,begin.wth.y),      to = c(end.wth.x, begin.wth.y),         lty="dashed", segment=c(   0, 0.95),arr.type = "none", lwd=.9)
 ##### Label Sections :
-diagram::textempty(lab = "Between-Level", mid = c(end.decomp.x+w_radx*0.5,           end.btw.y-(radx/asp)), adj=0, font=2)
-diagram::textempty(lab = "Within-Level",  mid = c(end.decomp.x+w_radx*0.5,           end.btw.y+(radx/asp)), adj=0, font=2)
-diagram::textempty(lab = "Decomposition", mid = c(get_mid_points(1       , c(begin.decomp.x,end.decomp.x)), 0.9*fig_margins.y[2]), font=2)
+diagram::textempty(lab =  title_labs[3], mid = c(end.decomp.x+w_radx*0.5,           end.btw.y-(radx/asp)), adj=0, font=2, cex = cex_title, family=family)
+diagram::textempty(lab =  title_labs[2], mid = c(end.decomp.x+w_radx*0.5,           end.btw.y+(radx/asp)), adj=0, font=2, cex = cex_title, family=family)
+diagram::textempty(lab =  title_labs[1], mid = c(get_mid_points(1       , c(begin.decomp.x,end.decomp.x)), 0.9*fig_margins.y[2]), font=2, cex = cex_title, family=family)
 
 
 ##### DECOMPOSITION :
@@ -664,8 +760,8 @@ if(!is.null(w_arr_l0)){
   for(i in 1:nrow(w_arr_l0)){
     shape::Arrows(w_arr_l0$x0[i],w_arr_l0$y0[i], w_arr_l0$x1[i],w_arr_l0$y1[i],lwd = 0.9, lty = "solid", arr.type ="triangle", arr.adj = 1, arr.length = arrHead_w)
     # repeat arrows at each t
-    x_diff = unique(w_nodes$midx[w_nodes$lag==0]) - unique(w_nodes$midx[w_nodes$lag==1])
-    shape::Arrows(w_arr_l0$x0[i]-x_diff,w_arr_l0$y0[i], w_arr_l0$x0[i]-x_diff,w_arr_l0$y1[i],lwd = 0.9, lty = "solid", arr.type ="triangle", arr.adj = 1, arr.length = arrHead_w)
+    x_diff = unique(w_nodes$midx[w_nodes$lag==0&w_nodes$construct==1]) - unique(w_nodes$midx[w_nodes$lag==1&w_nodes$construct==1])
+    shape::Arrows(w_arr_l0$x0[i]-x_diff,w_arr_l0$y0[i], w_arr_l0$x1[i]-x_diff,w_arr_l0$y1[i],lwd = 0.9, lty = "solid", arr.type ="triangle", arr.adj = 1, arr.length = arrHead_w)
     if(w_arr_l0$isRandom[i]==1){
       diagram::straightarrow(from = c(w_arr_l0$x0[i],w_arr_l0$y0[i]), to = c(w_arr_l0$x1[i],w_arr_l0$y1[i]),lwd = 0.9, lty = "solid", arr.type ="circle", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
       diagram::straightarrow(from = c(w_arr_l0$x0[i]-x_diff,w_arr_l0$y0[i]), to = c(w_arr_l0$x1[i]-x_diff,w_arr_l0$y1[i]),lwd = 0.9, lty = "solid", arr.type ="circle", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
@@ -673,6 +769,17 @@ if(!is.null(w_arr_l0)){
 
   }
 }
+
+# paths from epsilon to Y^w
+if(n_rdsem > 0){
+  for(i in 1:nrow(w_arr_rdsem)){
+    diagram::straightarrow(c(w_arr_rdsem$x0[i],w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i],w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", endhead = T, arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], arr.type = "triangle", arr.adj = 0.5)
+    # repeat at each T
+    diagram::straightarrow(c(w_arr_rdsem$x0[i]-x_diff,w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i]-x_diff,w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", endhead = T, arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], arr.type = "triangle", arr.adj = 0.5)
+  }
+}
+
+
 # interaction paths
 if(infos$n_int>0){
   for(i in 1:infos$n_int){
@@ -716,47 +823,35 @@ if(infos$n_inno_cors > 0){
   }
 
 
-for(i in 1:nrow(w_nodes)){
-  # within-level latent factor(s)
-  if(w_nodes$w_cen[i] == 1){
-    diagram::textellipse(lab = parse(text = w_nodes$lab[i]), mid = c(w_nodes$midx[i], w_nodes$midy[i]), radx = w_radx, rady = w_radx/asp, shadow.size = 0, lwd=lwd_nodes, family=family)
-  } else {
-    diagram::textrect(lab = parse(text = w_nodes$lab[i]), mid = c(w_nodes$midx[i], w_nodes$midy[i]), radx = w_radx*0.9, rady = w_radx*0.9/asp, shadow.size = 0, lwd=lwd_nodes, family=family)
-  }
+if(n_rdsem > 0){
+  w_nodes = rbind(w_nodes, w_nodes_resid)
 }
-for(i in 1:nrow(inno)){
-  # innovations
-    diagram::textellipse(lab = parse(text=inno$lab[i]), mid = c(inno$midx[i], inno$midy[i]), radx = inno_radx, rady = inno_radx/asp, shadow.size = 0, lwd=lwd_nodes, family=family)
-    # arrows
-    shape::Arrows(x0=inno$x0[i],y0=inno$y0[i], x1=inno$x1[i],y1=inno$y1[i],lwd = 0.9, lty = "solid", arr.adj = 1, arr.length = arrHead_w, arr.type = "triangle")
-    # self-arrow
-    diagram::curvedarrow(curve = 0.5,  from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x0[i]+1.5*inno_radx,inno$y0[i]),lwd = 0.9, lty = "solid",endhead = T, arr.pos = 0.6, arr.length = arrHead_w, arr.type ="triangle")
-    diagram::curvedarrow(curve = -0.5, from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x0[i]+1.5*inno_radx,inno$y0[i]),lwd = 0.9, lty = "solid",endhead = T, arr.pos = 0.6, arr.length = arrHead_w, arr.type ="triangle")
-    if(inno$isRandom[i]==1){
-      diagram::straightarrow(from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x1[i],inno$y1[i]),lwd = 0.9, lty = "solid",  arr.type ="circle", endhead = T, arr.pos = 0, arr.length = arrHead_w/2)
-    }
-}
+
+
 ### lag 1 arrows
-for(i in 1:nrow(w_arr_l1)){
-  if(w_arr_l1$isAR[i] == 1 | w_arr_l1$y0[i] == w_arr_l1$y1[i]){
-    shape::Arrows(w_arr_l1$x0[i],w_arr_l1$y0[i], (w_arr_l1$x1[i]-w_radx), w_arr_l1$y1[i], lwd = 0.9, lty = "solid", arr.type ="triangle", arr.length = arrHead_w, arr.adj = 1)
-  } else {
-    diagram::straightarrow(c(w_arr_l1$x0[i],w_arr_l1$y0[i]), c(w_arr_l1$x1[i], w_arr_l1$y1[i]), lwd = 0.9, lty = "solid", endhead = T, arr.type ="triangle", arr.pos = w_arr_l1$arr_pos[i], arr.length = arrHead_w, arr.adj = 0.5)
-  }
-  if(w_arr_l1$isRandom[i]==1){
-    diagram::straightarrow(from = c(w_arr_l1$x0[i],w_arr_l1$y0[i]), to = c(w_arr_l1$x1[i],w_arr_l1$y1[i]),lwd = 0.9, lty = "solid", arr.type ="circle", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
-  }
-  if(infos$maxLag > 1){
-    if(w_arr_l1$isAR[i] == 1){
-      shape::Arrows(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i], (w_arr_l1.1$x1[i]-w_radx), w_arr_l1.1$y1[i], lwd = 0.9, lcol = "grey", lty = "solid", arr.type ="triangle", arr.length = arrHead_w, arr.adj = 1)
+if(nrow(w_arr_l1)>0){
+  for(i in 1:nrow(w_arr_l1)){
+    if(w_arr_l1$isAR[i] == 1 | w_arr_l1$y0[i] == w_arr_l1$y1[i]){
+      shape::Arrows(w_arr_l1$x0[i],w_arr_l1$y0[i], (w_arr_l1$x1[i]-w_radx), w_arr_l1$y1[i], lwd = 0.9, lty = "solid", arr.type ="triangle", arr.length = arrHead_w, arr.adj = 1)
     } else {
-      diagram::straightarrow(c(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i]), c(w_arr_l1.1$x1[i], w_arr_l1.1$y1[i]), lwd = 0.9, lty = "solid", lcol = "grey", endhead = T, arr.type ="triangle", arr.pos = w_arr_l1.1$arr_pos[i], arr.length = arrHead_w, arr.adj = 0.5)
+      diagram::straightarrow(c(w_arr_l1$x0[i],w_arr_l1$y0[i]), c(w_arr_l1$x1[i], w_arr_l1$y1[i]), lwd = 0.9, lty = "solid", endhead = T, arr.type ="triangle", arr.pos = w_arr_l1$arr_pos[i], arr.length = arrHead_w, arr.adj = 0.5)
     }
     if(w_arr_l1$isRandom[i]==1){
-      diagram::straightarrow(from = c(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i]), to = c(w_arr_l1.1$x1[i],w_arr_l1.1$y1[i]),lwd = 0.8, lty = "solid", lcol = "grey", arr.type ="circle", arr.col = "grey", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
+      diagram::straightarrow(from = c(w_arr_l1$x0[i],w_arr_l1$y0[i]), to = c(w_arr_l1$x1[i],w_arr_l1$y1[i]),lwd = 0.9, lty = "solid", arr.type ="circle", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
+    }
+    if(infos$maxLag > 1){
+      if(w_arr_l1$isAR[i] == 1){
+        shape::Arrows(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i], (w_arr_l1.1$x1[i]-w_radx), w_arr_l1.1$y1[i], lwd = 0.9, lcol = "grey", lty = "solid", arr.type ="triangle", arr.length = arrHead_w, arr.adj = 1)
+      } else {
+        diagram::straightarrow(c(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i]), c(w_arr_l1.1$x1[i], w_arr_l1.1$y1[i]), lwd = 0.9, lty = "solid", lcol = "grey", endhead = T, arr.type ="triangle", arr.pos = w_arr_l1.1$arr_pos[i], arr.length = arrHead_w, arr.adj = 0.5)
+      }
+      if(w_arr_l1$isRandom[i]==1){
+        diagram::straightarrow(from = c(w_arr_l1.1$x0[i],w_arr_l1.1$y0[i]), to = c(w_arr_l1.1$x1[i],w_arr_l1.1$y1[i]),lwd = 0.8, lty = "solid", lcol = "grey", arr.type ="circle", arr.col = "grey", endhead = T, arr.pos = rand_dot_pos, arr.length = arrHead_w/2)
+      }
     }
   }
 }
+
 if(n_w_l2AR > 0){
   for(i in 1:nrow(w_arr_l2.ar)){
     diagram::straightarrow(from = c(w_arr_l2.ar$hline_x0[i],w_arr_l2.ar$hline_y0[i]), to = c(w_arr_l2.ar$hline_x1[i],w_arr_l2.ar$hline_y1[i]),lwd = 0.9, lty = "solid", arr.type ="none")
@@ -773,6 +868,34 @@ if(infos$n_int>0){
     diagram::textellipse(mid = c(int_pars$midx[i], int_pars$midy[i]), radx = scale_int*w_radx, rady =  scale_int*w_radx/asp, shadow.size = 0, lwd=lwd_nodes, family=family)
   }
 }
+
+
+
+
+for(i in 1:nrow(w_nodes)){
+
+  # within-level latent factor(s)
+  if(w_nodes$w_cen[i] == 1){
+    diagram::textellipse(lab = parse(text = w_nodes$lab[i]), mid = c(w_nodes$midx[i], w_nodes$midy[i]), radx = w_radx, rady = w_radx/asp, shadow.size = 0, lwd=lwd_nodes, family=family, cex = cex_w)
+  } else {
+    diagram::textrect(lab = parse(text = w_nodes$lab[i]), mid = c(w_nodes$midx[i], w_nodes$midy[i]), radx = w_radx*0.9, rady = w_radx*0.9/asp, shadow.size = 0, lwd=lwd_nodes, family=family, cex = cex_w)
+  }
+}
+for(i in 1:nrow(inno)){
+  # innovations
+  diagram::textellipse(lab = parse(text=inno$lab[i]), mid = c(inno$midx[i], inno$midy[i]), radx = inno_radx, rady = inno_radx/asp, shadow.size = 0, lwd=lwd_nodes, family=family)
+  # arrows
+  shape::Arrows(x0=inno$x0[i],y0=inno$y0[i], x1=inno$x1[i],y1=inno$y1[i],lwd = 0.9, lty = "solid", arr.adj = 1, arr.length = arrHead_w, arr.type = "triangle")
+  # self-arrow
+  diagram::curvedarrow(curve = 0.5,  from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x0[i]+1.5*inno_radx,inno$y0[i]),lwd = 0.9, lty = "solid",endhead = T, arr.pos = 0.6, arr.length = arrHead_w, arr.type ="triangle")
+  diagram::curvedarrow(curve = -0.5, from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x0[i]+1.5*inno_radx,inno$y0[i]),lwd = 0.9, lty = "solid",endhead = T, arr.pos = 0.6, arr.length = arrHead_w, arr.type ="triangle")
+  if(inno$isRandom[i]==1){
+    diagram::straightarrow(from = c(inno$x0[i]+3*inno_radx,inno$y0[i]), to = c(inno$x1[i],inno$y1[i]),lwd = 0.9, lty = "solid",  arr.type ="circle", endhead = T, arr.pos = 0, arr.length = arrHead_w/2)
+  }
+}
+
+
+
 
 #### BETWEEN :
 

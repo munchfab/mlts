@@ -286,7 +286,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(0,1,2,3),
   ### dynamic effects
   n_phi = (q^2)*max_lag+length(incl_t0_effects) # dynamic parameters
   phi_order = rep(paste0("phi(",0:max_lag,")_"), each = q, times = q)
-  phis = paste0(rep(1:q, each = q*(max_lag+1)), rep(1:q, times = q*max_lag))
+  phis = paste0(rep(1:q, each = q*(max_lag+1)), rep(1:q, times = q*ifelse(max_lag==0,1,max_lag)))
   phi_pars = paste0(phi_order, phis)
   # remove all t0-effects not included in incl_to_effects
   phi_pars = phi_pars[phi_pars %in% incl_t0_effects | !startsWith(prefix = "phi(0)_",phi_pars)]

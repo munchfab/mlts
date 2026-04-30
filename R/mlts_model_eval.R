@@ -17,6 +17,7 @@
 #'
 mlts_model_eval <- function(model){
 
+
   # read features of specified model
   ## Check if grouping was requested
   if(!is.null(model$group)){
@@ -85,8 +86,10 @@ mlts_model_eval <- function(model){
   # update q based on involved constructs in the dynamic effects and innovation variances
   has_log.inno = which(paste0("ln.sigma2_",1:9) %in% fix_pars$Param)
   has_inno = which(paste0("sigma_",1:9) %in% fix_pars$Param)
+  has_rDSEM = unlist(c(substr(fix_pars_rdsem$Param, start = 8, stop = 8),substr(fix_pars_rdsem$Param, start = 9, stop = 9)))
+  has_rDSEM = ifelse(length(has_rDSEM)==0, 0, max(has_rDSEM))
   q <- as.integer(max(c(fix_pars_dyn$Dout, fix_pars_dyn$Dpred,
-                        fix_pars_dyn$Dpred2,
+                        fix_pars_dyn$Dpred2, has_rDSEM,
                         ifelse(length(has_log.inno)>0,max(has_log.inno),0),
                         ifelse(length(has_inno)>0,max(has_inno),0))))
 
