@@ -268,9 +268,9 @@ if(n_rdsem>0){
   w_nodes_resid$midx = w_nodes_resid$midx + rdsem_resid_offset[1]
   w_nodes_resid$midy = w_nodes_resid$midy + rdsem_resid_offset[2]
   if(is.null(y_ind_labs)){
-    w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "Y", replacement="epsilon")
+    w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "Y", replacement="hat(Y)")
   } else {
-    w_nodes_resid$lab = paste0("epsilon[",w_nodes_resid$lab,"]")
+    w_nodes_resid$lab = paste0("hat(Y)[",w_nodes_resid$lab,"]^W")
   }
 } else {
   rdsem_DV   =0

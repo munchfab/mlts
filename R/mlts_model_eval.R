@@ -130,13 +130,13 @@ mlts_model_eval <- function(model){
         fix_pars_rdsem$Dpred[i] = substr(fix_pars_rdsem$Param[i], start = 9, stop = 9)
       }
     is_rdsem     = sapply(1:q,function(x){ifelse(x %in% fix_pars_rdsem$Dout, 1, 0)})
-    N_pred_rdsem = sapply(1:q,function(x){sum(x %in% fix_pars_rdsem$Dout)})
+    N_pred_rdsem = sapply(1:q,function(x){sum(x == fix_pars_rdsem$Dout)})
     D_pred_rdsem = matrix(0, nrow = q, ncol = max(N_pred_rdsem), byrow = TRUE)
     Dpos1_rdsem <- rep(0,times=q)
     for(i in 1:q){
       if(N_pred_rdsem[i]!=0){
         D_pred_rdsem[i,1:N_pred_rdsem[i]] <- as.integer(fix_pars_rdsem$Dpred[fix_pars_rdsem$Dout == i])
-        Dpos1_rdsem[i] <- fix_pars_rdsem$no[fix_pars_rdsem$Dout == i]
+        Dpos1_rdsem[i] <- min(fix_pars_rdsem$no[fix_pars_rdsem$Dout == i])
       }
     }
   } else {
