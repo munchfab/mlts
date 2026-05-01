@@ -191,7 +191,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
           # choose value according to the respective lagged effect - if present
           lag_value = model$true.val[model$group == gg & model$Param == paste0("phi(1)_",t0_effect$Dout[i],t0_effect$Dpred[i])]
 
-          if(is.numeric(lag_value)){
+          if(length(lag_value)>0){
             vals <- 1.2 * lag_value
           } else {
             vals <- sample(x = seq(from=-0.15,to=0.15,by=0.05),size = 1)
@@ -306,6 +306,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
   # store final person parameters as a list
   btw <- list()
   W <- list()
+  btw_rand_list <- list()
   for( gg in 1:infos$G ){
 
   # FIXED EFFECTS
@@ -385,7 +386,9 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
   if(infos$n_innos_fix>0){
     for(i in infos$innos_fix_pos)
       btw[[gg]][,infos$innos_pos[i]] = rep(model$true.val[model$Type=="Fixed effect" & model$Param_Label == "Innovation Variance"& model$group == gg][i],times=N_G[gg])
-    }
+  }
+
+  btw_rand_list[[gg]] <- btw_random
   }
 
   #### WITHIN-LEVEL PROCESS ====================================================
@@ -490,7 +493,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
     VARsimData = list(
       model = model,
       data = data,
-      RE.pars = btw_random
+      RE.pars = do.call(rbind,btw_rand_list)
     )
 
     # add class

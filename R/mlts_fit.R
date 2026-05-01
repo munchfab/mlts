@@ -175,8 +175,8 @@ mlts_fit <- function(model,
     if(print_message == TRUE){message("Simulated data provided:",
     "\nTrue scores used in the data generation will be added to the returned object.")}
 
-    par_labels <- merge(x = par_labels, data$model[,c("Param", "true.val")],
-                       by = "Param", sort = FALSE)
+    par_labels <- merge(x = par_labels, data$model[,c("Param","group", "true.val")],
+                       by = c("Param", "group"), sort = FALSE)
 
     # store true values of indivdual parameters
     re.trues <- data$RE.pars
