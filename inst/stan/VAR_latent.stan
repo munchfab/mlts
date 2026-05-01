@@ -1,7 +1,7 @@
 // autoregressive DSEM with manifest variables
 data {
   int<lower=1> N; 	        // number of observational units
-int<lower=1> G;   // number of groups
+  int<lower=1> G;   // number of groups
   int<lower=1> D;           // number of latent constructs
   int<lower=1> D_cen;
   array[D] int<lower=1> D_np;     // number of indicators per construct
@@ -9,10 +9,18 @@ int<lower=1> G;   // number of groups
   array[n_p] int D_perP;          // indicate dimension per indicator
   array[n_p] int is_SI;           // indicate if single-indicator per construct
   array[D] int D_pos_is_SI;       // indicate position of single-indicator per construct
-  int<lower=1, upper=3> maxLag; // maximum lag
+  int<lower=0, upper=3> maxLag; // maximum lag
   int<lower=1> N_obs; 	    // observations in total: N * TP
   int<lower=1> n_pars;
   int<lower=D_cen> n_random;    // number of random effects
+
+int<lower=0> n_mvn1;
+int<lower=0> n_mvn2;
+int<lower=0> n_iid;
+array[n_iid] int pos_iid;
+array[n_mvn1] int pos_mvn1;
+array[n_mvn2] int pos_mvn2;
+
   int n_fixed;
   array[1,n_fixed] int is_fixed;
   array[n_random] int is_random;  // which parameters to model person-specific
@@ -122,6 +130,11 @@ int<lower=1> G;   // number of groups
   array[n_p] int<lower=0,upper=n_p> p_is_wcen_pos;
   array[D] int<lower=0,upper=D> D_cen_pos;
   array[D] int<lower=0,upper=n_p> Dp_cen_pos;
+
+  array[D] int<lower=0,upper=1> is_rdsem;
+  array[D] int<lower=0> N_pred_rdsem;
+  array[D,max(N_pred_rdsem)] int<lower=0> D_pred_rdsem;
+  array[D] int Dpos1_rdsem;
 }
 
 transformed data{
@@ -135,7 +148,8 @@ parameters {
   array[N] vector[n_random] b_free;            // person-specific parameter
   array[G] vector<lower=0>[n_random] sd_R;        // random effect SD
   array[G] vector<lower=0>[n_innos_fix] sigma;    // SDs of fixed innovation variances
-  array[G] cholesky_factor_corr[n_random] L;      // cholesky factor of random effects correlation matrix
+  array[G] cholesky_factor_corr[n_mvn1] L;      // cholesky factor of random effects correlation matrix
+  array[G] cholesky_factor_corr[n_mvn2] L2;     // cholesky factor of random effects correlation matrix
   vector[n_miss] y_impute;               // vector to store imputed values
   vector<upper=censL_val>[n_censL] y_impute_censL;
   vector<lower=censR_val>[n_censR] y_impute_censR;
@@ -159,7 +173,7 @@ parameters {
 
 transformed parameters {
   matrix[N, n_random] bmu;     // gammas of person-specific parameters
-  matrix[N, n_pars-n_innos_fix] b;
+  matrix[N,n_pars-n_innos_fix] b;
   array[D_cen] vector[N] sd_noise;
   array[n_inno_covs] vector[N] sd_inncov;
   array[G] matrix[n_cov, n_random] b_re_pred_mat;
@@ -222,17 +236,27 @@ model {
   int p_censL = 1;
   int p_censR = 1;
   int obs_id = 1;    // declare local variable to store variable number of obs per person
-  matrix[n_random, n_random] SIGMA = diag_pre_multiply(sd_R[1,], L[1,]);
   array[n_p] vector[N_obs] y_merge;
-  array[n_p] vector[N_obs] Ymus;
+  array[max(p_is_wcen_pos)] vector[N_obs] Ymus;
   array[n_p] vector[N] YB;
+  array[G] matrix[n_mvn1, n_mvn1] SIGMA;
+  array[G] matrix[n_mvn2, n_mvn2] SIGMA2;
 
-  y_merge = y;          // add observations
+  for(g in 1:G){
+    if(n_mvn1 > 0){
+      SIGMA[g] = diag_pre_multiply(sd_R[g,pos_mvn1], L[g,]);
+    }
+    if(n_mvn2 > 0){
+      SIGMA2[g] = diag_pre_multiply(sd_R[g,pos_mvn2], L2[g,]);
+    }
+  }
+
   // add imputed values for missings on each indicator
+  y_merge = y;
   for(i in 1:n_p){
     if(n_miss_p[i]>0){
       y_merge[i,pos_miss_p[i,1:n_miss_p[i]]] = segment(y_impute, p_miss, n_miss_p[i]);
-      p_miss = p_miss + n_miss_p[i];    // update counter for next indicator i+1
+      p_miss = p_miss + n_miss_p[i];
     }
   }
 
@@ -241,12 +265,12 @@ model {
     if(n_censL_p[i]>0){
     // add imputed values for observations at floor (threshold for censoring)
     y_merge[i,pos_censL_p[i,1:n_censL_p[i]]] = segment(y_impute_censL, p_censL, n_censL_p[i]);
-    p_censL = p_censL + n_censL_p[i];    // update counter for next indicator i+1
+    p_censL = p_censL + n_censL_p[i];
     }
     if(n_censR_p[i]>0){
     // add imputed values for observations at ceiling (threshold for censoring)
     y_merge[i,pos_censR_p[i,1:n_censR_p[i]]] = segment(y_impute_censR, p_censR, n_censR_p[i]);
-    p_censR = p_censR + n_censR_p[i];    // update counter for next indicator i+1
+    p_censR = p_censR + n_censR_p[i];
     }
   }
 
@@ -254,7 +278,12 @@ model {
  for(g in 1:G){
   target += normal_lpdf(gammas[g,] | prior_gamma[,1],prior_gamma[,2]);
   target += cauchy_lpdf(sd_R[g,] | prior_sd_R[,1], prior_sd_R[,2]);
-  target += lkj_corr_cholesky_lpdf(L[g,] | prior_LKJ);
+    if(n_mvn1>0){
+      target += lkj_corr_cholesky_lpdf(L[g,] | prior_LKJ);
+    }
+    if(n_mvn2>0){
+      target += lkj_corr_cholesky_lpdf(L2[g,] | prior_LKJ);
+    }
 
   if(n_innos_fix>0){
     target += cauchy_lpdf(sigma[g,] | prior_sigma[,1], prior_sigma[,2]);
@@ -292,6 +321,9 @@ model {
   }
 
   for (pp in 1:N) {
+
+    int pp_g = 1;
+
     // store number of observations per person
     obs_id = (N_obs_id[pp]);
     int pos_etaW_free = 1;    // running counter variable to index positition on etaW_free
@@ -307,11 +339,28 @@ model {
       }
     }
 
+    if( sum(is_rdsem) > 0 ){
+      for (d in 1:D) {
+        if (is_rdsem[d] == 1 ) {
+          for(k in 1:N_pred_rdsem[d]){
+             etaW_id[d,] = etaW_id[d,] - b[pp,(Dpos1_rdsem[d]+(k-1))] * etaW_id[D_pred_rdsem[d,k],];
+          }
+        }
+      }
+    }
+
+
     // individual parameters from (multivariate) normal distribution
-    if(n_random == 1){
-      target += normal_lpdf(b_free[pp,1] | bmu[pp,1], sd_R[1]);
-    } else {
-      target += multi_normal_cholesky_lpdf(b_free[pp, 1:n_random] | bmu[pp, 1 : n_random], SIGMA);
+    if(n_iid > 0){
+      for(jj in pos_iid){
+         target += normal_lpdf(b_free[pp,jj] | bmu[pp,jj], sd_R[pp_g, jj]);
+      }
+    }
+    if(n_mvn1 > 0) {
+      target += multi_normal_cholesky_lpdf(b_free[pp, pos_mvn1] | bmu[pp, pos_mvn1], SIGMA[pp_g]);
+    }
+    if(n_mvn2 > 0) {
+      target += multi_normal_cholesky_lpdf(b_free[pp, pos_mvn2] | bmu[pp, pos_mvn2], SIGMA2[pp_g]);
     }
 
     // dynamic process
@@ -328,38 +377,44 @@ model {
     for(d in 1:D){ // start loop over dimensions
       if(is_wcen[d] == 1){
 
-      // build prediction matrix for specific dimensions
-      int n_cols = (n_inno_covs>0 && d<3) ? N_pred[d]+n_inno_covs : N_pred[d];
-      matrix[(obs_id-maxLag),n_cols] b_mat;
-      vector[n_cols] b_use;
-      b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
+      if(N_pred[d]>0){
+        // build prediction matrix for specific dimensions
+        int n_cols = (n_inno_covs>0 && d<3) ? N_pred[d]+n_inno_covs : N_pred[d];
+        matrix[(obs_id-maxLag),n_cols] b_mat;
+        vector[n_cols] b_use;
+        b_use[1:N_pred[d]] = to_vector(b[pp, Dpos1[d]:Dpos2[d]]);
 
-      for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
-        int lag_use = Lag_pred[d,nd];
-        if(D_pred2[d,nd] == -99){
-          b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
-          } else {
-           int lag_use2 = Lag_pred2[d,nd];
-           b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
-                        etaW_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
-        }
-      }
-
-      if(n_inno_covs>0&&d<3){
-         b_use[N_pred[d]+1] = inno_cov_load[d];
-         b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
+        for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
+          int lag_use = Lag_pred[d,nd];
+          if(D_pred2[d,nd] == -99){
+            b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+            } else {
+              int lag_use2 = Lag_pred2[d,nd];
+              b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
+                           etaW_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
+              }
         }
 
-      // use build predictor matrix to calculate latent time-series means
-      if(D_np[d] == 1){
-        mus[D_cen_pos[d],] =  YB[D_pos_is_SI[d],pp] + b_mat * b_use;
-        target += normal_lpdf(y_merge[D_pos_is_SI[d],(pos+maxLag):(pos+(obs_id-1))] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
-      } else {
-        mus[D_cen_pos[d],] = b_mat * b_use;
+        if(n_inno_covs>0&&d<3){
+          b_use[N_pred[d]+1] = inno_cov_load[d];
+          b_mat[,(N_pred[d]+1)] = eta_cov_id[1,]; // add innovation covariance factor scores
+          }
+
+          // use build predictor matrix to calculate latent time-series means
+          if(D_np[d] == 1){
+              //mus[D_cen_pos[d],] = YB[D_pos_is_SI[d],pp] + b_mat * b_use;
+              mus[D_cen_pos[d],] = b_mat * b_use;
+              } else {
+              mus[D_cen_pos[d],] = b_mat * b_use;
+              }
+
+        } else {
+          mus[D_cen_pos[d],] = rep_vector(0,(obs_id-maxLag));
+          }
+
         target += normal_lpdf(etaW_id[d,(1+maxLag):obs_id] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
-        }
       }
-    }
+    } // end loop over dimensions
 
     // expected indicator scores
     for(i in 1:n_p){
@@ -383,7 +438,7 @@ model {
           target += normal_lpdf(YB[i,] | alpha[i] + loadB[i]*b[,mu_etaB_pos[i]], sigmaB[i]);
         }
         if(is_SI[i] == 0){
-          target += normal_lpdf(y_merge[i, pos_obs_p[i,1:n_obs_p[i]]] | Ymus[i,pos_obs_p[i,1:n_obs_p[i]]], sigmaW[i]);
+          target += normal_lpdf(y_merge[i, pos_obs_p[i,1:n_obs_p[i]]] | Ymus[p_is_wcen_pos[i],pos_obs_p[i,1:n_obs_p[i]]], sigmaW[i]);
         }
       }
     }
@@ -401,10 +456,19 @@ model {
 }
 
 generated quantities{
-  array[G] matrix[n_random,n_random] bcorr; // random coefficients correlation matrix
+  array[G] matrix[n_mvn1,n_mvn1] bcorr;  // random coefficients correlation matrix
+  array[G] matrix[n_mvn2,n_mvn2] bcorr2; // random coefficients correlation matrix
   vector[n_SD_etaW_all] SD_etaW;
   array[n_SD_etaW_all] vector[n_SD_etaW_i] SD_etaW_i;
-  bcorr[1] = multiply_lower_tri_self_transpose(L[1,]);
+  for(g in 1:G){
+    if(n_mvn1 > 0){
+      bcorr[g] = multiply_lower_tri_self_transpose(L[g]);
+    }
+    if(n_mvn2 > 0){
+      bcorr2[g] = multiply_lower_tri_self_transpose(L2[g]);
+    }
+  }
+
   if(standardized == 1){
     for(i in 1:n_SD_etaW_all){
       SD_etaW[i] = sd(etaW_free[i,]);

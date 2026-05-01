@@ -543,13 +543,16 @@ n_out <- infos$n_out
 n_cov_paths <- nrow(infos$RE.PREDS)
 n_out_paths <- nrow(infos$OUT)
 
+# get random pars -------
+b_nodes = infos$re_pars
+b_nodes <- b_nodes[order(b_nodes$Random_type), ]
 
 # calculate positions
 if(b_style == "h"){
   # positions of random effect par nodes
   b_poses_x = get_mid_points(n_nod_b, lims = c(begin.btw.x, end.btw.x))
   b_radx <- diff(b_poses_x[1:2])*scale_between
-  # basic settings (that may be overwritten based on other consitions)
+  # basic settings (that may be overwritten based on other conditions)
   b_poses_y <- get_mid_points(8, lims = c(end.btw.y, begin.btw.y))[5]
   b_r_l_y   <- b_poses_y + 3 * b_radx
   b_cor_pos <- "t"
@@ -577,31 +580,38 @@ if(b_style == "h"){
   }
 
   ##### placement of correlations ==========================================
-
   b_cor_offset <- ifelse(has_cov == 1 & has_out == 1, b_radx, 0)
   b_cor_col <- ifelse(has_cov == 1 & has_out == 1, "grey", "black")
   b_cor_lty <- ifelse(has_cov == 1 & has_out == 1, "dashed", "solid")
+  b_corr_types <- b_nodes$Random_type
+  b_mvn_poses <- which(b_corr_types == "mvn" | b_corr_types == "mvn1")
+
+
   if(b_cor_pos == "t"){
-    b_r_l_x <- c(min(b_poses_x) + b_cor_offset, max(b_poses_x[infos$n_random]) + b_cor_offset)
-    b_r_arrows_x0 <- b_poses_x[1:infos$n_random] + b_cor_offset
-    b_r_arrows_y0 <- rep(b_r_l_y,infos$n_random)
-    b_r_arrows_x1 <- b_poses_x[1:infos$n_random] + 0.5*b_cor_offset
-    b_r_arrows_y1 <- rep(b_poses_y,infos$n_random) + b_radx/asp
+    if(length(b_mvn_poses>0)){
+      b_r_l_x <- c(min(b_poses_x[b_mvn_poses]) + b_cor_offset, max(b_poses_x[b_mvn_poses]) + b_cor_offset)
+    }
+    b_r_arrows_x0 <- b_poses_x[b_mvn_poses] + b_cor_offset
+    b_r_arrows_y0 <- rep(b_r_l_y,length(b_mvn_poses))
+    b_r_arrows_x1 <- b_poses_x[b_mvn_poses] + 0.5*b_cor_offset
+    b_r_arrows_y1 <- rep(b_poses_y,length(b_mvn_poses)) + b_radx/asp
   }
   if(b_cor_pos == "b"){
-    b_r_l_x <- c(min(b_poses_x)- b_cor_offset, max(b_poses_x[infos$n_random])- b_cor_offset)
-    b_r_arrows_x0 <- b_poses_x[1:infos$n_random] - b_cor_offset
-    b_r_arrows_y0 <- rep(b_r_l_y,infos$n_random)
-    b_r_arrows_x1 <- b_poses_x[1:infos$n_random] -b_cor_offset/2
-    b_r_arrows_y1 <- rep(b_poses_y,infos$n_random) - b_radx/asp
+    if(length(b_mvn_poses>0)){
+      b_r_l_x <- c(min(b_poses_x[b_mvn_poses])- b_cor_offset, max(b_poses_x[b_mvn_poses])- b_cor_offset)#
+    }
+    b_r_arrows_x0 <- b_poses_x[b_mvn_poses] - b_cor_offset
+    b_r_arrows_y0 <- rep(b_r_l_y,length(b_mvn_poses))
+    b_r_arrows_x1 <- b_poses_x[b_mvn_poses] -b_cor_offset/2
+    b_r_arrows_y1 <- rep(b_poses_y,length(b_mvn_poses)) - b_radx/asp
   }
 } else {        # vertical ....
   b_poses_x = get_mid_points(1,       lims = c(end.btw.x, begin.btw.x))
   b_poses_y = get_mid_points(n_nod_b, lims = c(end.btw.y, begin.btw.y))
   b_radx <- diff(b_poses_y[1:2])*0.45
 }
+
 # get random pars -------
-b_nodes = infos$re_pars
 b_nodes$midx = b_poses_x[1:nrow(b_nodes)]
 b_nodes$midy = b_poses_y
 b_nodes$lab = plotmath_labeller(x = b_nodes$Param, y_fac_labs = y_fac_labs,
@@ -909,9 +919,11 @@ for ( i in 1:n_nod_b ) {
     rady = b_nodes$radx[i]/asp)
 
   # correlation "arrows"
+  if(length(b_mvn_poses>0)){
   shape::Arrows(
     b_r_l_x[1],b_r_l_y[1], b_r_l_x[2],b_r_l_y[1],
     lwd = 0.9, lty = b_cor_lty, lcol = b_cor_col, arr.length = 0)
+  }
   shape::Arrows(
     b_r_arrows_x0[i],b_r_arrows_y0[i], b_r_arrows_x1[i],b_r_arrows_y1[i],
     lwd = 0.9, lty = b_cor_lty, arr.type ="triangle",
