@@ -240,7 +240,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     censR_val = attr(model, which = "censor_right")
     n_censR_D = sapply(ts, FUN = function(x){ # store number of NAs per D
       sum(data[,x] != -Inf &
-            data[,x] <= censR_val &
+            data[,x] >= censR_val &
             data$int_time != 1)
     })
     n_censR_D = as.array(n_censR_D)
@@ -397,7 +397,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
       censR_val = attr(model, which = "censor_right")
       n_censR_p = sapply(ts, FUN = function(x){ # store number of NAs per D
         sum(data[,x] != -Inf &
-              data[,x] <= censR_val &
+              data[,x] >= censR_val &
               data$int_time != 1)
       })
       n_censR_p = as.array(n_censR_p)
