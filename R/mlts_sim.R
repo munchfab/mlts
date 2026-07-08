@@ -267,8 +267,10 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       model$true.val <- round(model$true.val, 3)
 
       } else if ( is.null(model$true.val)) {
-      stop("No true parameter values provided in model$true.val. Set default = TRUE to run data generation with random true parameter values.",
+      stop(
+        paste("No true parameter values provided in model$true.val. Set default = TRUE to run data generation with random true parameter values.",
          "Alternatively, user-specified values for each parameter can be specified in an additional column `true.val` in model.")
+      )
     }
 
 
