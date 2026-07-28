@@ -109,7 +109,7 @@ mlts_rel <- function(mltsfit, method = c("EAP", "RMU"), prob = 0.95, seed = NULL
 
 
   if (method == "EAP") {
-    u_pars <- mltsfit$model$Param[mltsfit$model$isRandom == 1]
+    u_pars <- mltsfit$model$Param[mltsfit$model$isRandom == 1 & mltsfit$model$Level == "Within"]
     split_data <- split(mltsfit$person.pars.summary, mltsfit$person.pars.summary$Param)
 
     reliability_results <- sapply(u_pars, function(x) {

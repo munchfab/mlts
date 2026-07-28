@@ -80,37 +80,43 @@ mlts_cor_ts <- function(data, ts, id, type = "between", as_mat = TRUE, within_ag
 
     } else {
 
-      ts_vars_df = data.frame(t(utils::combn(ts, 2)))
+      results <- list()
+      list_counter <- 1
 
-      results = lapply(1:nrow(ts_vars_df), function(x){
-        item = ts_vars_df$X1[x]
-        item2 = ts_vars_df$X2[x]
+      for (i in 1:(n_items - 1)){
+        for (j in (i+1) : n_items){
 
-        c_test <- tryCatch({
+          item <- ts[i]
+          item2 <- ts[j]
+
+          c_test <- tryCatch({
           stats::cor.test(person_means[, item],
                           person_means[, item2], method = "pearson")
         }, error = function(e) {
           list(conf.int = c(NA, NA))
         })
 
+        if (is.null(c_test$conf.int)) {
+          c_test$conf.int <- c(NA, NA)
+        }
+
         temp_df <- data.frame(
-          Var1 = ts[item],
-          Var2 = ts[item2],
+          Var1 = item,
+          Var2 = item2,
           r = cor_mat[item, item2],
           CI.lb = c_test$conf.int[1],
           CI.ub = c_test$conf.int[2]
         )
 
-      })
-
-      return(do.call(rbind, results))
-
+        results[[list_counter]] <- temp_df
+        list_counter <- list_counter + 1
+      }
     }
+          return(do.call(rbind, results))
   }
-
+}
 
   if (type == "within"){
-
     u_ids <- unique(data[[id]])
     matrices <- list()
     for ( i in u_ids){
@@ -158,16 +164,20 @@ mlts_cor_ts <- function(data, ts, id, type = "between", as_mat = TRUE, within_ag
               list(estimate = NA, conf.int = c(NA, NA))
             })
 
+            if (is.null(c_test$conf.int)) {
+              c_test$conf.int <- c(NA, NA)
+            }
+
             temp_df <- data.frame(
               ID = i,
               Var1 = ts[item],
               Var2 = ts[item2],
-              r = c_test$estimate,
+              r = unname(c_test$estimate),
               CI.lb = c_test$conf.int[1],
               CI.ub = c_test$conf.int[2]
             )
             results[[list_counter]] <- temp_df
-            list_counter <- list_counter +1
+            list_counter <- list_counter + 1
           }
         }
       }

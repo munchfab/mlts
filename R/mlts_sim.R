@@ -357,7 +357,9 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
     colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
 
     # check for AR parameters with absolute values below "1"
-    posAR = infos$fix_pars[infos$fix_pars$isRandom==1 & infos$fix_pars$isAR==1, "no"]
+    ar_param_names <- infos$fix_pars_dyn$Param[infos$fix_pars_dyn$isAR == 1]
+    posAR <- which(colnames(btw_random) %in% ar_param_names)
+    
     if (length(posAR) == 0){
       ar_condition <- FALSE
     } else if (sum(abs(btw_random[, posAR, drop = FALSE]) >= 1) > 0){
@@ -367,6 +369,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
     }
 
     counter = 0
+    total_invalid_ar <- 0
     while (ar_condition){
       if (counter >= 100){
         stop("Sampling was stopped, because AR effects bigger than 1 were sampled more than 100 times. Consider ",
@@ -374,6 +377,7 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       }
 
       invalid_ids <- which(apply(abs(btw_random[, posAR, drop = FALSE]) >= 1, 1, any))
+      total_invalid_ar <- total_invalid_ar + length(invalid_ids)
       if(n_random == 1){
         btw_random[invalid_ids, ] <- bmu[invalid_ids, , drop = FALSE] + stats::rnorm(n = length(invalid_ids), mean = 0, sd = cov_mat)
       } else {
@@ -387,9 +391,9 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
       }
       counter = counter + 1
     }
-
-
-
+    if (counter > 0) {
+      message("Resampled ", total_invalid_ar, " individual AR parameter(s) exceeding |1|.")
+    }
 
 
   # now combine fixed effects and random effects
@@ -503,10 +507,13 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
     }
 
     # return list
+    re_pars <- btw[, infos$is_random, drop = FALSE]
+    colnames(re_pars) <- infos$fix_pars$Param[infos$is_random]
+
     VARsimData = list(
       model = model,
       data = data,
-      RE.pars = btw_random
+      RE.pars = re_pars
     )
 
     # add class
