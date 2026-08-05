@@ -267,10 +267,15 @@ if(n_rdsem>0){
   w_nodes_resid = w_nodes[w_nodes$construct %in% rdsem_DV,]
   w_nodes_resid$midx = w_nodes_resid$midx + rdsem_resid_offset[1]
   w_nodes_resid$midy = w_nodes_resid$midy + rdsem_resid_offset[2]
-  if(is.null(y_ind_labs)){
+  if(is.null(y_fac_labs)){
     w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "Y", replacement="hat(Y)")
+    w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "italic(η)", replacement="italic(hat(η))", fixed = T)
   } else {
-    w_nodes_resid$lab = paste0("hat(Y)[",w_nodes_resid$lab,"]^W")
+    for(i in 1:nrow(w_nodes_resid)){
+      constr = w_nodes_resid$construct[i]
+      w_nodes_resid$lab[i] = gsub(w_nodes_resid$lab[i], pattern = paste0(y_fac_labs[constr],"["), replacement=paste0("hat(",y_fac_labs[constr],")["),fixed = T)
+    }
+    w_nodes_resid$lab = gsub(w_nodes_resid$lab, pattern = "italic(η)", replacement="italic(hat(η))", fixed = T)
   }
 } else {
   rdsem_DV   =0
@@ -298,7 +303,7 @@ for(i in 1:nrow(inno)){
   inno$y1[i] <- w_ys[inno$q[i]]
 
   if(n_rdsem>0){
-    if(i %in% rdsem_DV){
+    if(inno$q[i] %in% rdsem_DV){
       inno$midy[i] <- inno$midy[i] + rdsem_resid_offset[2]
       inno$y0[i] <- inno$y0[i] + rdsem_resid_offset[2]
       inno$y1[i] <- inno$y1[i] + rdsem_resid_offset[2]
