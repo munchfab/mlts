@@ -1,0 +1,42 @@
+title: "MLTS"
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  bslib:
+    primary: "#1a1a1a"         # navbar
+    link-color: "#9e2a2b"      # links
+    success: "#9e2a2b"         # buttons
+    bg: "#f8f9fa"              # background
+    fg: "#212529"              # text
+
+navbar:
+  structure:
+    left: [articles, features, news, about_stan]
+    right: [search, github]
+
+  components:
+    articles:
+      text: "Resources"
+      href: articles/articles.html
+
+    features:
+      text: "Features"
+      href: articles/features.html
+    
+    news:
+      text: "Changelog"
+      href: news/index.html
+
+    about_stan:
+      text: "About stan"
+      href: https://mc-stan.org/
+
+articles: 
+  - title: internal
+    contents: 
+      - articles
+      - betw_predictors
+      - manifest_ar
+      - manifest_var
+      - features
