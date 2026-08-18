@@ -31,6 +31,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/get_started.html">Get Started</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/articles.html">Resources</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/features.html">Features</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -48,193 +49,42 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="mlts">mlts<a class="anchor" aria-label="anchor" href="#mlts"></a>
-</h1></div>
-<!-- badges: start -->
-
+  <main id="main" class="col-md-9">
 <!-- badges: end -->
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<p>The <code>mlts</code> package allows fitting multilevel manifest or latent time series models and dynamic structural equation models (DSEM), as described in Asparouhov et al. (2018). It relies on <a href="https://mc-stan.org" class="external-link">Stan</a> (Stan Development Team, 2023b) and the <code>rstan</code> package (Stan Development Team, 2023a) for Bayesian inference. The package is designed for researchers working with intensive longitudinal data, e.g., data from ambulatory assessment studies or experience sampling methods. Models allow for missing data, unequal numbers of observations across units, unequally spaced observations, and approximation of continuous time processes. Parameters can be subjected to restrictions (i.e., fixations or equality constraints) and latent variables can be incorporated using a measurement model. For the models hypothesized by the user, a LaTex formula and path models can be inspected, and model parameters can be plotted.</p>
+<div class="section level1">
+<div class="page-header"><h1 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h1></div>
+<p>The <code>mlts</code> package allows fitting multilevel manifest or latent time series models and dynamic structural equation models (DSEM), as described in @Asparouhov2018. It relies on <a href="https://mc-stan.org" class="external-link">Stan</a> [@Stan2023] and the <code>rstan</code> package [@rStan2023] for Bayesian inference. The package is designed for researchers working with intensive longitudinal data, e.g., data from ambulatory assessment studies or experience sampling methods. Models allow for missing data, unequal numbers of observations across units, unequally spaced observations, and approximation of continuous time processes. Parameters can be subjected to restrictions (i.e., fixations or equality constraints) and latent variables can be incorporated using a measurement model. For the models hypothesized by the user, a LaTex formula and path models can be inspected, and model parameters can be plotted.</p>
+<p>At this stage, the package incorporates the means for:</p>
+<ul>
+<li>
+<p>Etimation of two-level vector autoregressive models, which flexibly handle</p>
+<ul>
+<li><p>multiple time-varying constructs (maximum of nine),</p></li>
+<li><p>lagged effects of higher order (up to lag three),</p></li>
+<li><p>user-specified within-level dynamics (unique lagged effects for each dimension),</p></li>
+<li><p>accounting for measurement error on the between- as well as within-level using multiple indicators (via specification of two-level confirmatory factor models),</p></li>
+<li><p>all dynamic model parameters specified as constant or person-specific (random),</p></li>
+<li><p>for bivariate VAR-models estimation of person-specific (random) log innovation covariances using a latent factor approach,</p></li>
+<li><p>within-level latent interaction effects,</p></li>
+<li><p>zero-inflation in time series variables via a censoring approach, as well as</p></li>
+<li><p>between-level variables as predictors of random (individual) effects, and/or between-level outcomes predicted by random model parameters and additional between-level covariates.</p></li>
+</ul>
+</li>
+<li><p>Generating data for all of the above modeling options (with additional convenience settings to study the models in simulation studies or for running power analyses based on specific parameter values).</p></li>
+<li><p>Accounting for non-equidistant measurements and overnight lags (by creating a time grid similar to the TINTERVAL option provided in Mplus).</p></li>
+<li><p>Running common posterior and model diagnostics analyses steps (as for objects of class stanfit) as well as specific posterior analyses for the mltsfit class.</p></li>
+<li>
+<p>Multiple plotting options of the</p>
+<ul>
+<li>specified model object as a path model,</li>
+<li>group-level effects,</li>
+<li>random effect parameters.</li>
+</ul>
+</li>
+</ul>
 </div>
-<div class="section level2">
-<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
-</h2>
-<p>The most recent <code>mlts</code> release can be installed from CRAN via</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mlts"</span><span class="op">)</span></span></code></pre></div>
-<p>To install the development version from <a href="https://github.com/" class="external-link">GitHub</a>, you need to install the <code>rstan</code>-package first and configure your R installation to be able to compile C++ code. You can find instructions for both steps on the <a href="https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started" class="external-link">RStan GitHub</a>. Afterwards, you can install the development version of <code>mlts</code> with</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"munchfab/mlts"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="a-simple-example">A Simple Example<a class="anchor" aria-label="anchor" href="#a-simple-example"></a>
-</h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># load package</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/munchfab/mlts" class="external-link">mlts</a></span><span class="op">)</span></span></code></pre></div>
-<p>One of the simplest models we can fit with <code>mlts</code> is a multilevel first order autoregressive model with only one observed variable. We start by specifying the model with <code><a href="reference/mlts_model.html">mlts_model()</a></code>. The argument <code>q</code> controls the number of time-series constructs. For this simple model, the following call is sufficient:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># build a simple autoregressive model</span></span>
-<span><span class="va">ar1_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mlts_model.html">mlts_model</a></span><span class="op">(</span>q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
-<p>We can check the parameters present in the model by just calling the object:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ar1_model</span></span>
-<span><span class="co">#&gt;                              Model   Level             Type</span></span>
-<span><span class="co">#&gt; mu_1                    Structural  Within     Fixed effect</span></span>
-<span><span class="co">#&gt; phi(1)_11               Structural  Within     Fixed effect</span></span>
-<span><span class="co">#&gt; ln.sigma2_1             Structural  Within     Fixed effect</span></span>
-<span><span class="co">#&gt; sigma_mu_1              Structural Between Random effect SD</span></span>
-<span><span class="co">#&gt; sigma_phi(1)_11         Structural Between Random effect SD</span></span>
-<span><span class="co">#&gt; sigma_ln.sigma2_1       Structural Between Random effect SD</span></span>
-<span><span class="co">#&gt; r_mu_1.phi(1)_11        Structural Between   RE correlation</span></span>
-<span><span class="co">#&gt; r_mu_1.ln.sigma2_1      Structural Between   RE correlation</span></span>
-<span><span class="co">#&gt; r_phi(1)_11.ln.sigma2_1 Structural Between   RE correlation</span></span>
-<span><span class="co">#&gt;                                           Param             Param_Label</span></span>
-<span><span class="co">#&gt; mu_1                                       mu_1                   Trait</span></span>
-<span><span class="co">#&gt; phi(1)_11                             phi(1)_11                 Dynamic</span></span>
-<span><span class="co">#&gt; ln.sigma2_1                         ln.sigma2_1 Log Innovation Variance</span></span>
-<span><span class="co">#&gt; sigma_mu_1                           sigma_mu_1                   Trait</span></span>
-<span><span class="co">#&gt; sigma_phi(1)_11                 sigma_phi(1)_11                 Dynamic</span></span>
-<span><span class="co">#&gt; sigma_ln.sigma2_1             sigma_ln.sigma2_1 Log Innovation Variance</span></span>
-<span><span class="co">#&gt; r_mu_1.phi(1)_11               r_mu_1.phi(1)_11                  RE Cor</span></span>
-<span><span class="co">#&gt; r_mu_1.ln.sigma2_1           r_mu_1.ln.sigma2_1                  RE Cor</span></span>
-<span><span class="co">#&gt; r_phi(1)_11.ln.sigma2_1 r_phi(1)_11.ln.sigma2_1                  RE Cor</span></span>
-<span><span class="co">#&gt;                         isRandom prior_type prior_location prior_scale</span></span>
-<span><span class="co">#&gt; mu_1                           1     normal              0        10.0</span></span>
-<span><span class="co">#&gt; phi(1)_11                      1     normal              0         2.0</span></span>
-<span><span class="co">#&gt; ln.sigma2_1                    1     normal              0        10.0</span></span>
-<span><span class="co">#&gt; sigma_mu_1                     0     cauchy              0         2.5</span></span>
-<span><span class="co">#&gt; sigma_phi(1)_11                0     cauchy              0         2.5</span></span>
-<span><span class="co">#&gt; sigma_ln.sigma2_1              0     cauchy              0         2.5</span></span>
-<span><span class="co">#&gt; r_mu_1.phi(1)_11               0        LKJ              1          NA</span></span>
-<span><span class="co">#&gt; r_mu_1.ln.sigma2_1             0        LKJ              1          NA</span></span>
-<span><span class="co">#&gt; r_phi(1)_11.ln.sigma2_1        0        LKJ              1          NA</span></span></code></pre></div>
-<p>When <code><a href="reference/mlts_model.html">mlts_model()</a></code> sets up this model, all model parameters are free (i.e., not constrained) by default. On the within level, there are three fixed effects: the grand mean (<code>mu_1</code>) of the outcome, the autoregressive effect (<code>phi(1)_11</code>), and the natural log of the innovation variance (<code>ln.sigma2_1</code>). The <code>(1)</code> in brackets for the autoregressive effect parameter indicates a lag of first order, and the <code>_11</code> subscript denotes that the first construct is as well predicted by the first construct. Note that for the innovation variance, the natural log is used to prevent the variance from dropping below zero. For each of these effects, random effects are also estimated on the between level, which are drawn from a multivariate normal distribution with zero mean. Standard deviations of random effects are indicated with a <code>sigma_</code> prefix, and random effect correlations are indicated with an <code>r_</code> prefix.</p>
-<p>A TeX formula for the above model can be obtained by calling the <code><a href="reference/mlts_model_formula.html">mlts_model_formula()</a></code> function on the model object. By default, the function produces an RMarkdown file and renders it to a pdf file using <code>knitr</code>. However, the TeX file can also be kept by calling <code>keep_tex = TRUE</code> within the function call.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/mlts_model_formula.html">mlts_model_formula</a></span><span class="op">(</span><span class="va">ar1_model</span><span class="op">)</span></span></code></pre></div>
-<center>
-Decomposition.
-</center>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>y</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>t</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>μ</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>y</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>t</mi></mrow><mi>w</mi></msubsup></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">
-\begin{gathered} \begin{bmatrix}
-y_{1, it} \\
-\end{bmatrix} = \begin{bmatrix}
-\mu_{1,i} \\
-\end{bmatrix}
-+
-\begin{bmatrix}
-y_{1, it}^w \\
-\end{bmatrix} \end{gathered}
-</annotation></semantics></math></p>
-<center>
-Within-level model.
-</center>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>y</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>t</mi></mrow><mi>w</mi></msubsup></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>y</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mi>w</mi></msubsup></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ζ</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>t</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mtext mathvariant="normal">with</mtext><mspace width="0.222em"></mspace><msub><mi>ζ</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi><mi>t</mi></mrow></msub><mo>∼</mo><mi mathvariant="italic">𝑁</mi><mo stretchy="false" form="prefix">(</mo><mn>0</mn><mo>,</mo><msubsup><mi>σ</mi><mrow><msub><mi>ζ</mi><mn>1</mn></msub><mo>,</mo><mi>i</mi></mrow><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mtd></mtr></mtable><annotation encoding="application/x-tex">
-\begin{gathered} \begin{bmatrix}
-y_{1, it}^w \\
-\end{bmatrix} = \begin{bmatrix} \phi_{(1)11,i} \\ \end{bmatrix} \begin{bmatrix} y_{1,i(t - 1)}^w \\ \end{bmatrix} +  \begin{bmatrix} \zeta_{1, it} \\ \end{bmatrix} ,\\
-\text{with}~\zeta_{1,it} \sim \mathit{N}(0, \sigma^2_{\zeta_{1},i})  \end{gathered}
-</annotation></semantics></math></p>
-<center>
-Between-level model.
-</center>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>μ</mi><mrow><mn>1</mn><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><mrow><msub><mi>ζ</mi><mn>1</mn></msub><mo>,</mo><mi>i</mi></mrow><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><msub><mi>μ</mi><mn>1</mn></msub></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn></mrow></msub></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><msub><mi>ζ</mi><mn>1</mn></msub><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>υ</mi><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>υ</mi><mrow><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn></mrow></msub><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>υ</mi><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><msub><mi>ζ</mi><mn>1</mn></msub><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>i</mi></mrow></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><mo stretchy="true" form="postfix">]</mo></mrow><mo>,</mo></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mtext mathvariant="normal">with</mtext><mspace width="0.222em"></mspace><msub><mi>υ</mi><mi>i</mi></msub><mo>∼</mo><mrow><mi mathvariant="italic">𝑀</mi><mi mathvariant="italic">𝑉</mi><mi mathvariant="italic">𝑁</mi></mrow><mo stretchy="false" form="prefix">(</mo><mn mathvariant="bold">𝟎</mn><mo>,</mo><mi mathvariant="bold">𝛀</mi><mo stretchy="false" form="postfix">)</mo></mtd></mtr></mtable><annotation encoding="application/x-tex">
-\begin{gathered} \begin{bmatrix} \mu_{1,i}\\
-\phi_{(1)11,i}\\
-\ln(\sigma^2_{\zeta_{1},i})\\ \end{bmatrix} = \begin{bmatrix} \gamma_{0,\mu_{1}}\\
-\gamma_{0,\phi_{(1)11}}\\
-\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}\\ \end{bmatrix} +
-  \begin{bmatrix} \upsilon_{\mu_{1},i}\\
-\upsilon_{\phi_{(1)11},i}\\
-\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}\\ \end{bmatrix} ,\\
-\text{with}~
-  \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega})  \end{gathered}
-</annotation></semantics></math></p>
-<p>Furthermore, a path model can also be produced with the function <code><a href="reference/mlts_paths.html">mlts_paths()</a></code> with many options for adjustment.</p>
-<p><img src="reference/figures/README-unnamed-chunk-5-1.png" alt="" width="50%" style="display: block; margin: auto;"></p>
-<p>To fit the above model, we pass it together with the data set to <code><a href="reference/mlts_fit.html">mlts_fit()</a></code>. The data set for this example is an artificial data set simulated from an autoregressive model:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ar1_data</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   ID time    Y1</span></span>
-<span><span class="co">#&gt; 1  1    1  1.16</span></span>
-<span><span class="co">#&gt; 2  1    2 -0.29</span></span>
-<span><span class="co">#&gt; 3  1    3  0.40</span></span>
-<span><span class="co">#&gt; 4  1    4 -0.18</span></span>
-<span><span class="co">#&gt; 5  1    5 -0.66</span></span>
-<span><span class="co">#&gt; 6  1    6  0.42</span></span></code></pre></div>
-<p>We need to specify the variable in <code>data</code> that contains the time-series process in the <code>ts</code> argument and the variable that contains the unit identifier in the <code>id</code> argument. With the argument <code>tinterval</code>, the time interval for approximation of a continuous time process can be specified Asparouhov et al. (2018). We don’t specify it here, but see the Vignette <em>Approximation of a Continuous Time Model</em> for more details.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ar1_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mlts_fit.html">mlts_fit</a></span><span class="op">(</span></span>
-<span>  model <span class="op">=</span> <span class="va">ar1_model</span>,</span>
-<span>  data <span class="op">=</span> <span class="va">ar1_data</span>,</span>
-<span>  id <span class="op">=</span> <span class="st">"ID"</span>,</span>
-<span>  ts <span class="op">=</span> <span class="st">"Y1"</span>,</span>
-<span>  iter <span class="op">=</span> <span class="fl">4000</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>The model <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> shows general information about the model and data:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">ar1_fit</span>, digits <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Time series variables as indicated by parameter subscripts: </span></span>
-<span><span class="co">#&gt;    1 --&gt; Y1</span></span>
-<span><span class="co">#&gt; Data: 2500 observations in 50 IDs</span></span>
-<span><span class="co">#&gt; Model convergence criteria: </span></span>
-<span><span class="co">#&gt;   Maximum Potential Scale Reduction Factor (PSR; Rhat): 1.005 (should be &lt; 1.01)</span></span>
-<span><span class="co">#&gt;   Minimum Bulk ESS: 574 (should be &gt; 200, 100 per chain) </span></span>
-<span><span class="co">#&gt;   Minimum Tail ESS: 864 (should be &gt; 200, 100 per chain) </span></span>
-<span><span class="co">#&gt;   Number of divergent transitions: 0 (should be 0) </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Posterior Summary Statistics</span></span>
-<span><span class="co">#&gt; Fixed Effects:</span></span>
-<span><span class="co">#&gt;               Mean   SD  2.5% 97.5% Rhat Bulk_ESS Tail_ESS</span></span>
-<span><span class="co">#&gt;         mu_1  0.73 0.09  0.56  0.91    1     4267     3055</span></span>
-<span><span class="co">#&gt;    phi(1)_11  0.27 0.03  0.22  0.33    1     2081     2724</span></span>
-<span><span class="co">#&gt;  ln.sigma2_1 -0.30 0.04 -0.39 -0.22    1     2445     2648</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Random Effects SDs:</span></span>
-<span><span class="co">#&gt;                    Mean   SD 2.5% 97.5% Rhat Bulk_ESS Tail_ESS</span></span>
-<span><span class="co">#&gt;         sigma_mu_1 0.60 0.07 0.48  0.75 1.00     3793     2800</span></span>
-<span><span class="co">#&gt;    sigma_phi(1)_11 0.13 0.03 0.07  0.20 1.01      709      910</span></span>
-<span><span class="co">#&gt;  sigma_ln.sigma2_1 0.23 0.04 0.15  0.32 1.00      934     1705</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Random Effects Correlations:</span></span>
-<span><span class="co">#&gt;                        Mean   SD  2.5% 97.5% Rhat Bulk_ESS Tail_ESS</span></span>
-<span><span class="co">#&gt;         mu_1.phi(1)_11 0.01 0.20 -0.39  0.41    1     2094     2947</span></span>
-<span><span class="co">#&gt;       mu_1.ln.sigma2_1 0.22 0.18 -0.16  0.55    1     2401     2345</span></span>
-<span><span class="co">#&gt;  phi(1)_11.ln.sigma2_1 0.12 0.26 -0.41  0.61    1      821     1899</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Samples were drawn using NUTS on Mon Dec  8 09:33:20 2025.</span></span>
-<span><span class="co">#&gt; For each parameter, Bulk_ESS and Tail_ESS are measures of effective</span></span>
-<span><span class="co">#&gt; sample size, and Rhat is the potential scale reduction factor</span></span>
-<span><span class="co">#&gt; on split chains (at convergence, Rhat = 1).</span></span></code></pre></div>
-<p>The line <code>Time series variables as indicated by parameter subscripts: 1 --&gt; Y1</code> shows that model parameters indexed by a <code>_1</code> refer to the variable <code>Y1</code> in the data set. The <code>Model convergence criteria</code> provide an overview across convergence diagnostics for all model parameters (i.e., also parameters which are not printed in the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> by default). For the simple AR1-model, all parameters converged well after 4,000 iterations.</p>
-<p>The section <code>Fixed Effects</code> provides information about the fixed effects in the model, i.e., <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><msub><mi>μ</mi><mn>1</mn></msub></mrow></msub><annotation encoding="application/x-tex">\gamma_{0, \mu_1}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn></mrow></msub></mrow></msub><annotation encoding="application/x-tex">\gamma_{0, \phi_{(1)11}}</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mrow><mn>0</mn><mo>,</mo><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><msub><mi>ζ</mi><mn>1</mn></msub><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}</annotation></semantics></math> in the above formula. For example, the posterior mean of the autoregressive effect parameter <code>phi(1)_11</code> is estimated at .27 with 95%-credible interval [.22, .33]. The log variance of the innovations <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ζ</mi><mrow><mn>1</mn><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">\zeta_{1t}</annotation></semantics></math> is estimated at -.30.</p>
-<p>The section <code>Random Effects SDs</code> shows standard deviations of the random effects <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>υ</mi><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">\upsilon_{\mu_{1},i}</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>υ</mi><mrow><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn></mrow></msub><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">\upsilon_{\phi_{(1)11},i}</annotation></semantics></math>, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>υ</mi><mrow><mrow><mi mathvariant="normal">ln</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><msubsup><mi>σ</mi><msub><mi>ζ</mi><mn>1</mn></msub><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}</annotation></semantics></math>. The section <code>Random Effects Correlations</code> shows correlations between random effects. For example, while random effects of the person mean <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>υ</mi><mrow><msub><mi>μ</mi><mn>1</mn></msub><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">\upsilon_{\mu_{1},i}</annotation></semantics></math> and the autoregressive effect <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>υ</mi><mrow><msub><mi>ϕ</mi><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mn>11</mn></mrow></msub><mo>,</mo><mi>i</mi></mrow></msub><annotation encoding="application/x-tex">\upsilon_{\phi_{(1)11},i}</annotation></semantics></math> display nearly no correlation, 0.01, there is a positive correlation between the person mean and log innovation variance, 0.22. This indicates that individuals with a higher person mean in the variable <code>Y1</code> also tend to have a higher innovation variance.</p>
-<p>The parameter estimates can also be plotted with the <code>mtls_plot()</code>-function. By default, forest plots of model parameters are produced. The <code>what</code>-argument controls what parameter types are plotted (e.g., fixed effects, random effect standard deviations, and other).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/mlts_plot.html">mlts_plot</a></span><span class="op">(</span><span class="va">ar1_fit</span>, type <span class="op">=</span> <span class="st">"fe"</span>, what <span class="op">=</span> <span class="st">"Fixed effect"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-ar1_plot-1.png" alt="" width="60%" style="display: block; margin: auto;"></p>
-</div>
-<div class="section level2">
-<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
-</h2>
-<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2">
-<div id="ref-Asparouhov2018" class="csl-entry">
-Asparouhov, T., Hamaker, E. L., &amp; Muthén, B. (2018). Dynamic Structural Equation Models. <em>Structural Equation Modeling: A Multidisciplinary Journal</em>, <em>25</em>(3), 359–388. <a href="https://doi.org/10.1080/10705511.2017.1406803" class="external-link uri">https://doi.org/10.1080/10705511.2017.1406803</a>
-</div>
-<div id="ref-rStan2023" class="csl-entry">
-Stan Development Team. (2023a). <em><span class="nocase">RStan: the R interface to Stan</span></em>. <a href="https://mc-stan.org/" class="external-link uri">https://mc-stan.org/</a>
-</div>
-<div id="ref-Stan2023" class="csl-entry">
-Stan Development Team. (2023b). <em><span class="nocase">Stan Modeling Language Users Guide and Reference Manual, Version 2.31</span></em>. <a href="https://mc-stan.org/" class="external-link uri">https://mc-stan.org/</a>
-</div>
-</div>
-</div>
-</div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
