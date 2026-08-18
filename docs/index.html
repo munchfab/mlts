@@ -33,7 +33,6 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/get_started.html">Get Started</a></li>
 <li class="nav-item"><a class="nav-link" href="articles/articles.html">Resources</a></li>
-<li class="nav-item"><a class="nav-link" href="articles/features.html">Features</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://mc-stan.org/">About stan</a></li>
       </ul>
@@ -49,12 +48,13 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9">
-<!-- badges: end -->
-<div class="section level1">
-<div class="page-header"><h1 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header"><h1 id="mlts">MLTS<a class="anchor" aria-label="anchor" href="#mlts"></a>
 </h1></div>
-<p>The <code>mlts</code> package allows fitting multilevel manifest or latent time series models and dynamic structural equation models (DSEM), as described in @Asparouhov2018. It relies on <a href="https://mc-stan.org" class="external-link">Stan</a> [@Stan2023] and the <code>rstan</code> package [@rStan2023] for Bayesian inference. The package is designed for researchers working with intensive longitudinal data, e.g., data from ambulatory assessment studies or experience sampling methods. Models allow for missing data, unequal numbers of observations across units, unequally spaced observations, and approximation of continuous time processes. Parameters can be subjected to restrictions (i.e., fixations or equality constraints) and latent variables can be incorporated using a measurement model. For the models hypothesized by the user, a LaTex formula and path models can be inspected, and model parameters can be plotted.</p>
+<!-- badges: start -->
+
+<!-- badges: end -->
+<p>The <code>mlts</code> package allows fitting multilevel manifest or latent time series models and dynamic structural equation models (DSEM), as described in Asparouhov et al. (2018). It relies on <a href="https://mc-stan.org" class="external-link">Stan</a> (Stan Development Team, 2023b) and the <code>rstan</code> package (Stan Development Team, 2023a) for Bayesian inference. The package is designed for researchers working with intensive longitudinal data, e.g., data from ambulatory assessment studies or experience sampling methods. Models allow for missing data, unequal numbers of observations across units, unequally spaced observations, and approximation of continuous time processes. Parameters can be subjected to restrictions (i.e., fixations or equality constraints) and latent variables can be incorporated using a measurement model. For the models hypothesized by the user, a LaTex formula and path models can be inspected, and model parameters can be plotted.</p>
 <p>At this stage, the package incorporates the means for:</p>
 <ul>
 <li>
@@ -83,8 +83,18 @@
 </ul>
 </li>
 </ul>
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2">
+<div id="ref-Asparouhov2018" class="csl-entry">
+Asparouhov, T., Hamaker, E. L., &amp; Muthén, B. (2018). Dynamic Structural Equation Models. <em>Structural Equation Modeling: A Multidisciplinary Journal</em>, <em>25</em>(3), 359–388. <a href="https://doi.org/10.1080/10705511.2017.1406803" class="external-link uri">https://doi.org/10.1080/10705511.2017.1406803</a>
 </div>
-
+<div id="ref-rStan2023" class="csl-entry">
+Stan Development Team. (2023a). <em><span class="nocase">RStan: the R interface to Stan</span></em>. <a href="https://mc-stan.org/" class="external-link uri">https://mc-stan.org/</a>
+</div>
+<div id="ref-Stan2023" class="csl-entry">
+Stan Development Team. (2023b). <em><span class="nocase">Stan Modeling Language Users Guide and Reference Manual, Version 2.31</span></em>. <a href="https://mc-stan.org/" class="external-link uri">https://mc-stan.org/</a>
+</div>
+</div>
+</div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

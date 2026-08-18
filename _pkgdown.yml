@@ -12,7 +12,7 @@ template:
 
 navbar:
   structure:
-    left: [get_started, articles, features, news, about_stan]
+    left: [get_started, articles, news, about_stan]
     right: [search, github]
 
   components:
@@ -23,10 +23,6 @@ navbar:
     articles:
       text: "Resources"
       href: articles/articles.html
-
-    features:
-      text: "Features"
-      href: articles/features.html
     
     news:
       text: "Changelog"
