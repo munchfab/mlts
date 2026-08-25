@@ -1,9 +1,17 @@
-MLTS
-================
+
+<style>
+h1::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+
+# MLTS <img src="man/figures/logo.png" align="right" height="120" />
 
 <!-- badges: start -->
 
-[![](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
+[![Downloads](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/mlts)](https://CRAN.R-project.org/package=mlts)
 

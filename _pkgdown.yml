@@ -9,8 +9,14 @@ template:
     success: "#9e2a2b"         # buttons
     bg: "#f8f9fa"              # background
     fg: "#212529"              # text
+  logo: man/figures/logo.png
+
 
 navbar:
+  title: "MLTS"
+  logo:
+    image: logo.svg
+    alt: "MLTS Logo"
   structure:
     left: [get_started, articles, news, about_stan]
     right: [search, github]
