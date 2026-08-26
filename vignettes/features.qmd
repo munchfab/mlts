@@ -1,0 +1,28 @@
+--- 
+title: "mlts Features"
+toc: true
+toc-depth: 3
+toc-expand: 1
+---
+
+# General Package Workflow
+
+## Specifying the Model
+
+## Data
+
+### Working with Simulated Data 
+
+### Working with Empirical Data
+
+## Fitting the Model 
+
+## Dagnostics
+
+# Extendended Model Specifications
+
+# Data handling
+
+# Fitting & Diagnostics
+
+# Plotting

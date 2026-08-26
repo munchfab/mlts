@@ -1,0 +1,50 @@
+title: "MLTS"
+url: ~
+template:
+  bootstrap: 5
+  bootswatch: flatly
+  bslib:
+    primary: "#1a1a1a"         # navbar
+    link-color: "#9e2a2b"      # links
+    success: "#9e2a2b"         # buttons
+    bg: "#f8f9fa"              # background
+    fg: "#212529"              # text
+  logo: man/figures/logo.png
+
+
+navbar:
+  title: "MLTS"
+  logo:
+    image: logo.svg
+    alt: "MLTS Logo"
+  structure:
+    left: [get_started, articles, news, about_stan]
+    right: [search, github]
+
+  components:
+    get_started:
+      text: "Get Started"
+      href: articles/get_started.html
+
+    articles:
+      text: "Resources"
+      href: articles/articles.html
+    
+    news:
+      text: "Changelog"
+      href: news/index.html
+
+    about_stan:
+      text: "About stan"
+      href: https://mc-stan.org/
+
+articles: 
+  - title: internal
+    contents: 
+      - get_started
+      - articles
+      - betw_predictors
+      - manifest_ar
+      - manifest_var
+      - features
+

@@ -316,54 +316,87 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
   }
   colnames(W[[gg]]) <- c("Intercept", cov_name)
 
-  for(i in 1:infos$n_random){
-    # get expected individual parameters
-    pred_use = infos$RE.PREDS[infos$RE.PREDS$re_no ==i,]
-    val_use = model$true.val[model$group==gg & model$Param %in% pred_use$Param]
 
-    if(nrow(pred_use)>0){
-      bmu[,i] = W[[gg]][,c(1,pred_use$pred_no+1)] %*% c(gammas[i], val_use)
-    } else {
-      bmu[,i] = gammas[i]
+
+    for(i in 1:infos$n_random){
+      # get expected individual parameters
+      pred_use = infos$RE.PREDS[infos$RE.PREDS$re_no ==i,]
+      val_use = model$true.val[model$group==gg & model$Param %in% pred_use$Param]
+
+      if(nrow(pred_use)>0){
+        bmu[,i] = W[[gg]][,c(1,pred_use$pred_no+1)] %*% c(gammas[i], val_use)
+      } else {
+        bmu[,i] = gammas[i]
+      }
     }
-  }
 
-  # calculate covariances from correlations
-  n_random = infos$n_random
-  rand.pars = infos$re_pars$Param
+    # calculate covariances from correlations
+    n_random = infos$n_random
+    rand.pars = infos$re_pars$Param
 
-  # variance covariance matrix of random effects
-  if(n_random == 1){
-    cov_mat = model$true.val[model$Type=="Random effect SD" & model$group == gg]
-  } else {
-    cov_mat = diag(model$true.val[model$Type=="Random effect SD" & model$group == gg]^2)
-    for(i in 1:n_random){
-      for(j in 1:n_random){
-        if(i < j){
-          r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j]) & model$group == gg]
-          cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
+    # variance covariance matrix of random effects
+    if(n_random == 1){
+      cov_mat = model$true.val[model$Type=="Random effect SD" & model$group == gg]
+    } else {
+      cov_mat = diag(model$true.val[model$Type=="Random effect SD" & model$group == gg]^2)
+      for(i in 1:n_random){
+        for(j in 1:n_random){
+          if(i < j){
+            r = model$true.val[model$Param == paste0("r_",rand.pars[i],".", rand.pars[j]) & model$group == gg]
+            cov_mat[i,j] = cov_mat[j,i] <- r * sqrt(cov_mat[i,i]) * sqrt(cov_mat[j,j])
+          }
         }
       }
     }
-  }
 
+    #### sample random effects from multivariate normal distribution and add to bmus
+    btw_random = matrix(NA, nrow = N_G[gg], ncol = infos$n_random)
+    if(n_random == 1){
+      btw_random = bmu + stats::rnorm(n = N_G[gg], mean = 0, sd = cov_mat)
+    } else {
+      btw_random = bmu + mvtnorm::rmvnorm(n = N_G[gg], mean = rep(0, infos$n_random), sigma = cov_mat)
+    }
+    colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
 
-  #### sample random effects from multivariate normal distribution and add to bmus
-  btw_random = matrix(NA, nrow = N_G[gg], ncol = infos$n_random)
-  if(n_random == 1){
-    btw_random = bmu + stats::rnorm(n = N_G[gg], mean = 0, sd = cov_mat)
-  } else {
-    btw_random = bmu + mvtnorm::rmvnorm(n = N_G[gg], mean = rep(0, infos$n_random), sigma = cov_mat)
-  }
-  colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
+    # check for AR parameters with absolute values below "1"
+    ar_param_names <- infos$fix_pars_dyn$Param[infos$fix_pars_dyn$isAR == 1]
+    posAR <- which(colnames(btw_random) %in% ar_param_names)
+    
+    if (length(posAR) == 0){
+      ar_condition <- FALSE
+    } else if (sum(abs(btw_random[, posAR, drop = FALSE]) >= 1) > 0){
+      ar_condition = TRUE
+    } else {
+      ar_condition = FALSE
+    }
 
-  # check for AR parameters with absolute values below "1"
-  posAR = infos$fix_pars[infos$fix_pars$isRandom==1 & infos$fix_pars$isAR==1, "no"]
+    counter = 0
+    total_invalid_ar <- 0
+    while (ar_condition){
+      if (counter >= 100){
+        stop("Sampling was stopped, because AR effects bigger than 1 were sampled more than 100 times. Consider ",
+           "setting the true values of the fixed effect or the random effect SD to a lower value.")
+      }
 
-  if(sum(abs(btw_random[,posAR]) >= 1)){
-    stop("Absolute individual AR effects greater than 1 were sampled. Consider
-            setting the true values of the fixed effect or the random effect SD to a lower value.")
-  }
+      invalid_ids <- which(apply(abs(btw_random[, posAR, drop = FALSE]) >= 1, 1, any))
+      total_invalid_ar <- total_invalid_ar + length(invalid_ids)
+      if(n_random == 1){
+        btw_random[invalid_ids, ] <- bmu[invalid_ids, , drop = FALSE] + stats::rnorm(n = length(invalid_ids), mean = 0, sd = cov_mat)
+      } else {
+        btw_random[invalid_ids, ] <- bmu[invalid_ids, , drop = FALSE] + mvtnorm::rmvnorm(n = length(invalid_ids), mean = rep(0, infos$n_random), sigma = cov_mat)
+      }
+
+      if (sum(abs(btw_random[, posAR, drop = FALSE]) >= 1) > 0){
+        ar_condition = TRUE
+      } else {
+        ar_condition = FALSE
+      }
+      counter = counter + 1
+    }
+    if (counter > 0) {
+      message("Resampled ", total_invalid_ar, " individual AR parameter(s) exceeding |1|.")
+    }
+
 
   # now combine fixed effects and random effects
   btw[[gg]] = matrix(NA, nrow = N_G[gg], infos$n_pars)
@@ -476,10 +509,13 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
     }
 
     # return list
+    re_pars <- btw[, infos$is_random, drop = FALSE]
+    colnames(re_pars) <- infos$fix_pars$Param[infos$is_random]
+
     VARsimData = list(
       model = model,
       data = data,
-      RE.pars = btw_random
+      RE.pars = re_pars
     )
 
     # add class

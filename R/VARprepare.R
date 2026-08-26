@@ -227,7 +227,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     censR_val = attr(model, which = "censor_right")
     n_censR_D = sapply(ts, FUN = function(x){ # store number of NAs per D
       sum(data[,x] != -Inf &
-            data[,x] <= censR_val &
+            data[,x] >= censR_val &
             data$int_time != 1)
     })
     n_censR_D = as.array(n_censR_D)
@@ -235,7 +235,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
     pos_censR_D = matrix(0, nrow = D, ncol = max(n_censR_D), byrow = TRUE)
     for(i in 1:D){
       if(n_censR_D[i] > 0){
-        pos_censR_D[i,1:n_censR_D[i]] = which(data[,ts[i]] <= censR_val &
+        pos_censR_D[i,1:n_censR_D[i]] = which(data[,ts[i]] >= censR_val &
                                                 data[,ts[i]] != -Inf &
                                                 data$int_time != 1)
       }
@@ -381,7 +381,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
       censR_val = attr(model, which = "censor_right")
       n_censR_p = sapply(ts, FUN = function(x){ # store number of NAs per D
         sum(data[,x] != -Inf &
-              data[,x] <= censR_val &
+              data[,x] >= censR_val &
               data$int_time != 1)
       })
       n_censR_p = as.array(n_censR_p)
@@ -389,7 +389,7 @@ VARprepare <- function(model, data, ts, covariates = NULL, outcomes = NULL,
       pos_censR_p = matrix(0, nrow = n_p, ncol = max(n_censR_p), byrow = TRUE)
       for(i in 1:n_p){
         if(n_censR_p[i] > 0){
-          pos_censR_p[i,1:n_censR_p[i]] = which(data[,ts[i]] <= censR_val &
+          pos_censR_p[i,1:n_censR_p[i]] = which(data[,ts[i]] >= censR_val &
                                                   data[,ts[i]] != -Inf &
                                                   data$int_time != 1)
         }

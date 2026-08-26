@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 <!-- badges: start -->
 
 [![](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
+[![CRAN status](https://www.r-pkg.org/badges/version/mlts)](https://CRAN.R-project.org/package=mlts)
 
 <!-- badges: end -->
 
