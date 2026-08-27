@@ -2,8 +2,8 @@
 
 S3method(summary,mltsfit)
 export(create_missings)
-export(mlts_cor_ts)
 export(describe_ts)
+export(mlts_cor_ts)
 export(mlts_fit)
 export(mlts_model)
 export(mlts_model_formula)
