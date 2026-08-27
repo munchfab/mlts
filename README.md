@@ -6,6 +6,8 @@
 <!-- badges: start -->
 
 [![](https://cranlogs.r-pkg.org/badges/mlts)](https://cranlogs.r-pkg.org/badges/mlts)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/mlts)](https://CRAN.R-project.org/package=mlts)
 
 <!-- badges: end -->
 
@@ -176,7 +178,7 @@ $$
 Furthermore, a path model can also be produced with the function
 `mlts_paths()` with many options for adjustment.
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="50%" style="display: block; margin: auto;" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="50%" style="display: block; margin: auto;" />
 
 To fit the above model, we pass it together with the data set to
 `mlts_fit()`. The data set for this example is an artificial data set
@@ -285,12 +287,12 @@ produced. The `what`-argument controls what parameter types are plotted
 mlts_plot(ar1_fit, type = "fe", what = "Fixed effect")
 ```
 
-<img src="man/figures/README-ar1_plot-1.png" width="60%" style="display: block; margin: auto;" />
+<img src="man/figures/README-ar1_plot-1.png" alt="" width="60%" style="display: block; margin: auto;" />
 
 ## References
 
 <div id="refs" class="references csl-bib-body hanging-indent"
-entry-spacing="0" line-spacing="2">
+data-entry-spacing="0" data-line-spacing="2">
 
 <div id="ref-Asparouhov2018" class="csl-entry">
 
