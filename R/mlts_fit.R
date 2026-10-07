@@ -65,6 +65,9 @@
 #' @param monitor_all_pars Logical. Should all parameters be stored? Default is FALSE.
 #' @param get_SD_latent Logical. Set to `TRUE` to obtain standardized estimates
 #' in multiple-indicator models.
+#' @param check_within_variance Logical. Set to `FALSE` to avoid initial checks
+#' to identify clusters with no within-cluster variance on any of the time series
+#' variables (not recommended).
 #' @param print_message Logical. Print messages based on defined inputs (default = TRUE).
 #' @param print_warning Logical. Print warnings based on defined inputs (default = TRUE).
 #' @param fit_model Logical. Set to FALSE to avoid fitting the model which may be
@@ -136,6 +139,7 @@ mlts_fit <- function(model,
                      fit_model = TRUE,
                      print_message = TRUE,
                      print_warning = TRUE,
+                     check_within_variance = TRUE
                      ...
 ){
 
@@ -248,16 +252,19 @@ mlts_fit <- function(model,
   }
   # initial data checks --------------------------------------------------
   ## any variables with zero variance in any of the clusters
-  ids = unique(data[,id])
-  data.test <- data
-  data.test$ID = data[,id]
-  for(i in 1:length(ts)){
-    for(j in 1:length(ids)){
-     if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = TRUE) == 0){
-       stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
-     }
+  if(check_within_variance == TRUE){
+    ids = unique(data[,id])
+    data.test <- data
+    data.test$ID = data[,id]
+    for(i in 1:length(ts)){
+      for(j in 1:length(ids)){
+        if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = TRUE) == 0){
+        stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
+        }
+      }
     }
   }
+
   ## any missing data between-level variables
   btw_vars = c(names(covariates), names(outcomes), names(outcome_pred_btw))
   if(length(btw_vars)>0){
