@@ -30,6 +30,7 @@ mlts_fit(
   fit_model = TRUE,
   print_message = TRUE,
   print_warning = TRUE,
+  check_within_variance = TRUE,
   ...
 )
 }
@@ -127,6 +128,10 @@ helpful to inspect prepared data used for model estimation (default = TRUE).}
 \item{print_message}{Logical. Print messages based on defined inputs (default = TRUE).}
 
 \item{print_warning}{Logical. Print warnings based on defined inputs (default = TRUE).}
+
+\item{check_within_variance}{Logical. Set to \code{FALSE} to avoid initial checks
+to identify clusters with no within-cluster variance on any of the time series
+variables (not recommended).}
 
 \item{...}{Additional arguments passed to \code{\link[rstan]{sampling}}.}
 }

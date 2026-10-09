@@ -91,6 +91,9 @@
 #' and the latter subscripts after the dot (i.e., `2(1)` and `1(0)`) the independent constructs involved
 #' in the interaction each followed by the respective lag in brackets. Note, that in this case the
 #' respective lag 0 effects need to be included separately using `incl_t0_effects`.
+#' @param incl_CL_effects Logical or character vector. If `TRUE`, all possible cross-lagged effects are
+#' included up to the maximum lag order in `max_lag`. Set to `FALSE` to remove all cross-lagged effects from the model.
+#' Alternatively, specify a vector of individual CL effects to include in the model (e.g., "phi(1)_12").
 #' @param censor_left Numeric. If an input is provided (i.e., a single numeric value) a left-censored
 #' version of the model will be estimated by treating all observations (of manifest indicators)
 #' at the censoring threshold (i.e., usually the lower bound of the scale) to be treated as missing during model estimation.
@@ -191,6 +194,7 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(0,1,2,3),
                        incl_t0_effects = NULL,
                        incl_rDSEM_effects = NULL,
                        incl_interaction_effects = NULL,
+                       incl_CL_effects = TRUE,
                        censor_left = NULL, censor_right = NULL, silent = FALSE){
 
   if(length(max_lag) == 4){
@@ -461,6 +465,9 @@ mlts_model <- function(class = c("VAR"), q, p = NULL, max_lag = c(0,1,2,3),
      "      constructs. The innovations of additional constructs will be modeled to stem \n",
      "      from a univariate normal distribution.")}
    }
+
+  # update fixef_zero according to include CL effects
+  fixef_zero = eval_incl_CL_effect(fixef_zero = fixef_zero, incl_CL_effects = incl_CL_effects, max_lag = max_lag)
 
   if(fix_dynamics == TRUE | fix_inno_vars == TRUE |
      fix_inno_covs == TRUE | !is.null(fixef_zero) |

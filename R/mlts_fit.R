@@ -139,7 +139,7 @@ mlts_fit <- function(model,
                      fit_model = TRUE,
                      print_message = TRUE,
                      print_warning = TRUE,
-                     check_within_variance = TRUE
+                     check_within_variance = TRUE,
                      ...
 ){
 

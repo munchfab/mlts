@@ -572,7 +572,30 @@ mlts_path_decomp <- function(
 
 
 
+eval_incl_CL_effect <- function(fixef_zero, incl_CL_effects, max_lag = 3){
 
+  # create a vector of all possible CL-effects
+  DV_IV1 = apply(utils::combn(x = 1:9, 2),2,function(x){paste0(x, collapse = "")})
+  DV_IV2 = apply(utils::combn(x = 9:1, 2),2,function(x){paste0(x, collapse = "")})
+  DV_IV = c(DV_IV1, DV_IV2)
+  phi_order = paste0("phi(",1:max_lag,")_")
+  cl_pars = paste0(phi_order, rep(DV_IV, each = max_lag))
+
+  if(incl_CL_effects == TRUE){
+    out = fixef_zero
+  }
+
+  if(incl_CL_effects == FALSE){
+    out = c(fixef_zero, cl_pars)
+  }
+
+  if(is.character(incl_CL_effects)){
+    cl_pars_to_remove = cl_pars[!(cl_pars %in% incl_CL_effects)]
+    out = c(fixef_zero, cl_pars_to_remove)
+  }
+
+  return(out)
+}
 
 
 

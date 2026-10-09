@@ -29,6 +29,7 @@ mlts_model(
   incl_t0_effects = NULL,
   incl_rDSEM_effects = NULL,
   incl_interaction_effects = NULL,
+  incl_CL_effects = TRUE,
   censor_left = NULL,
   censor_right = NULL,
   silent = FALSE
@@ -149,6 +150,10 @@ where the \code{i} indicates an interaction effect, the first subscript letter (
 and the latter subscripts after the dot (i.e., \code{2(1)} and \code{1(0)}) the independent constructs involved
 in the interaction each followed by the respective lag in brackets. Note, that in this case the
 respective lag 0 effects need to be included separately using \code{incl_t0_effects}.}
+
+\item{incl_CL_effects}{Logical or character vector. If \code{TRUE}, all possible cross-lagged effects are
+included up to the maximum lag order in \code{max_lag}. Set to \code{FALSE} to remove all cross-lagged effects from the model.
+Alternatively, specify a vector of individual CL effects to include in the model (e.g., "phi(1)_12").}
 
 \item{censor_left}{Numeric. If an input is provided (i.e., a single numeric value) a left-censored
 version of the model will be estimated by treating all observations (of manifest indicators)

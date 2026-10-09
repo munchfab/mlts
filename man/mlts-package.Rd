@@ -21,6 +21,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Kenneth Koslowski \email{kenneth.koslowski@uni-leipzig.de} (\href{https://orcid.org/0000-0001-5296-5267}{ORCID}) [copyright holder]
   \item Fabian Münch \email{fabian.felix.muench@uni-jena.de} (\href{https://orcid.org/0000-0001-5591-9901}{ORCID})
   \item Tobias Koch \email{tobias.koch@uni-jena.de} (\href{https://orcid.org/0000-0002-8143-3566}{ORCID})
   \item Jana Holtmann \email{jana.holtmann@uni-leipzig.de} (\href{https://orcid.org/0000-0002-7949-0772}{ORCID})
