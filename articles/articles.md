@@ -1,0 +1,33 @@
+# Resources & Materials
+
+## Articles
+
+- [A Tutorial on Bayesian Multilevel Latent Time Series Models using
+  Stan with the mlts R-package](https://osf.io/preprints/psyarxiv/j85tp)
+- [Beneath the Floor: Censored DSEM Models for Analyzing ESM Data with
+  Floor Effects](https://osf.io/preprints/psyarxiv/3adgx)
+
+------------------------------------------------------------------------
+
+## Vignettes
+
+- [Include Predictors for Random Effects on the Between
+  Level](https://munchfab.github.io/mlts/articles/betw_predictors.md)
+- [A Simple Example: Multilevel Manifest AR(1)
+  Model](https://munchfab.github.io/mlts/articles/manifest_ar.md)
+
+------------------------------------------------------------------------
+
+## Mplus vs. mlts
+
+- [Comparing Specification and Estimation of Dynamic Structural Equation
+  Models Using mlts and
+  Mplus](https://munchfab.github.io/mlts/articles/model_vignette.md)
+
+------------------------------------------------------------------------
+
+## Workshop Materials
+
+- [Introduction to Bayesian Multilevel Latent Time Series Models with
+  the R-package
+  `mlts`](https://github.com/KennethKoslowski/mlts_workshop_SAA2026)

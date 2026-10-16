@@ -1,0 +1,82 @@
+---
+# title: "Template Title"
+# author: "Your Name"
+# date: "The Date"
+output: pdf_document
+header-includes: 
+  - \usepackage{amsmath}
+  - \usepackage{caption}
+  - \thispagestyle{empty}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+\begin{center}
+Decomposition.
+\end{center}
+\[
+\begin{gathered} \begin{bmatrix}
+y_{1, it} \\
+y_{2, it} \\
+\end{bmatrix} = \begin{bmatrix}
+\mu_{1,i} \\
+\mu_{2,i} \\
+\end{bmatrix}
++
+\begin{bmatrix}
+y_{1, it}^w \\
+y_{2, it}^w \\
+\end{bmatrix} \end{gathered}
+\]
+\vspace{1em}
+\begin{center} Within-level model. \end{center} \[
+\begin{gathered} \begin{bmatrix}
+y_{1, it}^w \\
+y_{2, it}^w \\
+\end{bmatrix} = \begin{bmatrix} \phi_{(1)11,i} & 
+\phi_{(1)12,i} \\
+\phi_{(1)21,i} & 
+\phi_{(1)22,i} \\ \end{bmatrix} \begin{bmatrix} y_{1,i(t - 1)}^w \\
+y_{2,i(t - 1)}^w \\ \end{bmatrix} +  \begin{bmatrix} \zeta_{1, it} \\
+\zeta_{2, it} \\ \end{bmatrix} ,\\ 
+\text{with}~\zeta_{it} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Psi}_i) , \\ 
+\text{and}~\mathbf{\Psi} _i  =  \begin{bmatrix} \sigma^2_{\zeta_{1},i} &
+\sigma_{\zeta_{12}} \\
+ & 
+\sigma^2_{\zeta_{2},i} \\ \end{bmatrix} \end{gathered}
+\]
+\vspace{1em}
+\begin{center} Between-level model. \end{center} \[
+\begin{gathered} \begin{bmatrix} \mu_{1,i}\\
+\mu_{2,i}\\
+\phi_{(1)11,i}\\
+\phi_{(1)12,i}\\
+\phi_{(1)21,i}\\
+\phi_{(1)22,i}\\
+\ln(\sigma^2_{\zeta_{1},i})\\
+\ln(\sigma^2_{\zeta_{2},i})\\
+\sigma_{\zeta_{12},i}\\ \end{bmatrix} = \begin{bmatrix} \gamma_{0,\mu_{1}}\\
+\gamma_{0,\mu_{2}}\\
+\gamma_{0,\phi_{(1)11}}\\
+\gamma_{0,\phi_{(1)12}}\\
+\gamma_{0,\phi_{(1)21}}\\
+\gamma_{0,\phi_{(1)22}}\\
+\gamma_{0,\ln(\sigma^2_{\zeta_{1}})}\\
+\gamma_{0,\ln(\sigma^2_{\zeta_{2}})}\\
+\gamma_{0,\sigma^2_{\zeta_{12}}}\\ \end{bmatrix} +
+  \begin{bmatrix} \upsilon_{\mu_{1},i}\\
+\upsilon_{\mu_{2},i}\\
+\upsilon_{\phi_{(1)11},i}\\
+\upsilon_{\phi_{(1)12},i}\\
+\upsilon_{\phi_{(1)21},i}\\
+\upsilon_{\phi_{(1)22},i}\\
+\upsilon_{\ln(\sigma^2_{\zeta_{1}}),i}\\
+\upsilon_{\ln(\sigma^2_{\zeta_{2}}),i}\\
+0\\ \end{bmatrix} ,\\ 
+\text{with}~
+  \upsilon_{i} \sim \mathit{MVN}(\mathbf{0}, \mathbf{\Omega})  \end{gathered}
+\]
+\vspace{1em}
