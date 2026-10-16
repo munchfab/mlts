@@ -13,3 +13,4 @@ stanExports_*
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^\.github$
