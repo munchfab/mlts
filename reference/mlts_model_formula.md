@@ -67,7 +67,7 @@ mlts_model_formula(model = var_model)
 #> 2/3 [setup]
 #> 3/3        
 #> output file: formula.knit.md
-#> /opt/hostedtoolcache/pandoc/3.8.3/x64/pandoc +RTS -K512m -RTS formula.knit.md --to latex --from markdown+autolink_bare_uris+tex_math_single_backslash --output formula.tex --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/pagebreak.lua --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/latex-div.lua --embed-resources --standalone --syntax-highlighting tango --pdf-engine pdflatex --variable graphics --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/extract-data-uri.lua --include-in-header /tmp/RtmpIx2bU0/rmarkdown-str1d8b4fe9bd34.html --variable 'geometry:margin=1in' 
+#> /opt/hostedtoolcache/pandoc/3.8.3/x64/pandoc +RTS -K512m -RTS formula.knit.md --to latex --from markdown+autolink_bare_uris+tex_math_single_backslash --output formula.tex --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/pagebreak.lua --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/latex-div.lua --embed-resources --standalone --syntax-highlighting tango --pdf-engine pdflatex --variable graphics --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/extract-data-uri.lua --include-in-header /tmp/RtmpzjA5k0/rmarkdown-str1e41572cffdd.html --variable 'geometry:margin=1in' 
 #> Warning: error in running command
 #> ! sh: 1: pdflatex: not found
 #> Error: LaTeX failed to compile formula.tex. See https://yihui.org/tinytex/r/#debugging for debugging tips. See formula.log for more info.

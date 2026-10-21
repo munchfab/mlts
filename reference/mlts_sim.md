@@ -188,17 +188,14 @@ head(fit$pop.pars.summary)
 #> 4 -0.308 -0.242 -0.186   247 1.001      243      286
 #> 5  0.001  0.064  0.126   349 1.005      358      342
 #> 6  0.054  0.142  0.227   450 1.001      451      419
-#> n: 250 / 500 [ 50%]  (Warmup)
-#> Chain 2: Iteration: 251 / 500 [ 50%]  (Sampling)
-#> Chain 2: Iteration: 300 / 500 [ 60%]  (Sampling)
-#> Chain 2: Iteration: 350 / 500 [ 70%]  (Sampling)
+#> %]  (Sampling)
 #> Chain 2: Iteration: 400 / 500 [ 80%]  (Sampling)
 #> Chain 2: Iteration: 450 / 500 [ 90%]  (Sampling)
 #> Chain 2: Iteration: 500 / 500 [100%]  (Sampling)
 #> Chain 2: 
-#> Chain 2:  Elapsed Time: 28.603 seconds (Warm-up)
-#> Chain 2:                80.295 seconds (Sampling)
-#> Chain 2:                108.898 seconds (Total)
+#> Chain 2:  Elapsed Time: 27.033 seconds (Warm-up)
+#> Chain 2:                75.741 seconds (Sampling)
+#> Chain 2:                102.774 seconds (Total)
 #> Chain 2: 
 # }
 ```

@@ -165,7 +165,7 @@ summary(fit)
 #>    phi(1)_22.ln.sigma2_2 -0.055 0.246 -0.558  0.394 1.012      124      326
 #>  ln.sigma2_1.ln.sigma2_2 -0.114 0.292 -0.660  0.457 1.007      168      201
 #> 
-#> Samples were drawn using NUTS on Fri Oct 16 13:12:39 2026.
+#> Samples were drawn using NUTS on Wed Oct 21 06:58:28 2026.
 #> For each parameter, Bulk_ESS and Tail_ESS are measures of effective
 #> sample size, and Rhat is the potential scale reduction factor
 #> on split chains (at convergence, Rhat = 1).

@@ -73,7 +73,7 @@ mlts_model_paths(model = var_model)
 #> 2/3 [setup]
 #> 3/3        
 #> output file: pathmodel.knit.md
-#> /opt/hostedtoolcache/pandoc/3.8.3/x64/pandoc +RTS -K512m -RTS pathmodel.knit.md --to latex --from markdown+autolink_bare_uris+tex_math_single_backslash --output pathmodel.tex --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/pagebreak.lua --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/latex-div.lua --embed-resources --standalone --syntax-highlighting tango --pdf-engine pdflatex --variable graphics --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/extract-data-uri.lua --include-in-header /tmp/RtmpIx2bU0/rmarkdown-str1d8b6ab78c87.html 
+#> /opt/hostedtoolcache/pandoc/3.8.3/x64/pandoc +RTS -K512m -RTS pathmodel.knit.md --to latex --from markdown+autolink_bare_uris+tex_math_single_backslash --output pathmodel.tex --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/pagebreak.lua --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/latex-div.lua --embed-resources --standalone --syntax-highlighting tango --pdf-engine pdflatex --variable graphics --lua-filter /home/runner/work/_temp/Library/rmarkdown/rmarkdown/lua/extract-data-uri.lua --include-in-header /tmp/RtmpzjA5k0/rmarkdown-str1e416fe5c944.html 
 #> Warning: error in running command
 #> ! sh: 1: pdflatex: not found
 #> Error: LaTeX failed to compile pathmodel.tex. See https://yihui.org/tinytex/r/#debugging for debugging tips. See pathmodel.log for more info.
