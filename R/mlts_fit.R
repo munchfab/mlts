@@ -193,6 +193,10 @@ mlts_fit <- function(model,
     }
 
   # Some initial checks:
+
+  if (anyNA(data[,id]))
+    stop("No missing values allowed in the `id` variable.")
+
   # avoiding specification of "covariates"- and "outcomes"-arguments,
   # if variable names in the model-object match the variables names in data
   if(is.null(covariates) & infos$n_cov>1){
@@ -249,11 +253,12 @@ mlts_fit <- function(model,
   # initial data checks --------------------------------------------------
   ## any variables with zero variance in any of the clusters
   ids = unique(data[,id])
-  data.test <- data
+  data.test <- data[ts]
   data.test$ID = data[,id]
+  data.test <- data.test[complete.cases(data.test),]
   for(i in 1:length(ts)){
     for(j in 1:length(ids)){
-     if(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = TRUE) == 0){
+     if(!isTRUE(stats::var(data.test[data.test$ID == ids[j], ts[i]], na.rm = TRUE) > 0)){
        stop(paste0("Within-cluster variance is zero for indicator ", ts[i], " in cluster ", ids[j]))
      }
     }
