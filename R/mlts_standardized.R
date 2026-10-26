@@ -57,9 +57,12 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
 
 
   if(what == "within" | what == "both"){
-  if(length(object$person.pars.summary) == 1){
-    stop("\n To obtain standardized estimates per cluster and the average standardized estimate(s) across clusters, refit the model with `monitor_person_pars = TRUE`.",
-         "\n Note that for multiple indicator models (p > 1), `get_SD_latent` needs to be set to TRUE.")
+    has_cluster_samples = TRUE
+  if(ncol(object$person.pars.summary) == 5){
+    has_cluster_samples = FALSE
+    message("\n To obtain credible intervals for standardized estimates per cluster and the average standardized estimate(s) across clusters, refit the model with `monitor_person_pars = TRUE`.",
+            #"\n Note that for multiple indicator models (p > 1), `get_SD_latent` needs to be set to TRUE."
+            )
   }
 
   if(infos$isLatent == TRUE & object$standata$standardized == 0){
@@ -70,7 +73,7 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
 
     # run within-level standardization
     std_within = mlts_standardize_within(object = object, digits = digits, prob = prob,
-                            add_cluster_std = add_cluster_std)
+                            add_cluster_std = add_cluster_std, has_cluster_samples = has_cluster_samples)
     result[["Within-level standardized effects averaged over clusters"]] =
       std_within$`Within-level standardidzed effects averaged over clusters`
     if(add_cluster_std == TRUE){
