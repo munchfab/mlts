@@ -339,11 +339,13 @@ model {
       }
     }
 
+    array[D] vector[obs_id] etaW_resid_id;
+    etaW_resid_id = etaW_id;
     if( sum(is_rdsem) > 0 ){
       for (d in 1:D) {
         if (is_rdsem[d] == 1 ) {
           for(k in 1:N_pred_rdsem[d]){
-             etaW_id[d,] = etaW_id[d,] - b[pp,(Dpos1_rdsem[d]+(k-1))] * etaW_id[D_pred_rdsem[d,k],];
+             etaW_resid_id[d,] = etaW_resid_id[d,] - b[pp,(Dpos1_rdsem[d]+(k-1))] * etaW_id[D_pred_rdsem[d,k],];
           }
         }
       }
@@ -387,11 +389,11 @@ model {
         for(nd in 1:N_pred[d]){ // start loop over number of predictors in each dimension
           int lag_use = Lag_pred[d,nd];
           if(D_pred2[d,nd] == -99){
-            b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
+            b_mat[,nd] = etaW_resid_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)];
             } else {
               int lag_use2 = Lag_pred2[d,nd];
-              b_mat[,nd] = etaW_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
-                           etaW_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
+              b_mat[,nd] = etaW_resid_id[D_pred[d, nd],(1+maxLag-lag_use):(obs_id-lag_use)] .*
+                           etaW_resid_id[D_pred2[d, nd],(1+maxLag-lag_use2):(obs_id-lag_use2)];
               }
         }
 
@@ -412,7 +414,7 @@ model {
           mus[D_cen_pos[d],] = rep_vector(0,(obs_id-maxLag));
           }
 
-        target += normal_lpdf(etaW_id[d,(1+maxLag):obs_id] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
+        target += normal_lpdf(etaW_resid_id[d,(1+maxLag):obs_id] | mus[D_cen_pos[d],], sd_noise[D_cen_pos[d],pp]);
       }
     } // end loop over dimensions
 
