@@ -370,12 +370,45 @@ mlts_sim <- function(model, default = FALSE, N = NULL, N_G = NULL, TP, burn.in =
   colnames(btw_random) = infos$fix_pars$Param[infos$is_random]
 
   # check for AR parameters with absolute values below "1"
-  posAR = infos$fix_pars[infos$fix_pars$isRandom==1 & infos$fix_pars$isAR==1, "no"]
+  # check for AR parameters with absolute values below "1"
+  ar_param_names <- infos$fix_pars_dyn$Param[infos$fix_pars_dyn$isAR == 1]
+  posAR <- which(colnames(btw_random) %in% ar_param_names)
 
-  if(sum(abs(btw_random[,posAR]) >= 1)){
-    stop("Absolute individual AR effects greater than 1 were sampled. Consider
-            setting the true values of the fixed effect or the random effect SD to a lower value.")
+  if (length(posAR) == 0){
+    ar_condition <- FALSE
+  } else if (sum(abs(btw_random[, posAR, drop = FALSE]) >= 1) > 0){
+    ar_condition = TRUE
+  } else {
+    ar_condition = FALSE
   }
+
+  counter = 0
+  total_invalid_ar <- 0
+  while (ar_condition){
+    if (counter >= 100){
+      stop("Sampling was stopped, because AR effects bigger than 1 were sampled more than 100 times. Consider ",
+           "setting the true values of the fixed effect or the random effect SD to a lower value.")
+    }
+
+    invalid_ids <- which(apply(abs(btw_random[, posAR, drop = FALSE]) >= 1, 1, any))
+    total_invalid_ar <- total_invalid_ar + length(invalid_ids)
+    if(n_random == 1){
+      btw_random[invalid_ids, ] <- bmu[invalid_ids, , drop = FALSE] + stats::rnorm(n = length(invalid_ids), mean = 0, sd = cov_mat)
+    } else {
+      btw_random[invalid_ids, ] <- bmu[invalid_ids, , drop = FALSE] + mvtnorm::rmvnorm(n = length(invalid_ids), mean = rep(0, infos$n_random), sigma = cov_mat)
+    }
+
+    if (sum(abs(btw_random[, posAR, drop = FALSE]) >= 1) > 0){
+      ar_condition = TRUE
+    } else {
+      ar_condition = FALSE
+    }
+    counter = counter + 1
+  }
+  if (counter > 0) {
+    message("Resampled ", total_invalid_ar, " individual AR parameter(s) exceeding |1|.")
+  }
+
 
   # now combine fixed effects and random effects
   btw[[gg]] = matrix(NA, nrow = N_G[gg], infos$n_pars)
