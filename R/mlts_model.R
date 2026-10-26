@@ -43,7 +43,7 @@
 #' from a joint multivariate normal distribution.
 #' @param btw_model A list to indicate for which manifest indicator variables a common
 #' between-level factor should be modeled (see Details for detailed instructions).
-#' At this point restricted to one factor per latent construct.
+#' At this point restricted to one latent factor per indicator item.
 #' @param equal_loads_levels Logical. For multiple-indicator model with `btw_factor = TRUE`, if `TRUE`,
 #' factor loadings of the same indicators are assumed to be equal across levels. Note, that the first indicator
 #' loading parameters remain fixed to `1`.
