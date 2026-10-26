@@ -581,12 +581,13 @@ eval_incl_CL_effect <- function(fixef_zero, incl_CL_effects, max_lag = 3){
   phi_order = paste0("phi(",1:max_lag,")_")
   cl_pars = paste0(phi_order, rep(DV_IV, each = max_lag))
 
-  if(incl_CL_effects == TRUE){
-    out = fixef_zero
-  }
 
-  if(incl_CL_effects == FALSE){
-    out = c(fixef_zero, cl_pars)
+  if(is.logical(incl_CL_effects) == TRUE) {
+    if(incl_CL_effects == TRUE){
+      out = fixef_zero
+    } else {
+      out = c(fixef_zero, cl_pars)
+    }
   }
 
   if(is.character(incl_CL_effects)){
