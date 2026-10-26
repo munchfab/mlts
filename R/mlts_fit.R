@@ -467,6 +467,7 @@ mlts_fit <- function(model,
     # add model parameter labels
     sums$Param_stan = row.names(sums)
     pop.sums <- merge(par_labels, y = sums, by = "Param_stan", sort = FALSE)
+    pop.sums <- pop.sums[order(pop.sums$Par_no),]
 
     # create individual parameter summary table
     if(monitor_person_pars == TRUE){
@@ -504,13 +505,13 @@ mlts_fit <- function(model,
           "Param" = rep(colnames(re.trues), each = nrow(re.trues)),
           "true.val" = as.vector(re.trues)
         )
-        sums.i = merge(x = sums.i.true, sums.i, by = c("num_id", "Param"), all = TRUE)
+        sums.i = merge(x = sums.i.true, sums.i, by = c("num_id", "Param"), all = TRUE, sort=FALSE)
       }
 
 
       # add original subject identifier
       id.match = unique(data[c(id, "num_id")])
-      sums.i = merge(id.match, y = sums.i, by = "num_id", all = TRUE)
+      sums.i = merge(id.match, y = sums.i, by = "num_id", all = TRUE, sort=FALSE)
 
     } else {
 
