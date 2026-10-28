@@ -60,7 +60,7 @@ mlts_standardized <- function(object, what = c("between", "within", "both"),
     has_cluster_samples = TRUE
   if(ncol(object$person.pars.summary) == 5){
     has_cluster_samples = FALSE
-    message("\n To obtain credible intervals for standardized estimates per cluster and the average standardized estimate(s) across clusters, refit the model with `monitor_person_pars = TRUE`.",
+    message("\n To obtain credible intervals for standardized estimates per cluster and the average standardized estimate(s) across clusters, refit the model with `monitor_person_pars = TRUE`."
             #"\n Note that for multiple indicator models (p > 1), `get_SD_latent` needs to be set to TRUE."
             )
   }

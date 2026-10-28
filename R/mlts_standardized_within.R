@@ -11,7 +11,7 @@
 #' @noRd
 #'
 mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_std = FALSE,
-                                    has_cluster_samples = TRUE
+                                    has_cluster_samples
 ){
 
   # get model infos
@@ -32,7 +32,7 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
   # prepare results object
   results.std = list()
   btw.std = data.frame()
-  within_std = data.frame()
+  within_std = list()
   within_std_cluster = data.frame()
 
   # get information on fitted stan model
@@ -48,7 +48,6 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
 
   # Average Within-Level Standardized Estimates of Dynamics ====================
   n_dim = infos$q
-  within_std = list()
   intermediate_cols = c("isRandom","isAR","isINT","isRDSEM","Dout","Dpred","no")
   for(gg in 1:infos$G){
     within_std[[gg]] = infos$fix_pars_dyn[, c("Type", "Param",intermediate_cols)]
@@ -93,12 +92,12 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
 
       # pick parameter
       if(within_std[[1]]$isRandom[j] == 1){
-        par_no = within_std[[1]]$no[j]
+        par_no = within_std[[1]]$no[j] - cumsum(within_std[[1]]$isRandom == 0)[j]
         param_stan = paste0("b_free[",p,",",par_no,"]")
       } else {
         par_no = cumsum(within_std[[1]]$isRandom == 0)[j]
         g_id = object$standata$g_id[p]
-        param_stan = paste0("b_fix[",g_id,",",par_no[j],"]")
+        param_stan = paste0("b_fix[",g_id,",",par_no,"]")
       }
       # extract unstandardized estimates
       if(has_cluster_samples == TRUE){
@@ -163,8 +162,8 @@ mlts_standardize_within <- function(object, digits = 3, prob = .95, add_cluster_
         "Param" = names(bstd_all)[x],
         "Group" = object$standata$group_lab[gg],
         round(mean(b_std_average), digits = digits),
-        round(stats::sd(b_std_average), digits = digits),
-        t(round(stats::quantile(b_std_average, c(probs)),digits = digits)))
+        round(stats::sd(b_std_average, na.rm = TRUE), digits = digits),
+        t(round(stats::quantile(b_std_average, c(probs), na.rm = TRUE),digits = digits)))
 
       if(has_cluster_samples == FALSE){
         out[,4:6] <- NA
@@ -189,8 +188,8 @@ for(p in 1:N){
     }
     cluster_std[[p]][j,result.cols[result.cols!="Group"]] = round(c(
               mean(bstd_all[[j]][p,]),
-              stats::sd(bstd_all[[j]][p,]),
-              stats::quantile(bstd_all[[j]][p,], c(probs))),digits = digits
+              stats::sd(bstd_all[[j]][p,], na.rm = T),
+              stats::quantile(bstd_all[[j]][p,], c(probs), na.rm = T)),digits = digits
               )
   }
   cluster_std[[p]][,intermediate_cols] <- NULL
