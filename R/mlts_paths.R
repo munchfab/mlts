@@ -424,7 +424,7 @@ if(infos$n_int > 0){
   }
 }
 # Arrows of lag 0 ==============================================================
-w_arr <- rbind(infos$fix_pars_dyn[infos$fix_pars_dyn$Lag %in% c("0"),],
+w_arr <- plyr::rbind.fill(infos$fix_pars_dyn[infos$fix_pars_dyn$Lag %in% c("0"),],
                infos$fix_pars_rdsem)
 if(nrow(w_arr)>0){
   w_arr$Lag <- 0
@@ -788,9 +788,9 @@ if(!is.null(w_arr_l0)){
 # paths from epsilon to Y^w
 if(n_rdsem > 0){
   for(i in 1:nrow(w_arr_rdsem)){
-    diagram::straightarrow(c(w_arr_rdsem$x0[i],w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i],w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", endhead = T, arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], arr.type = "triangle", arr.adj = 0.5)
+    diagram::straightarrow(c(w_arr_rdsem$x0[i],w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i],w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], segment = c(0, w_arr_rdsem$arrpos[i]), arr.type = "triangle", arr.adj = 1)
     # repeat at each T
-    diagram::straightarrow(c(w_arr_rdsem$x0[i]-x_diff,w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i]-x_diff,w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", endhead = T, arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], arr.type = "triangle", arr.adj = 0.5)
+    diagram::straightarrow(c(w_arr_rdsem$x0[i]-x_diff,w_arr_rdsem$y0[i]), c(w_arr_rdsem$x1[i]-x_diff,w_arr_rdsem$y1[i]),lwd = 0.9, lty = "solid", arr.length = arrHead_w, arr.pos = w_arr_rdsem$arrpos[i], segment = c(0, w_arr_rdsem$arrpos[i]), arr.type = "triangle", arr.adj = 1)
   }
 }
 
