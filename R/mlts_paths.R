@@ -425,7 +425,8 @@ if(infos$n_int > 0){
 }
 # Arrows of lag 0 ==============================================================
 w_arr <- plyr::rbind.fill(infos$fix_pars_dyn[infos$fix_pars_dyn$Lag %in% c("0"),],
-               infos$fix_pars_rdsem)
+               infos$fix_pars_rdsem
+               )
 if(nrow(w_arr)>0){
   w_arr$Lag <- 0
   w_arr$Dpred = as.integer(w_arr$Dpred)
@@ -437,6 +438,7 @@ if(nrow(w_arr)>0){
     w_arr$x1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == w_arr$Lag[i], "midx"] + x_offset
     w_arr$y0[i] <- w_nodes[w_nodes$construct == w_arr$Dpred[i] & w_nodes$lag == (w_arr$Lag[i]), "midy"]
     w_arr$y1[i] <- w_nodes[w_nodes$construct == w_arr$Dout[i] & w_nodes$lag == w_arr$Lag[i], "midy"]
+
     if(w_arr$Dpred[i] < w_arr$Dout[i]){
       w_arr$y0[i] <- w_arr$y0[i] - w_radx/asp/2
       w_arr$y1[i] <- w_arr$y1[i] + w_radx/asp
@@ -445,7 +447,16 @@ if(nrow(w_arr)>0){
       w_arr$y0[i] <- w_arr$y0[i] + w_radx/asp/2
       w_arr$y1[i] <- w_arr$y1[i] - w_radx/asp
     }
+
+    if(w_arr$isRDSEM[i] == 0 & w_arr$Dout[i] %in% rdsem_DV){
+      w_arr$x1[i] <- w_arr$x1[i] + rdsem_resid_offset[1]
+      w_arr$y1[i] <- w_arr$y1[i] + rdsem_resid_offset[2]
+    }
+
   }
+
+
+
   w_arr_l0 <- w_arr
 } else {
   w_arr_l0 <- NULL
