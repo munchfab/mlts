@@ -2,7 +2,7 @@
 % Please edit documentation in R/mlts_tab.R
 \name{mlts_tab}
 \alias{mlts_tab}
-\title{Create a summary table ready for publication of a fitted model with class \code{mltsfit}}
+\title{Create a publication-ready summary table of a fitted \code{mltsfit} model}
 \usage{
 mlts_tab(
   fit,
@@ -12,7 +12,6 @@ mlts_tab(
   add_RE = TRUE,
   add_cor = TRUE,
   add_ranef_pred = FALSE,
-  sort_by_RE = FALSE,
   add_cis = TRUE,
   add_cor_cis = TRUE,
   cor_diag_string = "-",
@@ -22,34 +21,91 @@ mlts_tab(
   RE_cor_prefix = "RE COR__",
   NA_string = " ",
   digits = 2,
-  digits_cor_ci = 2
+  digits_cor_ci = 2,
+  out_as_list = TRUE
 )
 }
 \arguments{
 \item{fit}{An object of class \code{mltsfit}.}
 
-\item{bpe}{Bayesian posterior estimate can be either "mean" (the default)
-or the "median" of the posterior distribution.}
+\item{bpe}{Character. The Bayesian posterior estimate to report.
+Either \code{"mean"} (the default) or \code{"median"}.}
 
-\item{ci.level}{A value between 0 and 1 to indicate the width of the credible
-interval. Default is .95.}
+\item{ci.level}{Numeric. The desired width of the credible interval,
+specified as a value between 0 and 1. Defaults to \code{.95}.}
 
-\item{cols}{Character. Additional columns to be added (see \code{?rstan::monitor}).}
+\item{cols}{Character vector. Additional summary statistics to include
+in the table. These correspond to the column names returned by
+\code{rstan::summary()}, such as \code{"sd"}, \code{"se_mean"}, \code{"n_eff"}, and
+\code{"Rhat"}. The selected posterior estimate and credible interval
+columns are added automatically.}
 
-\item{digits}{Number of digits for fixed effects, random effects SDs, and
-random effects correlations.}
+\item{add_RE}{Logical. Whether to include random effect standard
+deviations in the summary table. Defaults to \code{TRUE}.}
 
-\item{flag_signif}{Add significance flags based on \code{ci.level} (default = FALSE).}
+\item{add_cor}{Logical. Whether to include the correlation matrix
+of the random effects. Defaults to \code{TRUE}.}
 
-\item{priors}{Add prior information (default = FALSE).}
+\item{add_ranef_pred}{Logical. Whether to include predictors of
+random effects in the summary table. Defaults to \code{FALSE}.}
 
-\item{...}{Additional arguments affecting the summary produced.}
+\item{add_cis}{Logical. Whether to include posterior credible
+intervals for the reported parameters. Defaults to \code{TRUE}.}
+
+\item{add_cor_cis}{Logical. Whether to report credible intervals
+for random effect correlations. Defaults to \code{TRUE}.
+If \code{FALSE}, the upper triangular part of the correlation matrix
+is left blank.}
+
+\item{cor_diag_string}{Character. String used to represent the
+diagonal elements of the random effect correlation matrix.
+Defaults to \code{"-"}.}
+
+\item{FE_prefix}{Character. Prefix added to the column names
+containing fixed effect estimates and summary statistics.
+Defaults to \code{"FE__"}.}
+
+\item{RE_prefix}{Character. Prefix added to the column names
+containing random effect standard deviations and summary
+statistics. Defaults to \code{"RE__"}.}
+
+\item{RE_pred_prefix}{Character. Prefix added to the column names
+containing estimates of predictors of random effects.
+Defaults to \code{"Par.ON__"}.}
+
+\item{RE_cor_prefix}{Character. Prefix added to the column names
+of the random effect correlation matrix.
+Defaults to \code{"RE COR__"}.}
+
+\item{NA_string}{Character or \code{NULL}. String used to replace
+missing values in the resulting table. If \code{NULL}, missing values
+are retained as \code{NA}. Defaults to \code{" "}.}
+
+\item{digits}{Integer. Number of decimal places used for fixed
+effects, random effect standard deviations, and random effect
+correlations. Defaults to \code{2}.}
+
+\item{digits_cor_ci}{Integer. Number of decimal places used for
+the lower and upper bounds of random effect correlation
+credible intervals. Defaults to \code{2}.}
+
+\item{out_as_list}{Logical. Whether to return the summary tables
+as a list. If \code{TRUE}, a list containing one table per group
+is returned. If \code{FALSE}, the group-specific tables are
+combined into a single data frame. Defaults to \code{FALSE}.}
 }
 \value{
-A summary of model parameters.
+A data frame or a list of data frames containing posterior
+summaries of the model parameters. Depending on the selected
+arguments, the output can include fixed effects, random effect
+standard deviations, random effect correlations, and predictors
+of random effects. For models with multiple groups, the group
+identifier is included in the output.
 }
 \description{
-Create a summary table ready for publication of a fitted model with class \code{mltsfit}
+Create a summary table containing posterior estimates and credible
+intervals for fixed effects, random effect standard deviations,
+random effect correlations, and optionally predictors of random effects.
 }
 \examples{
 \donttest{
@@ -62,11 +118,9 @@ fit <- mlts_fit(
   data = ts_data,
   ts = c("Y1", "Y2"), # time-series variables
   id = "ID", # identifier variable
-  time = "time",
-  tinterval = 1 # interval for approximation of continuous-time dynamic model,
 )
 
-# inspect model summary
-summary(fit)
+# prepare the results table
+mlts_tab(fit)
 }
 }
